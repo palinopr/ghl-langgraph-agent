@@ -679,7 +679,7 @@ print(f"Lead Score: {result['total_score']}/10")
 git clone https://github.com/palinopr/ghl-langgraph-agent.git
 cd ghl-langgraph-agent
 python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+source venv313/bin/activate  # or venv313\Scripts\activate on Windows
 pip install -r requirements.txt
 
 # Copy environment variables

@@ -21,12 +21,12 @@ help:
 # Quick validation (run before every push)
 validate:
 	@echo "⚡ Running quick validation..."
-	@python validate_workflow.py
+	@source venv313/bin/activate && python validate_workflow.py
 
 # Full test suite
 test:
 	@echo "🧪 Running full test suite..."
-	@python test_langgraph_deployment.py
+	@source venv313/bin/activate && python test_langgraph_deployment.py
 
 # Run locally
 run:

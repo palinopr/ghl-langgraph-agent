@@ -45,7 +45,7 @@ This enhanced system provides enterprise-grade features using LangGraph v0.5.3:
 
 ### Prerequisites
 
-- Python 3.9+ (3.13+ recommended for deployment - latest stable)
+- Python 3.13+ (required for deployment - includes free-threading and JIT)
 - pip
 - Virtual environment (recommended)
 - Redis (optional, for distributed message batching)
@@ -61,8 +61,8 @@ cd langgraph-ghl-agent
 
 2. Create and activate virtual environment:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3.13 -m venv venv313
+source venv313/bin/activate  # On Windows: venv313\Scripts\activate
 ```
 
 3. Install dependencies:
