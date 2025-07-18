@@ -220,6 +220,10 @@ def _merge_agent_results(
         "errors": errors
     }
     
+    # Fields that should not be duplicated when merging
+    skip_fields = {"contact_id", "contact_name", "contact_email", "contact_phone", 
+                   "conversation_started_at", "webhook_data"}
+    
     # Collect all messages
     all_messages = []
     
@@ -233,6 +237,20 @@ def _merge_agent_results(
                 msg.metadata = msg.metadata or {}
                 msg.metadata["agent"] = agent_name
                 all_messages.append(msg)
+        
+        # Merge non-duplicate fields
+        for key, value in agent_result.items():
+            if key not in skip_fields and key != "messages":
+                # For special agent-specific fields, use agent prefix
+                if key in ["appointment_status", "appointment_id", "qualification_score"]:
+                    if agent_name == "sofia" and key.startswith("appointment"):
+                        merged[key] = value
+                    elif agent_name == "carlos" and key == "qualification_score":
+                        merged[key] = value
+                else:
+                    # For other fields, only add if not already present
+                    if key not in merged:
+                        merged[key] = value
         
         # Check for special states
         if agent_name == "sofia" and agent_result.get("appointment_status") == "booked":

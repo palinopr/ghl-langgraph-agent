@@ -18,7 +18,9 @@ class ConversationState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
     
     # Contact Information
-    contact_id: str
+    # Using operator.add for contact_id to handle parallel updates
+    # This allows multiple nodes to update contact_id without conflicts
+    contact_id: Annotated[str, lambda x, y: y if y else x]  # Keep latest non-empty value
     contact_name: Optional[str]
     contact_email: Optional[str]
     contact_phone: Optional[str]
@@ -95,6 +97,11 @@ class ConversationState(TypedDict):
     suggested_agent: Optional[Literal["maria", "carlos", "sofia"]]  # Routing suggestion
     analysis_metadata: Optional[Dict[str, Any]]  # Analysis details and confidence
     score_reasoning: Optional[str]  # Explanation for current score
+    
+    # Loop Prevention Fields (to prevent expensive agent loops)
+    interaction_count: int  # Number of agent interactions in this conversation
+    response_sent: bool  # Whether a response has been sent to the customer
+    should_end: bool  # Explicit flag to end the conversation
 
 
 def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
@@ -178,7 +185,12 @@ def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
         lead_category="cold",
         suggested_agent="maria",
         analysis_metadata=None,
-        score_reasoning=None
+        score_reasoning=None,
+        
+        # Loop Prevention
+        interaction_count=0,
+        response_sent=False,
+        should_end=False
     )
 
 

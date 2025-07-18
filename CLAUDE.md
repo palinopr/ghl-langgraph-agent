@@ -1004,6 +1004,19 @@ If changes are pushed but LangGraph Platform doesn't pick them up:
    - Should update within 2-5 minutes
    - API URL remains the same
 
+## GHL API Authentication (IMPORTANT!)
+
+The GHL API requires Bearer token authentication:
+```python
+headers = {
+    "Authorization": f"Bearer {GHL_API_TOKEN}",  # MUST include "Bearer" prefix
+    "Version": "2021-07-28",
+    "Content-Type": "application/json"
+}
+```
+
+This is already configured in `app/config.py:get_ghl_headers()`.
+
 ## GoHighLevel (GHL) Webhook Integration
 
 ### Setting up GHL Webhook
