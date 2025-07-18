@@ -6,9 +6,9 @@ from app.utils.tracing import setup_langsmith_tracing, is_tracing_enabled
 
 # Setup tracing on import
 if is_tracing_enabled():
-    print(" LangSmith tracing is enabled")
+    print("✓ LangSmith tracing is enabled")
 else:
-    print("�  LangSmith tracing is disabled (no API key found)")
+    print("✗ LangSmith tracing is disabled (no API key found)")
 
 # Import main components
 from app.workflow import workflow, create_workflow, run_workflow
