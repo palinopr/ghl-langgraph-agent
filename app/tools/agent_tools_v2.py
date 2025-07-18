@@ -2,7 +2,7 @@
 LangGraph tool definitions for GoHighLevel agents - MODERNIZED VERSION
 Using latest patterns: InjectedState, InjectedToolCallId, Command objects
 """
-from typing import Dict, Any, List, Optional, Literal, Annotated
+from typing import Dict, Any, List, Optional, Literal, Union, Annotated
 from datetime import datetime, timedelta
 import pytz
 import uuid
@@ -19,7 +19,7 @@ logger = get_logger("agent_tools_v2")
 
 
 # ============ HANDOFF TOOLS ============
-def create_handoff_tool(*, agent_name: str, description: str | None = None):
+def create_handoff_tool(*, agent_name: str, description: Optional[str] = None):
     """
     Creates a handoff tool using the latest Command pattern
     This allows agents to transfer control to other agents

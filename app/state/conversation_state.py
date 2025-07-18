@@ -1,7 +1,8 @@
 """
 Conversation state definition for LangGraph workflow
 """
-from typing import TypedDict, List, Literal, Optional, Dict, Any, Annotated
+from typing import List, Literal, Optional, Dict, Any, Annotated
+from typing_extensions import TypedDict
 from datetime import datetime
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph.message import add_messages

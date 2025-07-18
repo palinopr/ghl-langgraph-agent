@@ -2,7 +2,7 @@
 Maria - Customer Support Agent (MODERNIZED VERSION)
 Using create_react_agent and latest LangGraph patterns
 """
-from typing import Dict, Any, List, Annotated
+from typing import Dict, Any, List, Annotated, Optional
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.prebuilt.chat_agent_executor import AgentState
@@ -17,8 +17,8 @@ logger = get_logger("maria_v2")
 class MariaState(AgentState):
     """Extended state for Maria agent"""
     contact_id: str
-    contact_name: str | None
-    support_category: str | None
+    contact_name: Optional[str]
+    support_category: Optional[str]
     issue_resolved: bool = False
     needs_escalation: bool = False
 

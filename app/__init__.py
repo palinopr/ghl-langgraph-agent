@@ -10,16 +10,7 @@ if is_tracing_enabled():
 else:
     print("✗ LangSmith tracing is disabled (no API key found)")
 
-# Import main components
-from app.workflow import workflow, create_workflow, run_workflow
-from app.api.webhook import app as webhook_app
-
 __version__ = "3.0.0"  # v3 with intelligence layer and tracing
 
-__all__ = [
-    "workflow",
-    "create_workflow", 
-    "run_workflow",
-    "webhook_app",
-    "__version__"
-]
+# Note: workflow and webhook_app are imported directly where needed
+# to avoid circular imports during module initialization

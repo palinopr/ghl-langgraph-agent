@@ -2,7 +2,7 @@
 Carlos - Lead Qualification Agent (MODERNIZED VERSION)
 Using create_react_agent and latest LangGraph patterns
 """
-from typing import Dict, Any, List, Annotated
+from typing import Dict, Any, List, Annotated, Optional
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.prebuilt.chat_agent_executor import AgentState
@@ -17,12 +17,12 @@ logger = get_logger("carlos_v2")
 class CarlosState(AgentState):
     """Extended state for Carlos agent"""
     contact_id: str
-    contact_name: str | None
-    business_type: str | None
-    business_goals: str | None
-    budget_range: str | None
+    contact_name: Optional[str]
+    business_type: Optional[str]
+    business_goals: Optional[str]
+    budget_range: Optional[str]
     qualification_score: int = 0
-    qualification_status: str | None
+    qualification_status: Optional[str]
 
 
 def carlos_prompt(state: CarlosState) -> list[AnyMessage]:
