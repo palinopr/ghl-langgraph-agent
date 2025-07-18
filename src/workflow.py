@@ -181,9 +181,13 @@ async def run_workflow(
         raise
 
 
+# Create the compiled workflow for LangGraph Platform
+workflow = create_workflow_with_memory()
+
 # Export main components
 __all__ = [
     "create_workflow",
     "create_workflow_with_memory",
-    "run_workflow"
+    "run_workflow",
+    "workflow"
 ]
