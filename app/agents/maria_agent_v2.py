@@ -2,7 +2,7 @@
 Maria - Customer Support Agent (MODERNIZED VERSION)
 Using create_react_agent and latest LangGraph patterns
 """
-from typing import Dict, Any, List, Annotated, Optional
+from typing import Dict, Any, List, Annotated, Optional, Union
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.prebuilt.chat_agent_executor import AgentState
@@ -90,7 +90,7 @@ def create_maria_agent():
     return agent
 
 
-async def maria_node_v2(state: Dict[str, Any]) -> Command | Dict[str, Any]:
+async def maria_node_v2(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
     """
     Maria agent node for LangGraph - modernized version
     Returns Command for routing or state updates

@@ -9,10 +9,10 @@ from app.tools.agent_tools_v2 import (
     create_handoff_tool
 )
 from app.tools.ghl_client import GHLClient
-from app.tools.supabase_client import SupabaseClient
+# from app.tools.supabase_client import SupabaseClient  # Optional - not needed for core workflow
 from app.tools.webhook_processor import WebhookProcessor
 from app.tools.webhook_enricher import WebhookEnricher
-from app.tools.conversation_loader import ConversationLoader
+# from app.tools.conversation_loader import ConversationLoader  # Removed - redundant with Receptionist
 
 __all__ = [
     "appointment_tools_v2",
@@ -20,8 +20,8 @@ __all__ = [
     "support_tools_v2",
     "create_handoff_tool",
     "GHLClient",
-    "SupabaseClient",
+    # "SupabaseClient",  # Optional - not needed for core workflow
     "WebhookProcessor",
-    "WebhookEnricher",
-    "ConversationLoader"
+    "WebhookEnricher"
+    # "ConversationLoader"  # Removed - redundant with Receptionist
 ]

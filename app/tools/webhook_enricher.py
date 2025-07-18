@@ -6,7 +6,7 @@ UPDATED: Now with parallel API calls for 3x faster enrichment
 from typing import Dict, Any, List
 import asyncio
 from app.tools.ghl_client import ghl_client
-from app.tools.conversation_loader import conversation_loader
+# from app.tools.conversation_loader import conversation_loader  # Removed - using Receptionist instead
 from app.constants import FIELD_MAPPINGS
 from app.utils.simple_logger import get_logger
 
@@ -18,7 +18,7 @@ class WebhookEnricher:
     
     def __init__(self):
         self.ghl_client = ghl_client
-        self.conversation_loader = conversation_loader
+        # self.conversation_loader = conversation_loader  # Removed - using Receptionist instead
         self.field_mappings = FIELD_MAPPINGS
     
     async def enrich_webhook_data(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -52,23 +52,9 @@ class WebhookEnricher:
         
         try:
             # PARALLEL API CALLS - Python 3.13 free-threading optimization
-            # Fetch contact details and conversation history simultaneously
-            contact_task = asyncio.create_task(
-                self.ghl_client.get_contact(contact_id)
-            )
-            conversation_task = asyncio.create_task(
-                self.conversation_loader.load_conversation_history(
-                    contact_id, 
-                    limit=50  # Get more history for better context
-                )
-            )
-            
-            # Wait for both to complete in parallel
-            contact, conversation_history = await asyncio.gather(
-                contact_task,
-                conversation_task,
-                return_exceptions=False
-            )
+            # Fetch contact details
+            # Note: Conversation history is now loaded by Receptionist agent
+            contact = await self.ghl_client.get_contact(contact_id)
             
             # Process contact details
             if contact:
@@ -115,13 +101,10 @@ class WebhookEnricher:
                     f"Budget={enriched['extracted_info']['budget']}"
                 )
             
-            # Process conversation history
-            enriched["conversation_history"] = conversation_history or []
-            enriched["message_count"] = len(enriched["conversation_history"])
+            # Note: Conversation history is now loaded by Receptionist agent
             
             logger.info(
                 f"Enriched webhook data for {contact_id}: "
-                f"{len(conversation_history)} historical messages, "
                 f"previous score: {enriched['previous_score']}"
             )
             

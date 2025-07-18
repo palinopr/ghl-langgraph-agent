@@ -360,5 +360,5 @@ class SupabaseClient:
             return False
 
 
-# Create singleton instance
-supabase_client = SupabaseClient()
+# Note: Create instance when needed, not at module level
+# This prevents initialization errors during imports

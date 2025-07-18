@@ -5,7 +5,7 @@ Retrieves full conversation history from GHL or Supabase
 from typing import Dict, Any, List, Optional
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from app.tools.ghl_client import ghl_client
-from app.tools.supabase_client import supabase_client
+# from app.tools.supabase_client import SupabaseClient  # Optional - not needed for core workflow
 from app.utils.simple_logger import get_logger
 from datetime import datetime
 
@@ -17,7 +17,7 @@ class ConversationLoader:
     
     def __init__(self):
         self.ghl_client = ghl_client
-        self.supabase_client = supabase_client
+        self.supabase_client = None  # Optional - not needed for core workflow
     
     async def load_conversation_history(
         self, 
@@ -50,18 +50,19 @@ class ConversationLoader:
         except Exception as e:
             logger.warning(f"Failed to load from GHL API: {e}")
         
-        # If no messages from GHL, try Supabase
-        if not messages:
-            try:
-                supabase_history = await self.supabase_client.get_conversation_history(
-                    contact_id, 
-                    limit=limit
-                )
-                if supabase_history:
-                    logger.info(f"Loaded {len(supabase_history)} messages from Supabase")
-                    messages = self._convert_supabase_to_langchain(supabase_history)
-            except Exception as e:
-                logger.warning(f"Failed to load from Supabase: {e}")
+        # If no messages from GHL, try Supabase (if configured)
+        # Note: Supabase is optional - not required for core workflow
+        # if not messages and self.supabase_client:
+        #     try:
+        #         supabase_history = await self.supabase_client.get_conversation_history(
+        #             contact_id, 
+        #             limit=limit
+        #         )
+        #         if supabase_history:
+        #             logger.info(f"Loaded {len(supabase_history)} messages from Supabase")
+        #             messages = self._convert_supabase_to_langchain(supabase_history)
+        #     except Exception as e:
+        #         logger.warning(f"Failed to load from Supabase: {e}")
         
         # Limit messages to requested amount
         if len(messages) > limit:

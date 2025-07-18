@@ -2,7 +2,7 @@
 Carlos - Lead Qualification Agent (MODERNIZED VERSION)
 Using create_react_agent and latest LangGraph patterns
 """
-from typing import Dict, Any, List, Annotated, Optional
+from typing import Dict, Any, List, Annotated, Optional, Union
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.prebuilt.chat_agent_executor import AgentState
@@ -96,7 +96,7 @@ def create_carlos_agent():
     return agent
 
 
-async def carlos_node_v2(state: Dict[str, Any]) -> Command | Dict[str, Any]:
+async def carlos_node_v2(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
     """
     Carlos agent node for LangGraph - modernized version
     Returns Command for routing or state updates
