@@ -136,26 +136,36 @@ supervisor_agent = create_react_agent(
 workflow.set_entry_point("supervisor")
 ```
 
-## File Structure (Current)
+## File Structure (Current - Post Cleanup)
 ```
 app/
 ├── agents/
-│   ├── __init__.py            # Original exports
-│   ├── sofia_agent.py         # Original Sofia (v1)
-│   ├── sofia_agent_v2.py      # Modernized Sofia
-│   ├── carlos_agent.py        # Original Carlos (v1)
-│   ├── carlos_agent_v2.py     # Modernized Carlos
-│   ├── maria_agent.py         # Original Maria (v1)
-│   ├── maria_agent_v2.py      # Modernized Maria
-│   ├── orchestrator.py        # Original orchestrator
-│   └── supervisor.py          # New supervisor pattern
+│   ├── __init__.py            # v2 exports only
+│   ├── sofia_agent_v2.py      # Modernized Sofia with Commands
+│   ├── carlos_agent_v2.py     # Modernized Carlos with Commands
+│   ├── maria_agent_v2.py      # Modernized Maria with Commands
+│   └── supervisor.py          # Supervisor pattern orchestration
+├── intelligence/
+│   ├── analyzer.py            # Deterministic scoring & extraction
+│   └── ghl_updater.py         # Persists scores to GHL
 ├── tools/
-│   ├── agent_tools.py         # Original tools
-│   └── agent_tools_v2.py      # Modernized tools with Commands
+│   ├── agent_tools_v2.py      # Modernized tools with Commands
+│   ├── webhook_enricher.py    # Loads full context from GHL
+│   ├── conversation_loader.py # Loads conversation history
+│   ├── ghl_client.py          # GHL API client
+│   └── supabase_client.py     # Supabase client
+├── utils/
+│   ├── message_batcher.py     # 15-second batching for human-like responses
+│   ├── message_utils.py       # Message trimming utilities
+│   ├── simple_logger.py       # Logging utility
+│   └── tracing.py             # LangSmith integration
 ├── state/
-│   └── conversation_state.py  # State definitions
-├── workflow.py               # Main workflow (now uses v2)
-└── workflow_v2.py           # Modernized workflow implementation
+│   └── conversation_state.py  # State with add_messages reducer
+├── api/
+│   └── webhook.py             # FastAPI webhook endpoints
+├── workflow.py                # Main entry (imports from v2)
+├── workflow_v2.py             # Modernized workflow implementation
+└── config.py                  # Configuration management
 ```
 
 ## Deployment History & Issues Fixed
@@ -386,6 +396,22 @@ def create_handoff_tool(agent_name: str):
 - [Memory Store](https://langchain-ai.github.io/langgraph/concepts/persistence/#store)
 - [Supervisor Pattern](https://langchain-ai.github.io/langgraph/concepts/multi_agent/)
 
+## Recent Cleanup (July 18, 2025)
+
+### Removed Files
+- **Old v1 Agents**: sofia_agent.py, carlos_agent.py, maria_agent.py, orchestrator.py
+- **Old Tools**: agent_tools.py (v1 implementation)
+- **Test Scripts**: test_setup.py, test_imports.py, simple_test.py, etc.
+- **Deployment Scripts**: deploy-render.sh, setup-render-auth.sh, etc.
+- **Old Configs**: render.yaml, vercel.json, railway-debug.toml
+- **Unused Files**: main.py, worker.py, logger.py
+
+### What Remains
+- Only v2 implementations using modern patterns
+- Intelligence layer for deterministic scoring
+- Clean, focused codebase ready for production
+- Essential deployment configs for LangGraph Platform
+
 ## Context Engineering Summary
 
 ### What This Project Does
@@ -446,6 +472,26 @@ SUPABASE_KEY=eyJ...
 # Recommended
 LANGSMITH_API_KEY=lsv2_pt_...
 LANGSMITH_PROJECT=ghl-langgraph-agent
+
+# Optional
+REDIS_URL=redis://localhost:6379/0  # For distributed message batching
+```
+
+### Quick Development Setup
+```bash
+# Clone and setup
+git clone https://github.com/palinopr/ghl-langgraph-agent.git
+cd ghl-langgraph-agent
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+
+# Copy environment variables
+cp .env.example .env
+# Edit .env with your credentials
+
+# Run locally
+python app.py  # Starts on port 8000
 ```
 
 ## Intelligence Layer Implementation (v3)
