@@ -45,7 +45,7 @@ This enhanced system provides enterprise-grade features using LangGraph v0.5.3:
 
 ### Prerequisites
 
-- Python 3.9+ (3.11+ recommended for deployment)
+- Python 3.9+ (3.13+ recommended for deployment - latest stable)
 - pip
 - Virtual environment (recommended)
 - Redis (optional, for distributed message batching)

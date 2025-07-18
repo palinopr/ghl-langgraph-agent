@@ -1,18 +1,18 @@
-# Core LangGraph dependencies (UPDATED to latest recommended versions)
-langgraph>=0.5.3  # Updated to latest version
-langgraph-sdk>=0.1.66  # Added - required for LangGraph Platform
-langgraph-checkpoint>=2.0.23  # Added - required for persistence
-langchain>=0.3.8  # Latest recommended version
-langchain-core>=0.3.42  # Updated to latest recommended version
-langchain-openai
-langchain-community>=0.2.0
-langsmith>=0.1.63  # Updated from 0.1.17
+# Core LangGraph dependencies (ABSOLUTE LATEST - Updated 2025-07-18)
+langgraph>=0.5.3  # Latest version from Context7 docs
+langgraph-sdk>=0.1.66  # Required for LangGraph Platform
+langgraph-checkpoint>=2.0.23  # Required for persistence
+langchain>=0.3.8  # Latest stable from Context7 docs
+langchain-core>=0.3.42  # Latest from Context7 JS/TS SDK ref
+langchain-openai>=0.2.0  # Latest stable
+langchain-community>=0.3.0  # Latest major version
+langsmith>=0.1.63  # Latest from LangGraph docs
 
-# API and Web Framework
-fastapi>=0.110.0
-uvicorn>=0.26.0  # Updated from 0.27.0 to match LangGraph recommendations
-pydantic>=2.6.0
-pydantic-settings>=2.0.0
+# API and Web Framework (LATEST VERSIONS)
+fastapi>=0.115.12  # Latest from Context7 (tiangolo/fastapi)
+uvicorn>=0.26.0  # LangGraph recommended
+pydantic>=2.10.0  # Latest v2 from Context7
+pydantic-settings>=2.7.0  # Latest from Context7
 httpx>=0.25.0  # Changed from fixed 0.25.2 to >=0.25.0
 sse-starlette>=2.1.0,<2.2.0  # Added - required for streaming
 

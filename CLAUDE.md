@@ -37,7 +37,7 @@ This is a LangGraph-based GoHighLevel (GHL) messaging agent that handles intelli
 - **Cache**: Redis for message batching (optional)
 - **Monitoring**: LangSmith tracing integration
 - **Deployment**: LangGraph Platform (LangSmith)
-- **Python**: 3.11+ (required by LangGraph Platform)
+- **Python**: 3.13+ (latest stable as of July 2025)
 
 ## Modernization Implementation (2025-07-18)
 
@@ -369,7 +369,7 @@ def create_handoff_tool(agent_name: str):
 
 ### Import Errors
 - Ensure all imports are absolute (from app.xxx)
-- Check Python version is 3.11+
+- Check Python version is 3.13+
 - Verify langgraph dependencies
 
 ### Routing Issues
