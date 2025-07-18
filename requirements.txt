@@ -1,9 +1,9 @@
 # Core LangGraph dependencies (UPDATED to latest recommended versions)
-langgraph>=0.3.27  # Updated from 0.2.0
+langgraph>=0.5.3  # Updated to latest version
 langgraph-sdk>=0.1.66  # Added - required for LangGraph Platform
 langgraph-checkpoint>=2.0.23  # Added - required for persistence
-langchain>=0.3.8  # Updated from 0.2.0
-langchain-core>=0.2.38  # Added - explicit core dependency
+langchain>=0.3.8  # Latest recommended version
+langchain-core>=0.3.42  # Updated to latest recommended version
 langchain-openai
 langchain-community>=0.2.0
 langsmith>=0.1.63  # Updated from 0.1.17
@@ -35,6 +35,7 @@ orjson>=3.9.7,<3.10.17  # Added - recommended for JSON performance
 tenacity>=8.0.0  # Added - for retry logic
 cloudpickle>=3.0.0  # Added - for serialization
 redis>=5.0.0  # Added - for message batching
+jsonschema-rs>=0.20.0  # Added - for schema validation performance
 
 # Development Tools
 pytest>=8.0.0
@@ -55,3 +56,4 @@ structlog>=24.1.0  # Added - for structured logging
 langchain-experimental>=0.3.0
 langchain-anthropic  # In case we want Claude
 tiktoken  # Token counting
+typing-extensions>=4.0.0  # Ensure TypedDict compatibility
