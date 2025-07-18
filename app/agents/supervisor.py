@@ -33,19 +33,34 @@ def supervisor_prompt(state: SupervisorState) -> list[AnyMessage]:
     suggested_agent = state.get("suggested_agent", None)
     lead_category = state.get("lead_category", "unknown")
     
-    # Build context about extracted information
+    # Build context about extracted information AND qualification status
     extracted = state.get("extracted_data", {})
     context_info = []
     if extracted.get("name"):
-        context_info.append(f"Name: {extracted['name']}")
+        context_info.append(f"Name: {extracted['name']} ✓")
     if extracted.get("business_type"):
-        context_info.append(f"Business: {extracted['business_type']}")
+        context_info.append(f"Business: {extracted['business_type']} ✓")
     if extracted.get("budget"):
-        context_info.append(f"Budget: {extracted['budget']}")
+        context_info.append(f"Budget: {extracted['budget']} {'✓ QUALIFIED' if '$300' in str(extracted['budget']) or '300' in str(extracted['budget']) else '❌ CHECK'}")
     if extracted.get("goal"):
         context_info.append(f"Goal: {extracted['goal']}")
+    if extracted.get("email"):
+        context_info.append(f"Email: {extracted['email']} ✓")
+    
+    # Qualification status
+    has_email = bool(extracted.get("email"))
+    has_budget_300 = bool(extracted.get("budget") and ('300' in str(extracted['budget']) or int(str(extracted.get('budget', '0')).replace('$', '').replace('+', '').split('/')[0] or 0) >= 300))
+    has_name = bool(extracted.get("name"))
     
     context_str = "\n".join(context_info) if context_info else "No information extracted yet"
+    
+    qualification_str = f"""
+APPOINTMENT QUALIFICATION CHECK:
+• Name: {"✓ YES" if has_name else "❌ NO"}
+• Email: {"✓ YES" if has_email else "❌ NO"} 
+• Budget $300+: {"✓ CONFIRMED" if has_budget_300 else "❌ NOT CONFIRMED"}
+• Can book appointment: {"YES - Send to Sofia" if all([has_name, has_email, has_budget_300]) else "NO - Need qualification first"}
+"""
     
     system_prompt = f"""You are an intelligent routing supervisor for Main Outlet Media.
 Your role is to analyze conversations and route to the appropriate specialist agent based on lead score and context.
@@ -59,23 +74,27 @@ Current Status:
 Extracted Information:
 {context_str}
 
-ROUTING RULES (PRIORITY ORDER):
+{qualification_str}
 
-1. **Score-Based Primary Routing**:
-   - Score 8-10 (HOT LEADS) → Sofia (Appointment Booking)
-     * Has budget confirmed ($300+)
-     * Clear buying intent
-     * Ready for appointment
-     
-   - Score 5-7 (WARM LEADS) → Carlos (Lead Qualification)
-     * Has business information
-     * Expressed interest but needs nurturing
-     * Budget not confirmed yet
-     
-   - Score 1-4 (COLD LEADS) → Maria (Information Gathering)
-     * Limited information provided
-     * Just exploring options
-     * Needs basic education
+ROUTING RULES (QUALIFICATION-BASED):
+
+1. **APPOINTMENT READY (Route to Sofia)**:
+   - Score 6+ AND
+   - Has Name AND
+   - Has Email AND
+   - Budget $300+ CONFIRMED
+   
+2. **NEEDS QUALIFICATION (Route to Carlos)**:
+   - Score 5-7 OR
+   - Missing budget confirmation OR
+   - Has business but needs nurturing
+   
+3. **COLD/INFO GATHERING (Route to Maria)**:
+   - Score 1-4 OR
+   - Very limited information OR
+   - Just starting conversation
+
+⚠️ CRITICAL: NEVER route to Sofia without ALL qualifications!
 
 2. **Context-Based Override Rules**:
    - If user explicitly asks for appointment → Sofia (regardless of score)
