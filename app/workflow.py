@@ -126,10 +126,7 @@ def route_from_supervisor(state: ConversationState) -> Literal["sofia", "carlos"
         logger.info("Routing to END due to interaction limit")
         return "end"
     
-    # Check if response already sent
-    if state.get("response_sent", False):
-        logger.info("Routing to END - response already sent")
-        return "end"
+    # No need to check response_sent anymore - responder handles that
     
     # Get next agent
     next_agent = state.get("next_agent")
