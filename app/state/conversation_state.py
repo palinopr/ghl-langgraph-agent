@@ -100,7 +100,6 @@ class ConversationState(TypedDict):
     
     # Loop Prevention Fields (to prevent expensive agent loops)
     interaction_count: int  # Number of agent interactions in this conversation
-    response_sent: bool  # Whether a response has been sent to the customer
     should_end: bool  # Explicit flag to end the conversation
 
 
@@ -189,7 +188,6 @@ def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
         
         # Loop Prevention
         interaction_count=0,
-        response_sent=False,
         should_end=False
     )
 
