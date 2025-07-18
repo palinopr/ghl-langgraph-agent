@@ -5,7 +5,7 @@ Handles incoming webhooks and formats them for agent processing
 from typing import Dict, Any, Optional
 from datetime import datetime
 import pytz
-from ..utils.simple_logger import get_logger
+from app.utils.simple_logger import get_logger
 
 logger = get_logger("webhook_processor")
 

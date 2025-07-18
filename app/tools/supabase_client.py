@@ -5,8 +5,8 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import pytz
 from supabase import create_client, Client
-from ..config import get_settings
-from ..utils.simple_logger import get_logger
+from app.config import get_settings
+from app.utils.simple_logger import get_logger
 
 logger = get_logger("supabase_client")
 

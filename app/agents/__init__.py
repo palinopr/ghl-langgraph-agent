@@ -1,10 +1,10 @@
 """
 Agent modules for LangGraph messaging system
 """
-from .sofia_agent import sofia_node, SofiaAgent
-from .carlos_agent import carlos_node, CarlosAgent
-from .maria_agent import maria_node, MariaAgent
-from .orchestrator import orchestrator_node, Orchestrator
+from app.agents.sofia_agent import sofia_node, SofiaAgent
+from app.agents.carlos_agent import carlos_node, CarlosAgent
+from app.agents.maria_agent import maria_node, MariaAgent
+from app.agents.orchestrator import orchestrator_node, Orchestrator
 
 __all__ = [
     "sofia_node",

@@ -103,6 +103,20 @@ gotrue>=2.4.0  # Was 2.0.0
 realtime>=2.0.0  # Was 1.0.0
 ```
 
+#### 9. Relative Import Fix
+```python
+# Error: ImportError: attempted relative import with no known parent package
+# LangGraph loads modules directly from file path, not as package
+# Solution: Convert all relative imports to absolute imports
+# Before:
+from .state.conversation_state import ConversationState
+from .agents import sofia_node
+
+# After:
+from app.state.conversation_state import ConversationState
+from app.agents import sofia_node
+```
+
 ## Current Deployment Configuration
 
 ### LangGraph Platform Settings

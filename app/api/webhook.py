@@ -6,12 +6,12 @@ from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from typing import Dict, Any
 import asyncio
-from ..workflow import run_workflow
-from ..tools.webhook_processor import webhook_processor
-from ..tools.supabase_client import supabase_client
-from ..tools.ghl_client import ghl_client
-from ..utils.simple_logger import get_logger
-from ..config import get_settings
+from app.workflow import run_workflow
+from app.tools.webhook_processor import webhook_processor
+from app.tools.supabase_client import supabase_client
+from app.tools.ghl_client import ghl_client
+from app.utils.simple_logger import get_logger
+from app.config import get_settings
 
 logger = get_logger("webhook")
 

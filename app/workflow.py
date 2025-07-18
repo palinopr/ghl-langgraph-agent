@@ -5,9 +5,9 @@ Orchestrates the flow between Sofia, Carlos, and Maria
 from typing import Dict, Any, Literal
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import InMemorySaver
-from .state.conversation_state import ConversationState
-from .agents import sofia_node, carlos_node, maria_node, orchestrator_node
-from .utils.simple_logger import get_logger
+from app.state.conversation_state import ConversationState
+from app.agents import sofia_node, carlos_node, maria_node, orchestrator_node
+from app.utils.simple_logger import get_logger
 
 logger = get_logger("main_workflow")
 

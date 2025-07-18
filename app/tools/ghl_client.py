@@ -6,8 +6,8 @@ import httpx
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import pytz
-from ..config import get_settings, get_ghl_headers
-from ..utils.simple_logger import get_logger
+from app.config import get_settings, get_ghl_headers
+from app.utils.simple_logger import get_logger
 
 logger = get_logger("ghl_client")
 

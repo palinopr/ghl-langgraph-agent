@@ -6,8 +6,8 @@ from typing import Dict, Any, List, Optional, Literal
 from datetime import datetime, timedelta
 import pytz
 from langchain_core.tools import tool
-from .ghl_client import ghl_client
-from ..utils.simple_logger import get_logger
+from app.tools.ghl_client import ghl_client
+from app.utils.simple_logger import get_logger
 
 logger = get_logger("agent_tools")
 
