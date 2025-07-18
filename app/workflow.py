@@ -1,12 +1,18 @@
 """
 Main LangGraph workflow for GoHighLevel messaging agent
-Orchestrates the flow between Sofia, Carlos, and Maria
+UPDATED: Now using modernized v2 implementation with latest patterns
 """
 from typing import Dict, Any, Literal
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import InMemorySaver
 from app.state.conversation_state import ConversationState
-from app.agents import sofia_node, carlos_node, maria_node, orchestrator_node
+# Import modernized v2 workflow
+from app.workflow_v2 import (
+    create_workflow_v2, 
+    create_workflow_with_memory_v2,
+    run_workflow_v2,
+    workflow as workflow_v2
+)
 from app.utils.simple_logger import get_logger
 
 logger = get_logger("main_workflow")
@@ -182,7 +188,13 @@ async def run_workflow(
 
 
 # Create the compiled workflow for LangGraph Platform
-workflow = create_workflow_with_memory()
+# Using modernized v2 workflow with latest patterns
+workflow = workflow_v2  # Use the v2 implementation
+
+# Legacy exports for backward compatibility
+create_workflow = create_workflow_v2
+create_workflow_with_memory = create_workflow_with_memory_v2
+run_workflow = run_workflow_v2
 
 # Export main components
 __all__ = [
