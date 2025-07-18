@@ -1,20 +1,37 @@
 """
 GoHighLevel API Client for Python
 Migrated from ghl-http.js
+UPDATED: Enhanced retry logic for rate limits with exponential backoff
 """
 import httpx
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import pytz
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+import asyncio
+from tenacity import (
+    retry, 
+    stop_after_attempt, 
+    wait_exponential,
+    retry_if_exception_type,
+    retry_if_result,
+    wait_fixed,
+    wait_random
+)
 from app.config import get_settings, get_ghl_headers
 from app.utils.simple_logger import get_logger
 
 logger = get_logger("ghl_client")
 
 
+class GHLRateLimitError(Exception):
+    """Custom exception for GHL rate limits"""
+    def __init__(self, retry_after: int = 60):
+        self.retry_after = retry_after
+        super().__init__(f"GHL rate limit exceeded. Retry after {retry_after} seconds")
+
+
 class GHLClient:
-    """GoHighLevel API client with all necessary methods"""
+    """GoHighLevel API client with enhanced rate limit handling"""
     
     def __init__(self):
         self.settings = get_settings()
@@ -23,12 +40,36 @@ class GHLClient:
         self.location_id = self.settings.ghl_location_id
         self.calendar_id = self.settings.ghl_calendar_id
         self.assigned_user_id = self.settings.ghl_assigned_user_id
+        # Rate limit tracking
+        self._rate_limit_reset = None
+        self._request_count = 0
+        self._request_window_start = datetime.now()
         
+    def _check_rate_limit(self, response: httpx.Response) -> bool:
+        """Check if we hit rate limit and extract retry-after"""
+        if response.status_code == 429:
+            # Check for Retry-After header
+            retry_after = response.headers.get("Retry-After", "60")
+            try:
+                retry_seconds = int(retry_after)
+            except:
+                retry_seconds = 60
+            
+            self._rate_limit_reset = datetime.now() + timedelta(seconds=retry_seconds)
+            logger.warning(f"GHL rate limit hit. Retry after {retry_seconds} seconds")
+            raise GHLRateLimitError(retry_seconds)
+        return False
+    
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type((httpx.HTTPError, httpx.TimeoutException)),
-        before_sleep=lambda retry_state: logger.warning(f"Retrying GHL API call, attempt {retry_state.attempt_number}")
+        stop=stop_after_attempt(5),  # More attempts for rate limits
+        wait=wait_exponential(multiplier=2, min=4, max=60) + wait_random(0, 3),  # Add jitter
+        retry=(
+            retry_if_exception_type((httpx.HTTPError, httpx.TimeoutException)) |
+            retry_if_exception_type(GHLRateLimitError)
+        ),
+        before_sleep=lambda retry_state: logger.warning(
+            f"Retrying GHL API call, attempt {retry_state.attempt_number}"
+        )
     )
     async def _make_request(
         self, 
@@ -64,16 +105,45 @@ class GHLClient:
                     timeout=timeout
                 )
                 
+                # Track request count
+                self._request_count += 1
+                
+                # Check for rate limits
+                self._check_rate_limit(response)
+                
                 logger.info(
                     f"GHL API Request: {method} {endpoint} - Status: {response.status_code}"
                 )
                 
                 if response.status_code == 200:
                     return response.json()
+                elif response.status_code == 429:
+                    # Rate limit handled by _check_rate_limit
+                    pass
                 else:
                     logger.error(
                         f"GHL API Error: {response.status_code} - {response.text}"
                     )
+                    # Specific error handling
+                    if response.status_code == 401:
+                        raise httpx.HTTPStatusError(
+                            "GHL Authentication failed. Check API token.",
+                            request=response.request,
+                            response=response
+                        )
+                    elif response.status_code == 403:
+                        raise httpx.HTTPStatusError(
+                            "GHL Access forbidden. Check permissions.",
+                            request=response.request,
+                            response=response
+                        )
+                    elif response.status_code >= 500:
+                        # Server errors - worth retrying
+                        raise httpx.HTTPStatusError(
+                            f"GHL Server error: {response.status_code}",
+                            request=response.request,
+                            response=response
+                        )
                     return None
                     
         except Exception as e:
@@ -425,6 +495,78 @@ class GHLClient:
         else:
             logger.error(f"Failed to create note for contact {contact_id}")
             return None
+    
+    async def verify_connection(self) -> bool:
+        """Verify GHL API connection for health checks"""
+        try:
+            # Simple API call to verify connection
+            result = await self._make_request("GET", f"/locations/{self.location_id}")
+            return result is not None
+        except Exception:
+            return False
+    
+    async def get_rate_limit_status(self) -> Dict[str, Any]:
+        """Get current rate limit status"""
+        now = datetime.now()
+        window_duration = (now - self._request_window_start).total_seconds()
+        
+        return {
+            "requests_made": self._request_count,
+            "window_duration_seconds": window_duration,
+            "rate_limited": self._rate_limit_reset is not None and self._rate_limit_reset > now,
+            "reset_time": self._rate_limit_reset.isoformat() if self._rate_limit_reset else None,
+            "requests_per_minute": (self._request_count / window_duration * 60) if window_duration > 0 else 0
+        }
+    
+    async def batch_update_custom_fields(
+        self,
+        updates: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Batch update custom fields for multiple contacts
+        Uses Python 3.13 TaskGroup for parallel execution
+        
+        Args:
+            updates: List of dicts with contact_id and custom_fields
+            
+        Returns:
+            List of results
+        """
+        results = []
+        
+        try:
+            # Use TaskGroup for parallel updates
+            async with asyncio.TaskGroup() as tg:
+                tasks = []
+                for update in updates:
+                    task = tg.create_task(
+                        self.update_custom_fields(
+                            update["contact_id"],
+                            update["custom_fields"]
+                        )
+                    )
+                    tasks.append((update["contact_id"], task))
+            
+            # Collect results
+            for contact_id, task in tasks:
+                try:
+                    result = task.result()
+                    results.append({
+                        "contact_id": contact_id,
+                        "success": result is not None,
+                        "result": result
+                    })
+                except Exception as e:
+                    results.append({
+                        "contact_id": contact_id,
+                        "success": False,
+                        "error": str(e)
+                    })
+                    
+        except Exception as e:
+            logger.error(f"Batch update failed: {e}")
+            
+        return results
 
 
 # Create singleton instance

@@ -188,8 +188,30 @@ async def run_workflow(
 
 
 # Create the compiled workflow for LangGraph Platform
-# Using enhanced v2 workflow with all latest features
-workflow = workflow_v2  # Enhanced with streaming, parallel processing, and error recovery
+# Dynamically choose between standard and parallel workflows
+def get_optimized_workflow():
+    """Get the optimal workflow based on configuration"""
+    from app.config import get_settings
+    settings = get_settings()
+    
+    if settings.enable_parallel_agents:
+        logger.info("Using parallel workflow with Python 3.13 TaskGroup support")
+        try:
+            from app.workflow_parallel import (
+                create_parallel_workflow_with_memory,
+                create_parallel_workflow,
+                run_agents_parallel
+            )
+            return create_parallel_workflow_with_memory()
+        except ImportError:
+            logger.warning("Parallel workflow not available, falling back to v2")
+            return workflow_v2
+    else:
+        logger.info("Using standard v2 workflow")
+        return workflow_v2
+
+# Get the optimal workflow
+workflow = get_optimized_workflow()
 
 # Legacy exports for backward compatibility
 create_workflow = create_workflow_v2

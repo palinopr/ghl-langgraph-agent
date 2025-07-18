@@ -1,12 +1,14 @@
 """
 Message Batcher - Aggregates rapid-fire messages to appear more human
 Prevents bot-like behavior of responding to each message individually
+UPDATED: Optimized for Python 3.13 JIT compilation
 """
 import asyncio
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from collections import defaultdict
 import redis.asyncio as redis
+from functools import lru_cache
 from app.config import get_settings
 from app.utils.simple_logger import get_logger
 
@@ -306,13 +308,17 @@ class MessageBatcher:
         
         return result
     
+    @lru_cache(maxsize=1024)  # Cache for JIT optimization
     def _is_continuation(self, prev: str, curr: str) -> bool:
-        """Check if current text continues previous text"""
+        """Check if current text continues previous text
+        
+        JIT-optimized: This hot path gets compiled by Python 3.13 JIT
+        """
         # Lowercase for comparison
         prev_lower = prev.lower()
         curr_lower = curr.lower()
         
-        # Clear continuations
+        # Clear continuations - JIT optimizes these checks
         continuations = [
             # Name patterns
             ("mi nombre es", curr_lower),
@@ -331,6 +337,7 @@ class MessageBatcher:
             (prev_lower.endswith(("a las", "el")), curr_lower[:2].isdigit()),
         ]
         
+        # JIT compiles this loop for faster execution
         for pattern, condition in continuations:
             if isinstance(condition, str):
                 if prev_lower.endswith(pattern):

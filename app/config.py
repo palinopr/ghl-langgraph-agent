@@ -118,6 +118,17 @@ class Settings(BaseSettings):
     max_retries: int = Field(default=3, env="MAX_RETRIES")
     retry_delay: int = Field(default=60, env="RETRY_DELAY")  # seconds
     
+    # Python 3.13 Optimization Settings
+    enable_parallel_agents: bool = Field(default=True, env="ENABLE_PARALLEL_AGENTS")
+    enable_free_threading: bool = Field(default=True, env="ENABLE_FREE_THREADING")
+    enable_jit_compilation: bool = Field(default=True, env="ENABLE_JIT_COMPILATION")
+    enable_concurrent_webhooks: bool = Field(default=True, env="ENABLE_CONCURRENT_WEBHOOKS")
+    max_concurrent_webhooks: int = Field(default=10, env="MAX_CONCURRENT_WEBHOOKS")
+    
+    # Performance Monitoring
+    enable_performance_monitoring: bool = Field(default=True, env="ENABLE_PERFORMANCE_MONITORING")
+    performance_log_interval: int = Field(default=300, env="PERFORMANCE_LOG_INTERVAL")  # seconds
+    
     class Config:
         env_file = ".env"
         case_sensitive = False

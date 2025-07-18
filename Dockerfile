@@ -1,6 +1,12 @@
 # Use Python 3.13 slim image (Latest stable as of July 2025)
 FROM python:3.13-slim
 
+# Enable Python 3.13 optimizations
+ENV PYTHON_GIL=0
+ENV PYTHON_JIT=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
 # Set working directory
 WORKDIR /app
 

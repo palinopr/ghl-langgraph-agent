@@ -12,15 +12,23 @@ from app.tools.supabase_client import supabase_client
 from app.tools.ghl_client import ghl_client
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
+from app.utils.performance_monitor import track_performance, get_performance_monitor, start_performance_monitoring
 
 logger = get_logger("webhook")
 
 # Create FastAPI app
 app = FastAPI(
     title="GoHighLevel LangGraph Agent",
-    description="Webhook endpoint for processing GoHighLevel messages",
-    version="1.0.0"
+    description="Webhook endpoint for processing GoHighLevel messages with Python 3.13 optimizations",
+    version="2.0.0"
 )
+
+# Initialize performance monitoring on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize performance monitoring on startup"""
+    await start_performance_monitoring()
+    logger.info("Performance monitoring initialized")
 
 
 @app.get("/")
@@ -31,11 +39,22 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Simple health check - no external dependencies"""
-    return {"status": "healthy"}
+    """Health check with performance metrics"""
+    monitor = get_performance_monitor()
+    return {
+        "status": "healthy",
+        "optimizations": monitor.check_python_optimizations()
+    }
+
+@app.get("/performance")
+async def performance_metrics():
+    """Get detailed performance metrics"""
+    monitor = get_performance_monitor()
+    return monitor.get_performance_summary()
 
 
 @app.post("/webhook/message")
+@track_performance
 async def receive_message_webhook(
     request: Request,
     background_tasks: BackgroundTasks
@@ -110,6 +129,7 @@ async def receive_message_webhook(
         )
 
 
+@track_performance
 async def process_single_message(queue_id: str):
     """
     Process a single message from the queue
@@ -183,6 +203,7 @@ async def process_message_queue():
             await asyncio.sleep(10)  # Wait longer on error
 
 
+@track_performance
 async def process_batched_message(
     message_data: Dict[str, Any],
     background_tasks: BackgroundTasks

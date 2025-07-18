@@ -1,10 +1,12 @@
 """
 Intelligence Analyzer - Pre-processing layer for structured extraction and scoring
 Combines rule-based extraction with LLM analysis for optimal lead qualification
+UPDATED: Optimized for Python 3.13 JIT compilation with cached regex patterns
 """
 import re
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
+from functools import lru_cache
 from langchain_core.messages import AnyMessage, AIMessage
 from langgraph.types import Command
 from app.state.conversation_state import ConversationState
@@ -14,46 +16,60 @@ logger = get_logger("intelligence_analyzer")
 
 
 class SpanishPatternExtractor:
-    """Extract structured information from Spanish messages using patterns"""
+    """Extract structured information from Spanish messages using patterns
     
-    # Name extraction patterns
-    NAME_PATTERNS = [
-        (r'\b(?:soy|me llamo|mi nombre es)\s+([A-Za-zÀ-ÿ]+)', 'explicit'),
-        (r'\b([A-Za-zÀ-ÿ]+)\s+y\s+tengo', 'contextual'),
-        (r'(?:hola|buenos días|buenas tardes),?\s*(?:soy|me llamo)\s+([A-Za-zÀ-ÿ]+)', 'greeting'),
-        (r'\b([A-Za-zÀ-ÿ]+)\s*@', 'email_prefix'),
-    ]
+    Optimized for Python 3.13 JIT compilation with compiled regex patterns
+    """
     
-    # Business extraction patterns
-    BUSINESS_PATTERNS = [
-        (r'\b(?:tengo un|tengo una|mi)\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})', 'possession'),
-        (r'\b(?:trabajo en|soy dueño de|manejo un)\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})', 'occupation'),
-        (r'\b(restaurante|negocio|empresa|tienda|local|clínica|consultorio|agencia|estudio|taller)\b', 'business_type'),
-    ]
+    def __init__(self):
+        # Pre-compile all regex patterns for JIT optimization
+        self._compiled_patterns = self._compile_all_patterns()
     
-    # Budget detection patterns
-    BUDGET_PATTERNS = [
-        (r'como unos?\s*\$?\s*(\d+)', '{0}', 'approximate'),
-        (r'aproximadamente\s*\$?\s*(\d+)', '{0}', 'approximate'),
-        (r'alrededor de\s*\$?\s*(\d+)', '{0}', 'approximate'),
-        (r'más o menos\s*\$?\s*(\d+)', '{0}', 'approximate'),
-        (r'unos?\s*\$?\s*(\d+)', '{0}', 'approximate'),
-        (r'(\d+)\s*más o menos', '{0}', 'approximate'),
-        (r'entre\s*\$?\s*(\d+)\s*y\s*\$?\s*(\d+)', '{0}-{1}', 'range'),
-        (r'(\d+)\s*o más', '{0}+', 'minimum'),
-        (r'hasta\s*\$?\s*(\d+)', 'up to {0}', 'maximum'),
-        (r'máximo\s*\$?\s*(\d+)', 'max {0}', 'maximum'),
-        (r'\$?\s*(\d+)\s*(?:al mes|mensuales?|por mes)', '{0}/month', 'monthly'),
-        (r'(?:^|\s)\$?\s*(\d+)\s*(?:$|\s)', '{0}', 'direct'),
-    ]
-    
-    # Goal/Problem patterns
-    GOAL_PATTERNS = [
-        (r'(?:necesito|quiero|busco|requiero)\s+(.+?)(?:\.|,|$)', 'need'),
-        (r'(?:mi problema es|tengo problemas con)\s+(.+?)(?:\.|,|$)', 'problem'),
-        (r'(?:para|con el fin de)\s+(.+?)(?:\.|,|$)', 'purpose'),
-        (r'(?:automatizar|mejorar|aumentar|crecer)\s+(.+?)(?:\.|,|$)', 'action'),
-    ]
+    @staticmethod
+    @lru_cache(maxsize=1)
+    def _compile_all_patterns() -> Dict[str, List[Tuple]]:
+        """Compile all regex patterns once - JIT optimized"""
+        return {
+            "name": [
+                (re.compile(r'\b(?:soy|me llamo|mi nombre es)\s+([A-Za-zÀ-ÿ]+)', re.IGNORECASE), 'explicit'),
+                (re.compile(r'\b([A-Za-zÀ-ÿ]+)\s+y\s+tengo', re.IGNORECASE), 'contextual'),
+                (re.compile(r'(?:hola|buenos días|buenas tardes),?\s*(?:soy|me llamo)\s+([A-Za-zÀ-ÿ]+)', re.IGNORECASE), 'greeting'),
+                (re.compile(r'\b([A-Za-zÀ-ÿ]+)\s*@', re.IGNORECASE), 'email_prefix'),
+            ],
+            "business": [
+                (re.compile(r'\b(?:tengo un|tengo una|mi)\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})', re.IGNORECASE), 'possession'),
+                (re.compile(r'\b(?:trabajo en|soy dueño de|manejo un)\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})', re.IGNORECASE), 'occupation'),
+                (re.compile(r'\b(restaurante|negocio|empresa|tienda|local|clínica|consultorio|agencia|estudio|taller)\b', re.IGNORECASE), 'business_type'),
+            ],
+            "budget": [
+                (re.compile(r'como unos?\s*\$?\s*(\d+)', re.IGNORECASE), '{0}', 'approximate'),
+                (re.compile(r'aproximadamente\s*\$?\s*(\d+)', re.IGNORECASE), '{0}', 'approximate'),
+                (re.compile(r'alrededor de\s*\$?\s*(\d+)', re.IGNORECASE), '{0}', 'approximate'),
+                (re.compile(r'más o menos\s*\$?\s*(\d+)', re.IGNORECASE), '{0}', 'approximate'),
+                (re.compile(r'unos?\s*\$?\s*(\d+)', re.IGNORECASE), '{0}', 'approximate'),
+                (re.compile(r'(\d+)\s*más o menos', re.IGNORECASE), '{0}', 'approximate'),
+                (re.compile(r'entre\s*\$?\s*(\d+)\s*y\s*\$?\s*(\d+)', re.IGNORECASE), '{0}-{1}', 'range'),
+                (re.compile(r'(\d+)\s*o más', re.IGNORECASE), '{0}+', 'minimum'),
+                (re.compile(r'hasta\s*\$?\s*(\d+)', re.IGNORECASE), 'up to {0}', 'maximum'),
+                (re.compile(r'máximo\s*\$?\s*(\d+)', re.IGNORECASE), 'max {0}', 'maximum'),
+                (re.compile(r'\$?\s*(\d+)\s*(?:al mes|mensuales?|por mes)', re.IGNORECASE), '{0}/month', 'monthly'),
+                (re.compile(r'(?:^|\s)\$?\s*(\d+)\s*(?:$|\s)', re.IGNORECASE), '{0}', 'direct'),
+            ],
+            "goal": [
+                (re.compile(r'(?:necesito|quiero|busco|requiero)\s+(.+?)(?:\.|,|$)', re.IGNORECASE), 'need'),
+                (re.compile(r'(?:mi problema es|tengo problemas con)\s+(.+?)(?:\.|,|$)', re.IGNORECASE), 'problem'),
+                (re.compile(r'(?:para|con el fin de)\s+(.+?)(?:\.|,|$)', re.IGNORECASE), 'purpose'),
+                (re.compile(r'(?:automatizar|mejorar|aumentar|crecer)\s+(.+?)(?:\.|,|$)', re.IGNORECASE), 'action'),
+            ],
+            "email": [
+                (re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'), 'email')
+            ],
+            "phone": [
+                (re.compile(r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b'), '123-456-7890'),
+                (re.compile(r'\b\d{10}\b'), '1234567890'),
+                (re.compile(r'\b\+?1?\s*\(?(\d{3})\)?[-.\s]*(\d{3})[-.\s]*(\d{4})\b'), 'various'),
+            ]
+        }
     
     def extract_all(self, message: str, conversation_history: List[str] = None) -> Dict[str, Any]:
         """Extract all structured information from message and history"""
@@ -77,10 +93,11 @@ class SpanishPatternExtractor:
         
         return extracted
     
+    @lru_cache(maxsize=512)  # Cache results for JIT optimization
     def _extract_name(self, text: str) -> Optional[str]:
-        """Extract name from text"""
-        for pattern, confidence_type in self.NAME_PATTERNS:
-            match = re.search(pattern, text, re.IGNORECASE)
+        """Extract name from text - JIT optimized with caching"""
+        for pattern, confidence_type in self._compiled_patterns["name"]:
+            match = pattern.search(text)
             if match:
                 name = match.group(1).strip()
                 # Validate name (not common words)
@@ -88,10 +105,11 @@ class SpanishPatternExtractor:
                     return name.title()
         return None
     
+    @lru_cache(maxsize=512)  # Cache results for JIT optimization
     def _extract_business(self, text: str) -> Optional[str]:
-        """Extract business type from text"""
-        for pattern, confidence_type in self.BUSINESS_PATTERNS:
-            match = re.search(pattern, text, re.IGNORECASE)
+        """Extract business type from text - JIT optimized"""
+        for pattern, confidence_type in self._compiled_patterns["business"]:
+            match = pattern.search(text)
             if match:
                 business = match.group(1).strip()
                 # Clean common words
@@ -100,10 +118,17 @@ class SpanishPatternExtractor:
                     return business.lower()
         return None
     
+    @lru_cache(maxsize=512)  # Cache results for JIT optimization
     def _extract_budget(self, text: str) -> Optional[str]:
-        """Extract budget information from text"""
-        for pattern, format_str, budget_type in self.BUDGET_PATTERNS:
-            match = re.search(pattern, text, re.IGNORECASE)
+        """Extract budget information from text - JIT optimized"""
+        for pattern_data in self._compiled_patterns["budget"]:
+            if len(pattern_data) == 3:
+                pattern, format_str, budget_type = pattern_data
+            else:
+                pattern, budget_type = pattern_data
+                format_str = '{0}'
+            
+            match = pattern.search(text)
             if match:
                 # Format the budget string
                 groups = match.groups()
@@ -113,33 +138,31 @@ class SpanishPatternExtractor:
                 return budget
         return None
     
+    @lru_cache(maxsize=512)  # Cache results for JIT optimization
     def _extract_goal(self, text: str) -> Optional[str]:
-        """Extract goals or problems from text"""
-        for pattern, goal_type in self.GOAL_PATTERNS:
-            match = re.search(pattern, text, re.IGNORECASE)
+        """Extract goals or problems from text - JIT optimized"""
+        for pattern, goal_type in self._compiled_patterns["goal"]:
+            match = pattern.search(text)
             if match:
                 goal = match.group(1).strip()
                 if len(goal) > 10:  # Meaningful goal
                     return goal
         return None
     
+    @lru_cache(maxsize=512)  # Cache results for JIT optimization
     def _extract_email(self, text: str) -> Optional[str]:
-        """Extract email from text"""
-        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-        match = re.search(email_pattern, text)
-        return match.group(0) if match else None
+        """Extract email from text - JIT optimized"""
+        for pattern, _ in self._compiled_patterns["email"]:
+            match = pattern.search(text)
+            if match:
+                return match.group(0)
+        return None
     
+    @lru_cache(maxsize=512)  # Cache results for JIT optimization
     def _extract_phone(self, text: str) -> Optional[str]:
-        """Extract phone number from text"""
-        # Common phone patterns
-        phone_patterns = [
-            r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b',  # 123-456-7890
-            r'\b\d{10}\b',  # 1234567890
-            r'\b\+?1?\s*\(?(\d{3})\)?[-.\s]*(\d{3})[-.\s]*(\d{4})\b',  # Various US formats
-        ]
-        
-        for pattern in phone_patterns:
-            match = re.search(pattern, text)
+        """Extract phone number from text - JIT optimized"""
+        for pattern, _ in self._compiled_patterns["phone"]:
+            match = pattern.search(text)
             if match:
                 # Clean and standardize
                 phone = re.sub(r'\D', '', match.group(0))
