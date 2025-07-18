@@ -188,8 +188,8 @@ async def run_workflow(
 
 
 # Create the compiled workflow for LangGraph Platform
-# Using modernized v2 workflow with latest patterns
-workflow = workflow_v2  # Use the v2 implementation
+# Using enhanced v2 workflow with all latest features
+workflow = workflow_v2  # Enhanced with streaming, parallel processing, and error recovery
 
 # Legacy exports for backward compatibility
 create_workflow = create_workflow_v2

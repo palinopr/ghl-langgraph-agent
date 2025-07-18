@@ -98,6 +98,18 @@ class Settings(BaseSettings):
     cold_lead_threshold: int = Field(default=4, env="COLD_LEAD_THRESHOLD")
     warm_lead_threshold: int = Field(default=7, env="WARM_LEAD_THRESHOLD")
     
+    # Enhanced Features Configuration
+    enable_streaming: bool = Field(default=True, env="ENABLE_STREAMING")
+    enable_parallel_checks: bool = Field(default=True, env="ENABLE_PARALLEL_CHECKS")
+    enable_message_batching: bool = Field(default=True, env="ENABLE_MESSAGE_BATCHING")
+    batch_window_seconds: int = Field(default=15, env="BATCH_WINDOW_SECONDS")
+    max_batch_size: int = Field(default=10, env="MAX_BATCH_SIZE")
+    
+    # Model Configuration
+    openai_model: str = Field(default="gpt-4-turbo", env="OPENAI_MODEL")
+    streaming_enabled: bool = Field(default=True, env="STREAMING_ENABLED")
+    max_tokens_per_message: int = Field(default=4000, env="MAX_TOKENS_PER_MESSAGE")
+    
     # Business Hours (in EST/EDT)
     business_hours_start: int = Field(default=9, env="BUSINESS_HOURS_START")
     business_hours_end: int = Field(default=18, env="BUSINESS_HOURS_END")

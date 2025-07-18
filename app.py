@@ -19,8 +19,13 @@ if __name__ == "__main__":
         print(f"Import error: {e}")
         print("Trying alternative import...")
         
-        # Try importing from app.api.webhook
-        from app.api.webhook import app
+        # Try importing enhanced webhook first
+        try:
+            from app.api.webhook_enhanced import app
+            print("Using enhanced webhook with streaming support")
+        except ImportError:
+            from app.api.webhook import app
+            print("Using standard webhook")
         import uvicorn
         
         port = int(os.environ.get("PORT", 8000))

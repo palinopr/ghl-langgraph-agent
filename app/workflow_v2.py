@@ -11,17 +11,39 @@ from app.state.conversation_state import ConversationState
 from app.intelligence.analyzer import intelligence_node
 from app.intelligence.ghl_updater import ghl_update_node
 from app.agents.supervisor import supervisor_node
-from app.agents.sofia_agent_v2 import sofia_node_v2, create_sofia_agent
 
-# Import placeholders for other agents (to be implemented)
-# For now, we'll use Sofia's implementation as a template
-carlos_node_v2 = sofia_node_v2  # TODO: Import from carlos_agent_v2
-maria_node_v2 = sofia_node_v2   # TODO: Import from maria_agent_v2
-create_carlos_agent = create_sofia_agent  # TODO: Import actual implementation
-create_maria_agent = create_sofia_agent   # TODO: Import actual implementation
+# Import enhanced agents with latest features
+from app.agents.sofia_agent_v2_enhanced import sofia_node_v2, create_sofia_agent
+from app.agents.carlos_agent_v2_enhanced import carlos_node_v2, create_carlos_agent
+from app.agents.maria_agent_v2 import maria_node_v2, create_maria_agent
+
+# Import error recovery for robustness
+from app.utils.error_recovery import error_recovery_middleware, handle_graph_recursion
 from app.utils.simple_logger import get_logger
 
 logger = get_logger("workflow_v2")
+
+
+# Wrap nodes with error recovery for robustness
+@handle_graph_recursion(max_depth=30)
+async def protected_supervisor(state: ConversationState):
+    """Supervisor with recursion protection"""
+    return await error_recovery_middleware(supervisor_node, state)
+
+
+async def protected_sofia(state: ConversationState):
+    """Sofia with error recovery and streaming support"""
+    return await error_recovery_middleware(sofia_node_v2, state)
+
+
+async def protected_carlos(state: ConversationState):
+    """Carlos with error recovery and parallel checks"""
+    return await error_recovery_middleware(carlos_node_v2, state)
+
+
+async def protected_maria(state: ConversationState):
+    """Maria with error recovery"""
+    return await error_recovery_middleware(maria_node_v2, state)
 
 
 def create_workflow_v2() -> StateGraph:
@@ -42,13 +64,13 @@ def create_workflow_v2() -> StateGraph:
     # Add GHL update node (saves scores and data to GHL)
     workflow.add_node("ghl_update", ghl_update_node)
     
-    # Add the supervisor node (orchestrator)
-    workflow.add_node("supervisor", supervisor_node)
+    # Add the supervisor node with protection
+    workflow.add_node("supervisor", protected_supervisor)
     
-    # Add agent nodes with their modernized implementations
-    workflow.add_node("sofia", sofia_node_v2)
-    workflow.add_node("carlos", carlos_node_v2)
-    workflow.add_node("maria", maria_node_v2)
+    # Add agent nodes with error recovery
+    workflow.add_node("sofia", protected_sofia)
+    workflow.add_node("carlos", protected_carlos)
+    workflow.add_node("maria", protected_maria)
     
     # Set entry point to intelligence analyzer
     workflow.add_edge(START, "intelligence")

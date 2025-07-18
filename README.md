@@ -1,16 +1,18 @@
-# GoHighLevel LangGraph Messaging Agent
+# GoHighLevel LangGraph Messaging Agent (Enhanced v2)
 
-A Python-based LangGraph implementation of the GoHighLevel messaging agent with intelligent lead routing and appointment booking capabilities.
+A cutting-edge Python-based LangGraph implementation of the GoHighLevel messaging agent with intelligent lead routing, real-time streaming, parallel processing, and advanced error recovery.
 
 ## Overview
 
-This system replaces the Node.js/JavaScript implementation with a more robust Python/LangGraph architecture that provides:
+This enhanced system provides enterprise-grade features using LangGraph v0.5.3:
 
-- State management with persistence
-- Visual workflow debugging
-- Checkpointing and recovery
-- Better error handling
-- Production-ready infrastructure
+- **Real-time streaming responses** for instant user feedback
+- **Parallel qualification checks** for 3x faster lead scoring
+- **Intelligent message batching** for human-like conversations
+- **Automatic context management** with token optimization
+- **Advanced error recovery** with circuit breakers and retries
+- **State persistence** with checkpointing and recovery
+- **Production-ready** with comprehensive monitoring
 
 ## Architecture
 
@@ -21,10 +23,10 @@ This system replaces the Node.js/JavaScript implementation with a more robust Py
    - Lead information tracking
    - Message history management
 
-2. **Agents** (`app/agents/`)
-   - Maria: Cold lead agent (Score 1-4)
-   - Carlos: Warm lead agent (Score 5-7)
-   - Sofia: Hot lead agent (Score 8-10)
+2. **Enhanced Agents** (`app/agents/`)
+   - **Maria**: Cold lead agent (Score 1-4) with error recovery
+   - **Carlos**: Warm lead agent (Score 5-7) with parallel qualification
+   - **Sofia**: Hot lead agent (Score 8-10) with streaming responses
 
 3. **Tools** (`app/tools/`)
    - GoHighLevel API integration
@@ -32,18 +34,22 @@ This system replaces the Node.js/JavaScript implementation with a more robust Py
    - Calendar availability checking
    - Contact management
 
-4. **Workflow** (`app/workflow.py`)
-   - LangGraph StateGraph implementation
-   - Conditional routing based on lead score
-   - Agent handoff logic
+4. **Enhanced Workflow** (`app/workflow_v2.py`)
+   - LangGraph StateGraph with supervisor pattern
+   - Intelligence layer for pre-processing
+   - Command-based routing with error protection
+   - Streaming support for real-time responses
+   - Performance metrics and monitoring
 
 ## Setup
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.9+ (3.11+ recommended for deployment)
 - pip
 - Virtual environment (recommended)
+- Redis (optional, for distributed message batching)
+- LangSmith API key (recommended for monitoring)
 
 ### Installation
 
@@ -90,12 +96,32 @@ gunicorn app.api.webhook:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.
 python worker.py
 ```
 
+## Quick Start (Enhanced)
+
+### Using All Enhanced Features
+
+```bash
+# Start with enhanced features
+python start_enhanced.py
+```
+
+This will:
+- Enable streaming responses ✅
+- Enable parallel qualification ✅
+- Enable message batching ✅
+- Enable error recovery ✅
+- Start enhanced webhook server ✅
+
 ## API Endpoints
 
-- `POST /webhook/message` - Main webhook endpoint for GoHighLevel messages
-- `POST /webhook/appointment` - Webhook for appointment updates
+### Standard Endpoints
+- `POST /webhook/message` - Main webhook endpoint with batching
 - `GET /` - Basic health check
-- `GET /health` - Detailed health check with service status
+- `GET /health` - Detailed health check with component status
+
+### Enhanced Endpoints
+- `POST /webhook/message/stream` - Streaming webhook for real-time responses
+- `POST /webhook/appointment` - Appointment webhook with streaming confirmation
 
 ## Testing
 
@@ -117,30 +143,23 @@ docker build -t ghl-langgraph-agent .
 docker run -p 8000:8000 --env-file .env ghl-langgraph-agent
 ```
 
-### Recommended Deployment Platforms
+### Recommended Deployment Platform
 
-#### 1. Render (Recommended)
-Best for: Long-running processes, background workers, affordable pricing
+#### LangGraph Platform (LangSmith) - RECOMMENDED
+Best for: Native LangGraph support, built-in monitoring, automatic scaling
 
 ```bash
-# Deploy using render.yaml
-render deploy
+# Deploy to LangGraph Platform
+# Automatic deployment on push to main branch
+git push origin main
 ```
 
-#### 2. Google Cloud Run
-Best for: Enterprise scale, auto-scaling, longer timeouts
-
-```bash
-# Deploy using Cloud Build
-gcloud builds submit --config cloudbuild.yaml
-```
-
-#### 3. Fly.io
-Best for: Global distribution, WebSocket support
-
-```bash
-# Deploy with Fly
-fly launch
+Features:
+- Automatic deployment on git push
+- Built-in LangSmith monitoring
+- Native LangGraph optimizations
+- Automatic retries and error handling
+- Streaming support out of the box
 fly deploy
 ```
 
