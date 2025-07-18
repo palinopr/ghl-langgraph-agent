@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "2.1.0",
-  "description": "GoHighLevel LangGraph Agent - Production with Responder",
+  "version": "2.2.0",
+  "description": "GoHighLevel LangGraph Agent - v2.2 with Supervisor Brain Consolidation",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },
