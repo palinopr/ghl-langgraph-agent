@@ -5,8 +5,8 @@ import pytest
 import asyncio
 from unittest.mock import Mock, patch, AsyncMock
 from langchain_core.messages import HumanMessage, AIMessage
-from src.agents import SofiaAgent, CarlosAgent, MariaAgent
-from src.state.conversation_state import ConversationState
+from app.agents import SofiaAgent, CarlosAgent, MariaAgent
+from app.state.conversation_state import ConversationState
 
 
 class TestSofiaAgent:

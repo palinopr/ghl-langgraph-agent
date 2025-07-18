@@ -4,14 +4,14 @@ Test suite for LangGraph workflow
 import pytest
 from unittest.mock import patch, AsyncMock
 from langchain_core.messages import HumanMessage, AIMessage
-from src.workflow import (
+from app.workflow import (
     should_continue, 
     route_to_agent, 
     create_workflow,
     create_workflow_with_memory,
     run_workflow
 )
-from src.state.conversation_state import ConversationState
+from app.state.conversation_state import ConversationState
 
 
 class TestWorkflowFunctions:

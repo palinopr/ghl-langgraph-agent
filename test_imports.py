@@ -11,13 +11,13 @@ tests = [
     ("Pydantic", "from pydantic import BaseModel"),
     ("Pydantic Settings", "from pydantic_settings import BaseSettings"),
     ("Dotenv", "from dotenv import load_dotenv"),
-    ("Config", "from src.config import get_settings"),
-    ("Simple Logger", "from src.utils.simple_logger import get_logger"),
-    ("Webhook App", "from src.api.webhook import app"),
-    ("Workflow", "from src.workflow import run_workflow"),
-    ("Webhook Processor", "from src.tools.webhook_processor import webhook_processor"),
-    ("Supabase Client", "from src.tools.supabase_client import supabase_client"),
-    ("GHL Client", "from src.tools.ghl_client import ghl_client"),
+    ("Config", "from app.config import get_settings"),
+    ("Simple Logger", "from app.utils.simple_logger import get_logger"),
+    ("Webhook App", "from app.api.webhook import app"),
+    ("Workflow", "from app.workflow import run_workflow"),
+    ("Webhook Processor", "from app.tools.webhook_processor import webhook_processor"),
+    ("Supabase Client", "from app.tools.supabase_client import supabase_client"),
+    ("GHL Client", "from app.tools.ghl_client import ghl_client"),
 ]
 
 for name, import_str in tests:

@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/api/webhook.py",
+      "src": "app/api/webhook.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "src/api/webhook.py"
+      "dest": "app/api/webhook.py"
     }
   ],
   "env": {
@@ -24,7 +24,7 @@
     "WEBHOOK_SECRET": "@WEBHOOK_SECRET"
   },
   "functions": {
-    "src/api/webhook.py": {
+    "app/api/webhook.py": {
       "maxDuration": 60,
       "memory": 1024
     }

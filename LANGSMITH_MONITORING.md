@@ -19,7 +19,7 @@ LangSmith provides powerful monitoring and debugging capabilities for LangGraph 
 
 ## Configuration
 
-Your project already has LangSmith configured in `src/config.py`:
+Your project already has LangSmith configured in `app/config.py`:
 
 ```python
 # LangSmith configuration

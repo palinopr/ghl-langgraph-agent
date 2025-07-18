@@ -19,8 +19,8 @@ if __name__ == "__main__":
         print(f"Import error: {e}")
         print("Trying alternative import...")
         
-        # Try importing from src.api.webhook
-        from src.api.webhook import app
+        # Try importing from app.api.webhook
+        from app.api.webhook import app
         import uvicorn
         
         port = int(os.environ.get("PORT", 8000))

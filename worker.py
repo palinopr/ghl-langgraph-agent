@@ -5,8 +5,8 @@ Runs continuously to process pending messages
 import asyncio
 import signal
 import sys
-from src.api.webhook import process_message_queue
-from src.utils.logger import setup_logging, get_worker_logger
+from app.api.webhook import process_message_queue
+from app.utils.logger import setup_logging, get_worker_logger
 
 # Set up logging
 setup_logging()

@@ -15,19 +15,19 @@ def test_imports():
     
     # Test core modules
     imports_to_test = [
-        ("Config", "from src.config import get_settings"),
-        ("Simple Logger", "from src.utils.simple_logger import get_logger"),
-        ("Conversation State", "from src.state.conversation_state import ConversationState"),
-        ("Webhook Processor", "from src.tools.webhook_processor import webhook_processor"),
-        ("GHL Client", "from src.tools.ghl_client import ghl_client"),
-        ("Supabase Client", "from src.tools.supabase_client import supabase_client"),
-        ("Agent Tools", "from src.tools.agent_tools import agent_tools"),
-        ("Workflow", "from src.workflow import run_workflow"),
-        ("Maria Agent", "from src.agents.maria_agent import maria_node"),
-        ("Carlos Agent", "from src.agents.carlos_agent import carlos_node"),
-        ("Sofia Agent", "from src.agents.sofia_agent import sofia_node"),
-        ("Orchestrator", "from src.agents.orchestrator import orchestrator_node"),
-        ("Webhook API", "from src.api.webhook import app"),
+        ("Config", "from app.config import get_settings"),
+        ("Simple Logger", "from app.utils.simple_logger import get_logger"),
+        ("Conversation State", "from app.state.conversation_state import ConversationState"),
+        ("Webhook Processor", "from app.tools.webhook_processor import webhook_processor"),
+        ("GHL Client", "from app.tools.ghl_client import ghl_client"),
+        ("Supabase Client", "from app.tools.supabase_client import supabase_client"),
+        ("Agent Tools", "from app.tools.agent_tools import agent_tools"),
+        ("Workflow", "from app.workflow import run_workflow"),
+        ("Maria Agent", "from app.agents.maria_agent import maria_node"),
+        ("Carlos Agent", "from app.agents.carlos_agent import carlos_node"),
+        ("Sofia Agent", "from app.agents.sofia_agent import sofia_node"),
+        ("Orchestrator", "from app.agents.orchestrator import orchestrator_node"),
+        ("Webhook API", "from app.api.webhook import app"),
         ("Main App", "import main"),
     ]
     

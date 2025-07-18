@@ -12,7 +12,7 @@ except Exception as e:
 
 try:
     print("\n2. Testing src.api.webhook import...")
-    from src.api.webhook import app
+    from app.api.webhook import app
     print("✓ Webhook app imported successfully")
 except Exception as e:
     print(f"✗ Webhook import failed: {e}")
@@ -20,7 +20,7 @@ except Exception as e:
 try:
     print("\n3. Testing environment variables...")
     import os
-    from src.config import get_settings
+    from app.config import get_settings
     settings = get_settings()
     print("✓ Settings loaded successfully")
     print(f"  - Port: {settings.port}")

@@ -16,23 +16,23 @@ This system replaces the Node.js/JavaScript implementation with a more robust Py
 
 ### Core Components
 
-1. **State Management** (`src/state/`)
+1. **State Management** (`app/state/`)
    - Centralized conversation state
    - Lead information tracking
    - Message history management
 
-2. **Agents** (`src/agents/`)
+2. **Agents** (`app/agents/`)
    - Maria: Cold lead agent (Score 1-4)
    - Carlos: Warm lead agent (Score 5-7)
    - Sofia: Hot lead agent (Score 8-10)
 
-3. **Tools** (`src/tools/`)
+3. **Tools** (`app/tools/`)
    - GoHighLevel API integration
    - Appointment booking
    - Calendar availability checking
    - Contact management
 
-4. **Workflow** (`src/workflow.py`)
+4. **Workflow** (`app/workflow.py`)
    - LangGraph StateGraph implementation
    - Conditional routing based on lead score
    - Agent handoff logic
@@ -76,12 +76,12 @@ cp .env.example .env
 ```bash
 python main.py
 # Or with uvicorn directly:
-uvicorn src.api.webhook:app --reload --port 8000
+uvicorn app.api.webhook:app --reload --port 8000
 ```
 
 ### Production Mode
 ```bash
-gunicorn src.api.webhook:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+gunicorn app.api.webhook:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
 
 ### Background Worker

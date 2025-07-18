@@ -44,7 +44,7 @@ langgraph-checkpoint>=2.0.23  # Required for persistence
 
 #### 2. Configuration Issues
 ```python
-# src/config.py - Fixed .env loading:
+# app/config.py - Fixed .env loading:
 env_file = PROJECT_ROOT / ".env"
 if env_file.exists():  # Only load if exists
     load_dotenv(env_file)
@@ -52,10 +52,10 @@ if env_file.exists():  # Only load if exists
 
 #### 3. Import Errors
 ```python
-# src/workflow.py - Fixed import:
+# app/workflow.py - Fixed import:
 from .utils.simple_logger import get_logger  # Was importing wrong function
 
-# src/tools/webhook_processor.py - Fixed MessageData:
+# app/tools/webhook_processor.py - Fixed MessageData:
 # Changed from MessageData class to Dict[str, Any]
 ```
 
@@ -71,7 +71,7 @@ supabase==2.4.0  # Works with this httpx version
 // langgraph.json - Fixed format:
 {
   "graphs": {
-    "agent": "./src/workflow.py:workflow"  // Was object notation
+    "agent": "./app/workflow.py:workflow"  // Was object notation
   },
   "python_version": "3.11"  // Was 3.9, minimum is 3.11
 }
@@ -79,8 +79,17 @@ supabase==2.4.0  # Works with this httpx version
 
 #### 6. Workflow Export
 ```python
-# src/workflow.py - Added export:
+# app/workflow.py - Added export:
 workflow = create_workflow_with_memory()  # Export for LangGraph Platform
+```
+
+#### 7. Package Name Restructuring
+```bash
+# LangGraph Platform doesn't allow 'src' as package name
+# Changed directory structure from src/ to app/
+mv src app
+# Updated all imports from "from src." to "from app."
+# Updated langgraph.json, vercel.json, and documentation
 ```
 
 ## Current Deployment Configuration
@@ -164,10 +173,10 @@ curl -X POST https://your-deployment.up.railway.app/webhook/message \
 5. Add A/B testing for agent responses
 
 ## Key Files Reference
-- `src/workflow.py`: Main LangGraph workflow definition
-- `src/agents/*.py`: Individual agent implementations  
-- `src/api/webhook.py`: FastAPI webhook endpoints
-- `src/config.py`: Settings and environment configuration
+- `app/workflow.py`: Main LangGraph workflow definition
+- `app/agents/*.py`: Individual agent implementations  
+- `app/api/webhook.py`: FastAPI webhook endpoints
+- `app/config.py`: Settings and environment configuration
 - `langgraph.json`: LangGraph Platform configuration
 - `requirements.txt`: Python dependencies
 

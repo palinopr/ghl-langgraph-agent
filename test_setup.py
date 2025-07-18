@@ -2,7 +2,7 @@
 Test script to verify LangGraph setup
 """
 import asyncio
-from src.workflow import create_workflow_with_memory
+from app.workflow import create_workflow_with_memory
 from langchain_core.messages import HumanMessage
 import logging
 
@@ -79,8 +79,8 @@ async def test_workflow():
 
 async def test_individual_agents():
     """Test individual agents directly"""
-    from src.agents import SofiaAgent, CarlosAgent, MariaAgent
-    from src.state.conversation_state import ConversationState
+    from app.agents import SofiaAgent, CarlosAgent, MariaAgent
+    from app.state.conversation_state import ConversationState
     
     logger.info("\n--- Testing Individual Agents ---")
     

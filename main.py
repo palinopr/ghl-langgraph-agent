@@ -3,7 +3,7 @@ Main entry point for the GoHighLevel LangGraph Agent
 """
 import os
 import uvicorn
-from src.api.webhook import app
+from app.api.webhook import app
 
 if __name__ == "__main__":
     # Get port from environment with default
