@@ -29,7 +29,7 @@ This is a LangGraph-based GoHighLevel (GHL) messaging agent that handles intelli
 - **Flow**: Message → Intelligence → Supervisor → Agent
 
 ## Tech Stack (Updated - July 18, 2025)
-- **Framework**: LangGraph 0.3.27+ with LangChain 0.3.8+
+- **Framework**: LangGraph 0.5.3+ with LangChain 0.3.8+
 - **Patterns**: Command objects, create_react_agent, InjectedState, add_messages reducer
 - **API**: FastAPI with webhook endpoints
 - **State Management**: LangGraph StateGraph with InMemorySaver + BaseStore
@@ -396,6 +396,22 @@ def create_handoff_tool(agent_name: str):
 - [Memory Store](https://langchain-ai.github.io/langgraph/concepts/persistence/#store)
 - [Supervisor Pattern](https://langchain-ai.github.io/langgraph/concepts/multi_agent/)
 
+## Recent Enhancements (July 18, 2025 - v2)
+
+### New Features Added
+- **Streaming Responses**: Real-time token streaming for Sofia's appointment confirmations
+- **Parallel Qualification**: Carlos can now check multiple criteria simultaneously (3x faster)
+- **Context Window Management**: Automatic message trimming with `trim_messages`
+- **Error Recovery**: Robust retry logic with circuit breakers and fallback responses
+- **Performance Metrics**: Built-in monitoring for response times and token usage
+
+### Enhanced Files
+- `app/agents/sofia_agent_v2_enhanced.py` - Streaming appointment confirmations
+- `app/agents/carlos_agent_v2_enhanced.py` - Parallel qualification checks
+- `app/utils/error_recovery.py` - Comprehensive error handling utilities
+- `app/workflow_enhanced.py` - Enhanced workflow with all new features
+- `ENHANCEMENT_GUIDE.md` - Complete usage guide for new features
+
 ## Recent Cleanup (July 18, 2025)
 
 ### Removed Files
@@ -475,6 +491,34 @@ LANGSMITH_PROJECT=ghl-langgraph-agent
 
 # Optional
 REDIS_URL=redis://localhost:6379/0  # For distributed message batching
+```
+
+### Using Enhanced Features
+
+#### Option 1: Quick Streaming Test
+```python
+# Stream Sofia's responses
+from app.agents.sofia_agent_v2_enhanced import stream_appointment_confirmation
+
+async for token in stream_appointment_confirmation(
+    contact_id="test123",
+    appointment_details={"date": "Tomorrow", "time": "2 PM"}
+):
+    print(token, end="", flush=True)
+```
+
+#### Option 2: Parallel Qualification
+```python
+# Quick lead scoring with Carlos
+from app.agents.carlos_agent_v2_enhanced import quick_qualify_lead
+
+result = await quick_qualify_lead(
+    contact_id="test123",
+    business_type="restaurant",
+    budget="$500/month",
+    goals="increase sales"
+)
+print(f"Lead Score: {result['total_score']}/10")
 ```
 
 ### Quick Development Setup
