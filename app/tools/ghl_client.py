@@ -569,5 +569,63 @@ class GHLClient:
         return results
 
 
+    async def get_conversations(self, contact_id: str) -> Optional[List[Dict]]:
+        """
+        Get conversations for a contact
+        
+        Args:
+            contact_id: Contact ID
+            
+        Returns:
+            List of conversations or empty list
+        """
+        params = {
+            "locationId": self.location_id,
+            "contactId": contact_id
+        }
+        
+        endpoint = "/conversations/search"
+        result = await self._make_request("GET", endpoint, params=params)
+        
+        if result and "conversations" in result:
+            return result["conversations"]
+        return []
+    
+    async def get_conversation_messages(self, conversation_id: str) -> Optional[List[Dict]]:
+        """
+        Get messages from a specific conversation
+        
+        Args:
+            conversation_id: Conversation ID
+            
+        Returns:
+            List of messages or empty list
+        """
+        endpoint = f"/conversations/{conversation_id}/messages"
+        result = await self._make_request("GET", endpoint)
+        
+        if result and "messages" in result:
+            return result["messages"]
+        return []
+    
+    async def add_tags(self, contact_id: str, tags: List[str]) -> Optional[Dict]:
+        """
+        Add tags to a contact
+        
+        Args:
+            contact_id: Contact ID
+            tags: List of tags to add
+            
+        Returns:
+            Updated contact or None
+        """
+        endpoint = f"/contacts/{contact_id}"
+        data = {
+            "tags": tags
+        }
+        
+        return await self._make_request("PUT", endpoint, data=data)
+
+
 # Create singleton instance
 ghl_client = GHLClient()
