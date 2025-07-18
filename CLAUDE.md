@@ -398,16 +398,25 @@ async with asyncio.TaskGroup() as tg:
 
 ## Pre-Deployment Validation (NEW!)
 
+### 🚨 IMPORTANT: Always Validate Before Pushing!
+The pre-deployment validation system prevents deployment failures and saves 15 minutes per failed deployment. **NEVER skip validation!**
+
 ### Automatic Validation
 Every `git push` now automatically validates the workflow to prevent deployment failures:
 
 ```bash
-# Manual validation
+# Manual validation (RECOMMENDED before committing)
 make validate  # 5 seconds
 
 # Or just push - validation runs automatically
 git push
 ```
+
+### When to Run Validation
+- **ALWAYS** before pushing any code changes
+- After fixing any workflow-related issues
+- When adding new agents or modifying state schemas
+- Before creating pull requests
 
 ### What Gets Validated
 1. ✅ Workflow imports without errors
@@ -540,6 +549,12 @@ make monitor
 
 ## Recent Updates (July 18, 2025)
 
+### Latest Fix: Supervisor State Schema
+- **Problem**: `Missing required key(s) {'remaining_steps'} in state_schema`
+- **Solution**: Added `remaining_steps: int = 10` to SupervisorState class
+- **Impact**: Fixes create_react_agent compatibility for supervisor
+- **Status**: ✅ Fixed and deployed
+
 ### Python 3.13 Optimizations Added
 - **Free-threading mode**: GIL disabled for parallelism
 - **JIT compilation**: Automatic optimization of hot paths
@@ -557,6 +572,7 @@ make monitor
 - ✅ Edge routing errors (supervisor wrapper added)
 - ✅ "Unknown node" errors (proper edge definitions)
 - ✅ Command vs state dict mismatches
+- ✅ Supervisor state missing 'remaining_steps' field (required by create_react_agent)
 
 ### Cleanup Completed
 - Removed all test scripts (backed up locally)
@@ -965,3 +981,54 @@ When working on this project:
 12. Use Python 3.13 for local development to match deployment environment
 13. Monitor performance metrics to ensure optimizations are working
 14. Check deployment logs immediately if validation passes but deployment fails
+
+## GoHighLevel (GHL) Webhook Integration
+
+### Setting up GHL Webhook
+1. **In GHL Workflow Builder**:
+   - Add "Custom Webhook" action
+   - URL: `https://YOUR-DEPLOYMENT-URL.us.langgraph.app/runs/stream`
+   - Method: POST
+   - Headers:
+     - `x-api-key`: Your LangSmith API key (format: `lsv2_pt_...`)
+     - `Content-Type`: `application/json`
+
+2. **Request Body Format**:
+```json
+{
+  "assistant_id": "agent",
+  "input": {
+    "messages": [
+      {
+        "role": "user",
+        "content": "{{message.body}}"
+      }
+    ],
+    "contact_id": "{{contact.id}}",
+    "contact_name": "{{contact.name}}",
+    "contact_email": "{{contact.email}}",
+    "contact_phone": "{{contact.phone}}"
+  },
+  "stream_mode": "updates"
+}
+```
+
+### Getting Your API Key
+1. Go to https://smith.langchain.com
+2. Click profile → Settings → API Keys
+3. Create new key or use existing one
+4. Format: `lsv2_pt_...`
+
+### Testing the Integration
+```bash
+curl -X POST https://YOUR-DEPLOYMENT-URL.us.langgraph.app/runs/stream \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: YOUR_LANGSMITH_API_KEY" \
+  -d '{
+    "assistant_id": "agent",
+    "input": {
+      "messages": [{"role": "user", "content": "Test message"}],
+      "contact_id": "test123"
+    }
+  }'
+```
