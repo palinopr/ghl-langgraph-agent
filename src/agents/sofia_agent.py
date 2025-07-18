@@ -9,10 +9,10 @@ from langchain_core.messages import AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from ..state.conversation_state import ConversationState
 from ..tools.agent_tools import appointment_tools
-from ..utils.logger import get_agent_logger
+from ..utils.simple_logger import get_logger
 from ..config import get_settings
 
-logger = get_agent_logger("sofia")
+logger = get_logger("sofia")
 
 
 class SofiaAgent:

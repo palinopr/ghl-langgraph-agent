@@ -6,9 +6,9 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 import pytz
 from ..state.conversation_state import MessageData
-from ..utils.logger import get_tool_logger
+from ..utils.simple_logger import get_logger
 
-logger = get_tool_logger("webhook_processor")
+logger = get_logger("webhook_processor")
 
 
 class WebhookProcessor:

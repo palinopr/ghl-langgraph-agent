@@ -10,18 +10,10 @@ from ..workflow import run_workflow
 from ..tools.webhook_processor import webhook_processor
 from ..tools.supabase_client import supabase_client
 from ..tools.ghl_client import ghl_client
-from ..utils.logger import get_api_logger
+from ..utils.simple_logger import get_logger
 from ..config import get_settings
 
-# Logger will be initialized when needed
-_logger = None
-
-def get_logger():
-    """Get logger instance (lazy initialization)"""
-    global _logger
-    if _logger is None:
-        _logger = get_api_logger("webhook")
-    return _logger
+logger = get_logger("webhook")
 
 # Create FastAPI app
 app = FastAPI(
@@ -45,7 +37,7 @@ async def health_check():
         await supabase_client.get_pending_messages(limit=1)
         supabase_status = "connected"
     except Exception as e:
-        get_logger().error(f"Supabase health check failed: {e}")
+        logger.error(f"Supabase health check failed: {e}")
         supabase_status = "error"
     
     return {
@@ -75,7 +67,7 @@ async def receive_message_webhook(
     try:
         # Get webhook data
         webhook_data = await request.json()
-        get_logger().info(f"Received webhook: {webhook_data}")
+        logger.info(f"Received webhook: {webhook_data}")
         
         # Validate webhook signature if configured
         settings = get_settings()
@@ -86,13 +78,13 @@ async def receive_message_webhook(
             if not webhook_processor.validate_webhook_signature(
                 body, signature, settings.webhook_secret
             ):
-                get_logger().warning("Invalid webhook signature")
+                logger.warning("Invalid webhook signature")
                 raise HTTPException(status_code=401, detail="Invalid signature")
         
         # Process webhook data
         message_data = webhook_processor.process_message_webhook(webhook_data)
         if not message_data:
-            get_logger().warning("Invalid webhook data format")
+            logger.warning("Invalid webhook data format")
             return JSONResponse(
                 status_code=400,
                 content={"error": "Invalid webhook format"}
@@ -101,7 +93,7 @@ async def receive_message_webhook(
         # Add to message queue
         queue_entry = await supabase_client.add_to_message_queue(message_data)
         if not queue_entry:
-            get_logger().error("Failed to add message to queue")
+            logger.error("Failed to add message to queue")
             return JSONResponse(
                 status_code=500,
                 content={"error": "Failed to queue message"}
@@ -125,7 +117,7 @@ async def receive_message_webhook(
     except HTTPException:
         raise
     except Exception as e:
-        get_logger().error(f"Webhook processing error: {e}")
+        logger.error(f"Webhook processing error: {e}")
         return JSONResponse(
             status_code=500,
             content={"error": "Internal server error"}
@@ -143,7 +135,7 @@ async def process_single_message(queue_id: str):
         # Get message from queue
         message = await supabase_client.get_queue_entry(queue_id)
         if not message:
-            get_logger().error(f"Queue entry not found: {queue_id}")
+            logger.error(f"Queue entry not found: {queue_id}")
             return
         
         # Update status to processing
@@ -170,7 +162,7 @@ async def process_single_message(queue_id: str):
             )
             
     except Exception as e:
-        get_logger().error(f"Message processing error: {e}")
+        logger.error(f"Message processing error: {e}")
         await supabase_client.update_queue_status(
             queue_id,
             "failed",
@@ -183,7 +175,7 @@ async def process_message_queue():
     Process pending messages from the queue
     Called by the worker process
     """
-    get_logger().info("Starting message queue processor")
+    logger.info("Starting message queue processor")
     
     while True:
         try:
@@ -191,7 +183,7 @@ async def process_message_queue():
             messages = await supabase_client.get_pending_messages(limit=5)
             
             if messages:
-                get_logger().info(f"Processing {len(messages)} messages")
+                logger.info(f"Processing {len(messages)} messages")
                 
                 # Process each message
                 for message in messages:
@@ -201,5 +193,5 @@ async def process_message_queue():
             await asyncio.sleep(5)
             
         except Exception as e:
-            get_logger().error(f"Queue processing error: {e}")
+            logger.error(f"Queue processing error: {e}")
             await asyncio.sleep(10)  # Wait longer on error

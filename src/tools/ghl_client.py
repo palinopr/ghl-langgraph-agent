@@ -7,9 +7,9 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import pytz
 from ..config import get_settings, get_ghl_headers
-from ..utils.logger import get_tool_logger
+from ..utils.simple_logger import get_logger
 
-logger = get_tool_logger("ghl_client")
+logger = get_logger("ghl_client")
 
 
 class GHLClient:

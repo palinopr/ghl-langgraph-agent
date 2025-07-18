@@ -9,7 +9,7 @@ from .state.conversation_state import ConversationState
 from .agents import sofia_node, carlos_node, maria_node, orchestrator_node
 from .utils.logger import get_workflow_logger
 
-logger = get_workflow_logger("main_workflow")
+logger = get_logger("main_workflow")
 
 
 def should_continue(state: ConversationState) -> Literal["orchestrator", "end"]:

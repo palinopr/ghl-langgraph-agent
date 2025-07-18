@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 import pytz
 from langchain_core.tools import tool
 from .ghl_client import ghl_client
-from ..utils.logger import get_tool_logger
+from ..utils.simple_logger import get_logger
 
-logger = get_tool_logger("agent_tools")
+logger = get_logger("agent_tools")
 
 
 @tool

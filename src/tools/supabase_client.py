@@ -6,9 +6,9 @@ from datetime import datetime
 import pytz
 from supabase import create_client, Client
 from ..config import get_settings
-from ..utils.logger import get_tool_logger
+from ..utils.simple_logger import get_logger
 
-logger = get_tool_logger("supabase_client")
+logger = get_logger("supabase_client")
 
 
 class SupabaseClient:
