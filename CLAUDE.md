@@ -386,6 +386,68 @@ def create_handoff_tool(agent_name: str):
 - [Memory Store](https://langchain-ai.github.io/langgraph/concepts/persistence/#store)
 - [Supervisor Pattern](https://langchain-ai.github.io/langgraph/concepts/multi_agent/)
 
+## Context Engineering Summary
+
+### What This Project Does
+This is a sophisticated multi-agent LangGraph system for GoHighLevel that:
+1. **Intelligently routes leads** based on deterministic scoring (1-10 scale)
+2. **Extracts Spanish patterns** using regex before LLM processing
+3. **Persists all data to GHL** custom fields for continuity
+4. **Batches messages** for human-like responses (15-second window)
+5. **Loads full context** on every webhook for stateless operation
+
+### Key Architecture Decisions
+1. **Hybrid Intelligence**: Deterministic rules + LLM flexibility
+2. **Stateless Design**: GHL is source of truth, survives restarts
+3. **Human-Like Behavior**: Message batching prevents bot spam
+4. **Full Observability**: LangSmith tracing for debugging
+5. **Modern Patterns**: Command objects, create_react_agent, supervisor
+
+### Critical Files
+- `app/intelligence/analyzer.py` - Lead scoring and extraction
+- `app/intelligence/ghl_updater.py` - Persists scores to GHL
+- `app/utils/message_batcher.py` - Human-like response timing
+- `app/tools/webhook_enricher.py` - Loads full context
+- `app/workflow_v2.py` - Main orchestration flow
+
+### Recent Enhancements (July 18, 2025)
+1. **Intelligence Layer**: Pre-processes messages with Spanish extraction
+2. **Score Persistence**: Saves to GHL custom fields automatically
+3. **Message Batching**: Waits for complete thoughts before responding
+4. **Context Loading**: Every message has full conversation history
+5. **LangSmith Integration**: Complete tracing and debugging
+
+### Testing Quick Start
+```bash
+# Send rapid messages to test batching
+curl -X POST http://localhost:8000/webhook/message \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hi", "contactId": "test123"}'
+
+curl -X POST http://localhost:8000/webhook/message \
+  -H "Content-Type: application/json" \
+  -d '{"message": "My name is Jaime", "contactId": "test123"}'
+
+curl -X POST http://localhost:8000/webhook/message \
+  -H "Content-Type: application/json" \
+  -d '{"message": "I have a restaurant", "contactId": "test123"}'
+
+# Check score persistence in GHL custom fields
+```
+
+### Environment Setup
+```bash
+# Required
+OPENAI_API_KEY=sk-...
+GHL_API_TOKEN=pit-...
+SUPABASE_URL=https://...
+SUPABASE_KEY=eyJ...
+
+# Recommended
+LANGSMITH_API_KEY=lsv2_pt_...
+LANGSMITH_PROJECT=ghl-langgraph-agent
+```
+
 ## Intelligence Layer Implementation (v3)
 
 ### Overview
