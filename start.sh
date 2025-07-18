@@ -2,5 +2,5 @@
 echo "PORT is: $PORT"
 echo "Python version:"
 python --version
-echo "Starting server..."
-python main.py
+echo "Starting simple server..."
+python simple_main.py
