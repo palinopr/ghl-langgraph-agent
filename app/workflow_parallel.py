@@ -22,26 +22,34 @@ from app.agents.maria_agent_v2 import maria_node_v2, create_maria_agent
 from app.utils.error_recovery import error_recovery_middleware, handle_graph_recursion
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
+from app.config import get_settings
 
 logger = get_logger("workflow_parallel")
 
 
 # Parallel supervisor node that can run multiple agents concurrently
-async def parallel_supervisor_node(state: ConversationState) -> Command:
+async def parallel_supervisor_node(state: ConversationState) -> Dict[str, Any]:
     """
     Enhanced supervisor that can run multiple agents in parallel
     when appropriate (e.g., getting multiple perspectives)
+    
+    Returns:
+        State update dict (not Command) for compatibility with workflow
     """
     settings = get_settings()
     
     # Get the last message for analysis
     last_message = state["messages"][-1] if state.get("messages") else None
     if not last_message:
-        return Command(goto="maria", update={})
+        return {"next_agent": "maria"}
     
     # Check if we should run agents in parallel
     lead_score = state.get("lead_score", 0)
     message_content = last_message.content.lower()
+    
+    # Check for conversation end conditions first
+    if any(phrase in message_content for phrase in ["goodbye", "thank you", "thanks", "bye"]):
+        return {"should_end": True}
     
     # Scenarios for parallel execution
     should_run_parallel = False
@@ -71,16 +79,22 @@ async def parallel_supervisor_node(state: ConversationState) -> Command:
     
     if should_run_parallel and settings.enable_parallel_agents:
         # Run agents in parallel using TaskGroup
-        return await run_agents_parallel(state, parallel_agents)
+        result = await run_agents_parallel(state, parallel_agents)
+        return result
     else:
-        # Standard single-agent routing
-        return await supervisor_node(state)
+        # Standard single-agent routing - determine which agent
+        if lead_score >= 8:
+            return {"next_agent": "sofia"}
+        elif lead_score >= 5:
+            return {"next_agent": "carlos"}
+        else:
+            return {"next_agent": "maria"}
 
 
 async def run_agents_parallel(
     state: ConversationState, 
     agents: List[str]
-) -> Command:
+) -> Dict[str, Any]:
     """
     Run multiple agents in parallel using Python 3.13 TaskGroup
     
@@ -89,7 +103,7 @@ async def run_agents_parallel(
         agents: List of agent names to run in parallel
         
     Returns:
-        Command with combined results
+        State update dict with combined results
     """
     agent_functions = {
         "sofia": sofia_node_v2,
@@ -136,18 +150,20 @@ async def run_agents_parallel(
         # Determine next step based on merged results
         if merged_result.get("appointment_confirmed"):
             # Sofia confirmed appointment
-            return Command(goto=END, update=merged_result)
+            merged_result["should_end"] = True
         elif merged_result.get("needs_qualification"):
             # Need more qualification
-            return Command(goto="carlos", update=merged_result)
+            merged_result["next_agent"] = "carlos"
         else:
-            # Continue conversation
-            return Command(goto="supervisor", update=merged_result)
+            # Continue conversation with supervisor
+            merged_result["next_agent"] = "supervisor"
+        
+        return merged_result
             
     except Exception as e:
         logger.error(f"Parallel agent execution failed: {e}")
         # Fallback to single agent
-        return Command(goto="maria", update={"error": str(e)})
+        return {"next_agent": "maria", "error": str(e)}
 
 
 async def _run_agent_safe(
@@ -224,6 +240,20 @@ def _merge_agent_results(
     return merged
 
 
+def route_from_parallel_supervisor(state: ConversationState) -> Literal["sofia", "carlos", "maria", "supervisor", "end"]:
+    """Route based on parallel supervisor decision"""
+    if state.get("should_end"):
+        return "end"
+    return state.get("next_agent", "maria")
+
+
+def route_from_supervisor(state: ConversationState) -> Literal["sofia", "carlos", "maria", "end"]:
+    """Route based on supervisor decision"""
+    if state.get("should_end") or state.get("appointment_status") == "booked":
+        return "end"
+    return state.get("next_agent", "maria")
+
+
 def create_parallel_workflow() -> StateGraph:
     """
     Create workflow with parallel agent execution capabilities
@@ -249,10 +279,35 @@ def create_parallel_workflow() -> StateGraph:
     workflow.add_edge("intelligence", "ghl_update")
     workflow.add_edge("ghl_update", "parallel_supervisor")
     
-    # Agents can go back to supervisor
+    # Parallel supervisor routes to agents or end
+    workflow.add_conditional_edges(
+        "parallel_supervisor",
+        route_from_parallel_supervisor,
+        {
+            "sofia": "sofia",
+            "carlos": "carlos",
+            "maria": "maria",
+            "supervisor": "supervisor",
+            "end": END
+        }
+    )
+    
+    # Agents go back to supervisor
     workflow.add_edge("sofia", "supervisor")
     workflow.add_edge("carlos", "supervisor")
     workflow.add_edge("maria", "supervisor")
+    
+    # Supervisor routes to agents or end
+    workflow.add_conditional_edges(
+        "supervisor",
+        route_from_supervisor,
+        {
+            "sofia": "sofia",
+            "carlos": "carlos",
+            "maria": "maria",
+            "end": END
+        }
+    )
     
     logger.info("Created parallel workflow with TaskGroup support")
     
