@@ -1,16 +1,20 @@
-# Core LangGraph dependencies
-langgraph>=0.2.0
-langchain>=0.2.0
+# Core LangGraph dependencies (UPDATED to latest recommended versions)
+langgraph>=0.3.27  # Updated from 0.2.0
+langgraph-sdk>=0.1.66  # Added - required for LangGraph Platform
+langgraph-checkpoint>=2.0.23  # Added - required for persistence
+langchain>=0.3.8  # Updated from 0.2.0
+langchain-core>=0.2.38  # Added - explicit core dependency
 langchain-openai
 langchain-community>=0.2.0
-langsmith>=0.1.17
+langsmith>=0.1.63  # Updated from 0.1.17
 
 # API and Web Framework
 fastapi>=0.110.0
-uvicorn[standard]>=0.27.0
+uvicorn>=0.26.0  # Updated from 0.27.0 to match LangGraph recommendations
 pydantic>=2.6.0
 pydantic-settings>=2.0.0
-httpx==0.25.2
+httpx>=0.25.0  # Changed from fixed 0.25.2 to >=0.25.0
+sse-starlette>=2.1.0,<2.2.0  # Added - required for streaming
 
 # Database and State Management
 supabase==2.4.0
@@ -27,6 +31,9 @@ pytz>=2024.1
 python-dateutil>=2.8.2
 phonenumbers>=8.13.0
 email-validator>=2.1.0
+orjson>=3.9.7,<3.10.17  # Added - recommended for JSON performance
+tenacity>=8.0.0  # Added - for retry logic
+cloudpickle>=3.0.0  # Added - for serialization
 
 # Development Tools
 pytest>=8.0.0
@@ -39,6 +46,9 @@ ipdb>=0.13.0
 # Production
 gunicorn>=21.2.0
 sentry-sdk>=1.40.0
+uvloop>=0.18.0  # Added - for async performance
+httptools>=0.5.0  # Added - for HTTP performance
+structlog>=24.1.0  # Added - for structured logging
 
 # LangGraph specific
 langchain-experimental>=0.3.0
