@@ -1,0 +1,2 @@
+web: uvicorn src.api.webhook:app --host 0.0.0.0 --port $PORT
+worker: python worker.py
