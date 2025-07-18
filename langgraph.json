@@ -1,6 +1,6 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "GoHighLevel LangGraph Messaging Agent - Production",
   "graphs": {
     "agent": "./src/workflow.py:workflow"
