@@ -38,4 +38,4 @@ sentry-sdk>=1.40.0
 # LangGraph specific
 langchain-experimental>=0.3.0
 langchain-anthropic  # In case we want Claude
-tiktoken  # Token counting
+tiktoken  # Token countinggunicorn==23.0.0
