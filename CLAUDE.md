@@ -982,6 +982,28 @@ When working on this project:
 13. Monitor performance metrics to ensure optimizations are working
 14. Check deployment logs immediately if validation passes but deployment fails
 
+## Deployment Trigger Process
+
+### When Deployment Doesn't Auto-Trigger
+If changes are pushed but LangGraph Platform doesn't pick them up:
+
+1. **Update version in langgraph.json**:
+   - Bump the version number (e.g., 1.0.1 → 1.0.2)
+   - Add a timestamp or description change
+   - This forces the platform to recognize changes
+
+2. **Commit and push**:
+   ```bash
+   git add langgraph.json
+   git commit -m "Trigger deployment with version bump to X.X.X"
+   git push origin main
+   ```
+
+3. **Verify deployment**:
+   - Check "Last Updated" timestamp in LangSmith
+   - Should update within 2-5 minutes
+   - API URL remains the same
+
 ## GoHighLevel (GHL) Webhook Integration
 
 ### Setting up GHL Webhook
