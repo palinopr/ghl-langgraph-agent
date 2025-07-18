@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     app_env: str = Field(default="development", env="APP_ENV")
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
     port: int = Field(default=10000, env="PORT")
+    webhook_secret: Optional[str] = Field(default=None, env="WEBHOOK_SECRET")
     
     # OpenAI
     openai_api_key: str = Field(..., env="OPENAI_API_KEY")
