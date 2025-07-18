@@ -4,7 +4,7 @@ services:
     name: ghl-langgraph-agent
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: ./start.sh
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
