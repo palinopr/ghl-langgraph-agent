@@ -1,18 +1,19 @@
 """
 Agent modules for LangGraph messaging system
+Using modernized v2 implementations with latest patterns
 """
-from app.agents.sofia_agent import sofia_node, SofiaAgent
-from app.agents.carlos_agent import carlos_node, CarlosAgent
-from app.agents.maria_agent import maria_node, MariaAgent
-from app.agents.orchestrator import orchestrator_node, Orchestrator
+from app.agents.supervisor import supervisor_node, create_supervisor_agent
+from app.agents.sofia_agent_v2 import sofia_node_v2, create_sofia_agent
+from app.agents.carlos_agent_v2 import carlos_node_v2, create_carlos_agent
+from app.agents.maria_agent_v2 import maria_node_v2, create_maria_agent
 
 __all__ = [
-    "sofia_node",
-    "SofiaAgent",
-    "carlos_node", 
-    "CarlosAgent",
-    "maria_node",
-    "MariaAgent",
-    "orchestrator_node",
-    "Orchestrator"
+    "supervisor_node",
+    "create_supervisor_agent",
+    "sofia_node_v2",
+    "create_sofia_agent",
+    "carlos_node_v2", 
+    "create_carlos_agent",
+    "maria_node_v2",
+    "create_maria_agent"
 ]
