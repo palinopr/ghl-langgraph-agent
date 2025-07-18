@@ -92,6 +92,17 @@ mv src app
 # Updated langgraph.json, vercel.json, and documentation
 ```
 
+#### 8. Supabase Dependencies Update
+```python
+# Fixed httpx version conflict with postgrest
+# Error: postgrest==0.13.0 depends on httpx>=0.24.0,<0.25.0
+# Solution: Updated to newer versions
+supabase>=2.7.0  # Was 2.4.0
+postgrest>=0.16.0  # Was 0.13.0 - now compatible with httpx 0.25+
+gotrue>=2.4.0  # Was 2.0.0
+realtime>=2.0.0  # Was 1.0.0
+```
+
 ## Current Deployment Configuration
 
 ### LangGraph Platform Settings

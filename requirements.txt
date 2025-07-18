@@ -17,11 +17,11 @@ httpx>=0.25.0  # Changed from fixed 0.25.2 to >=0.25.0
 sse-starlette>=2.1.0,<2.2.0  # Added - required for streaming
 
 # Database and State Management
-supabase==2.4.0
-gotrue==2.0.0
-postgrest==0.13.0
-realtime==1.0.0
-storage3==0.7.0
+supabase>=2.7.0  # Updated to latest version compatible with httpx 0.25+
+gotrue>=2.4.0
+postgrest>=0.16.0  # Updated to version compatible with httpx 0.25+
+realtime>=2.0.0
+storage3>=0.7.0
 sqlalchemy>=2.0.0
 alembic>=1.13.0
 
