@@ -19,7 +19,8 @@ from app.state.conversation_state import ConversationState
 
 class SupervisorState(ConversationState):
     """State for supervisor extending ConversationState to access all fields"""
-    pass  # Inherits all fields from ConversationState including intelligence fields
+    # Add fields required by create_react_agent
+    remaining_steps: int = 10  # Default number of steps the agent can take
 
 
 def supervisor_prompt(state: SupervisorState) -> list[AnyMessage]:
