@@ -7,7 +7,7 @@ from typing import Dict, Any, List
 import asyncio
 from app.tools.ghl_client import ghl_client
 from app.tools.conversation_loader import conversation_loader
-from app.intelligence.ghl_updater import FIELD_MAPPINGS
+from app.constants import FIELD_MAPPINGS
 from app.utils.simple_logger import get_logger
 
 logger = get_logger("webhook_enricher")

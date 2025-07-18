@@ -5,22 +5,10 @@ Inspired by n8n workflow's update mechanism
 from typing import Dict, Any, Optional
 from app.tools.ghl_client import ghl_client
 from app.utils.simple_logger import get_logger
+from app.constants import FIELD_MAPPINGS
 from datetime import datetime
 
 logger = get_logger("ghl_updater")
-
-# GHL Custom Field IDs (from n8n workflow)
-FIELD_MAPPINGS = {
-    "score": "wAPjuqxtfgKLCJqahjo1",
-    "intent": "Q1n5kaciimUU6JN5PBD6", 
-    "business_type": "HtoheVc48qvAfvRUKhfG",
-    "urgency_level": "dXasgCZFgqd62psjw7nd",
-    "goal": "r7jFiJBYHiEllsGn7jZC",
-    "budget": "4Qe8P25JRLW0IcZc5iOs",
-    "name": "TjB0I5iNfVwx3zyxZ9sW",
-    "preferred_day": "D1aD9KUDNm5Lp4Kz8yAD",
-    "preferred_time": "M70lUtadchW4f2pJGDJ5"
-}
 
 
 class GHLUpdater:

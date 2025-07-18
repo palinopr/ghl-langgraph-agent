@@ -154,7 +154,7 @@ async def test_message_batching():
     batched_count = 0
     for i in range(0, len(messages), 4):
         batch = messages[i:i+4]
-        result = batcher._merge_messages(batch)
+        result = batcher.merge_messages(batch)
         if result:
             batched_count += 1
     

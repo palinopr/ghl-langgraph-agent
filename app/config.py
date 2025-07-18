@@ -140,21 +140,8 @@ def get_settings() -> Settings:
     return Settings()
 
 
-# Agent Names
-AGENT_NAMES = {
-    "maria": "Maria",
-    "carlos": "Carlos",
-    "sofia": "Sofia"
-}
-
-# Lead Intents
-LEAD_INTENTS = {
-    "LISTO_COMPRAR": "Ready to buy",
-    "BUSCANDO_INFO": "Looking for information",
-    "COMPARANDO_OPCIONES": "Comparing options",
-    "SOLO_PREGUNTANDO": "Just asking",
-    "NO_INTERESADO": "Not interested"
-}
+# Import shared constants
+from app.constants import AGENT_NAMES, LEAD_INTENTS
 
 # Message Templates
 ACKNOWLEDGMENT_MESSAGE = "✓"
