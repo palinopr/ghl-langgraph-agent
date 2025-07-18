@@ -13,7 +13,15 @@ from ..tools.ghl_client import ghl_client
 from ..utils.logger import get_api_logger
 from ..config import get_settings
 
-logger = get_api_logger("webhook")
+# Logger will be initialized when needed
+_logger = None
+
+def get_logger():
+    """Get logger instance (lazy initialization)"""
+    global _logger
+    if _logger is None:
+        _logger = get_api_logger("webhook")
+    return _logger
 
 # Create FastAPI app
 app = FastAPI(
@@ -37,7 +45,7 @@ async def health_check():
         await supabase_client.get_pending_messages(limit=1)
         supabase_status = "connected"
     except Exception as e:
-        logger.error(f"Supabase health check failed: {e}")
+        get_logger().error(f"Supabase health check failed: {e}")
         supabase_status = "error"
     
     return {
@@ -67,7 +75,7 @@ async def receive_message_webhook(
     try:
         # Get webhook data
         webhook_data = await request.json()
-        logger.info(f"Received webhook: {webhook_data}")
+        get_logger().info(f"Received webhook: {webhook_data}")
         
         # Validate webhook signature if configured
         settings = get_settings()
@@ -78,13 +86,13 @@ async def receive_message_webhook(
             if not webhook_processor.validate_webhook_signature(
                 body, signature, settings.webhook_secret
             ):
-                logger.warning("Invalid webhook signature")
+                get_logger().warning("Invalid webhook signature")
                 raise HTTPException(status_code=401, detail="Invalid signature")
         
         # Process webhook data
         message_data = webhook_processor.process_message_webhook(webhook_data)
         if not message_data:
-            logger.warning("Invalid webhook data format")
+            get_logger().warning("Invalid webhook data format")
             return JSONResponse(
                 status_code=400,
                 content={"error": "Invalid webhook format"}
@@ -93,202 +101,105 @@ async def receive_message_webhook(
         # Add to message queue
         queue_entry = await supabase_client.add_to_message_queue(message_data)
         if not queue_entry:
-            logger.error("Failed to add message to queue")
+            get_logger().error("Failed to add message to queue")
             return JSONResponse(
                 status_code=500,
                 content={"error": "Failed to queue message"}
             )
         
-        # Process in background
+        # Process message in background
         background_tasks.add_task(
-            process_message_async,
-            queue_entry["id"],
-            message_data
+            process_single_message,
+            queue_entry["id"]
         )
         
         # Return immediate acknowledgment
         return JSONResponse(
             status_code=200,
             content={
-                "status": "received",
-                "message_id": queue_entry["id"],
-                "contact_id": message_data["contact_id"]
+                "status": "queued",
+                "queue_id": queue_entry["id"]
             }
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
+        get_logger().error(f"Webhook processing error: {e}")
         return JSONResponse(
             status_code=500,
             content={"error": "Internal server error"}
         )
 
 
-async def process_message_async(
-    message_id: str,
-    message_data: Dict[str, Any]
-):
+async def process_single_message(queue_id: str):
     """
-    Process message asynchronously through LangGraph workflow
+    Process a single message from the queue
     
     Args:
-        message_id: Queue message ID
-        message_data: Processed message data
+        queue_id: Queue entry ID
     """
     try:
-        logger.info(f"Processing message {message_id} for contact {message_data['contact_id']}")
+        # Get message from queue
+        message = await supabase_client.get_queue_entry(queue_id)
+        if not message:
+            get_logger().error(f"Queue entry not found: {queue_id}")
+            return
         
         # Update status to processing
-        await supabase_client.update_message_status(
-            message_id, 
+        await supabase_client.update_queue_status(
+            queue_id,
             "processing"
         )
         
-        # Get contact details from GHL
-        contact_details = await ghl_client.get_contact_details(
-            message_data["contact_id"]
-        )
-        
-        # Get conversation history
-        conversation_history = await ghl_client.get_conversation_history(
-            message_data["contact_id"]
-        )
-        
-        # Prepare context
-        context = {
-            "contact_details": contact_details,
-            "conversation_history": conversation_history,
-            "message_data": message_data
-        }
-        
         # Run workflow
-        result = await run_workflow(
-            contact_id=message_data["contact_id"],
-            message=message_data["message_body"],
-            context=context
-        )
+        result = await run_workflow(message["message_data"])
         
-        # Extract agent response
-        agent_responses = result.get("agent_responses", [])
-        if agent_responses:
-            last_response = agent_responses[-1]
-            
-            # Add to responder queue
-            await supabase_client.add_to_responder_queue(
-                contact_id=message_data["contact_id"],
-                message_id=message_id,
-                agent=last_response["agent"],
-                response=last_response["response"],
-                analysis=result.get("analysis", {})
+        # Update status based on result
+        if result.get("success"):
+            await supabase_client.update_queue_status(
+                queue_id,
+                "completed",
+                result=result
             )
-            
-            # Send response via GHL
-            send_result = await ghl_client.send_message(
-                contact_id=message_data["contact_id"],
-                message=last_response["response"],
-                message_type=message_data.get("message_type", "WhatsApp")
-            )
-            
-            if send_result:
-                # Update message status to completed
-                await supabase_client.update_message_status(
-                    message_id,
-                    "completed",
-                    agent_name=last_response["agent"]
-                )
-                
-                # If appointment was booked, update tracking
-                if result.get("appointment_status") == "booked":
-                    await supabase_client.mark_appointment_booked(
-                        message_id,
-                        result.get("appointment_id", "")
-                    )
-                
-                logger.info(f"Successfully processed message {message_id}")
-            else:
-                raise Exception("Failed to send response via GHL")
         else:
-            raise Exception("No agent response generated")
+            await supabase_client.update_queue_status(
+                queue_id,
+                "failed",
+                error=result.get("error", "Unknown error")
+            )
             
     except Exception as e:
-        logger.error(f"Error processing message {message_id}: {str(e)}", exc_info=True)
-        
-        # Update status to failed
-        await supabase_client.update_message_status(
-            message_id,
+        get_logger().error(f"Message processing error: {e}")
+        await supabase_client.update_queue_status(
+            queue_id,
             "failed",
-            error_message=str(e)
+            error=str(e)
         )
 
 
-@app.post("/webhook/appointment")
-async def receive_appointment_webhook(request: Request):
-    """
-    Receive appointment webhook from GoHighLevel
-    
-    Args:
-        request: FastAPI request object
-        
-    Returns:
-        Acknowledgment response
-    """
-    try:
-        webhook_data = await request.json()
-        logger.info(f"Received appointment webhook: {webhook_data}")
-        
-        # Process appointment update
-        # This can be used to update conversation state, send confirmations, etc.
-        
-        return JSONResponse(
-            status_code=200,
-            content={"status": "received"}
-        )
-        
-    except Exception as e:
-        logger.error(f"Error processing appointment webhook: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": "Internal server error"}
-        )
-
-
-# Background task to process queued messages
 async def process_message_queue():
-    """Background task to process pending messages from queue"""
+    """
+    Process pending messages from the queue
+    Called by the worker process
+    """
+    get_logger().info("Starting message queue processor")
+    
     while True:
         try:
             # Get pending messages
-            pending = await supabase_client.get_pending_messages(limit=5)
+            messages = await supabase_client.get_pending_messages(limit=5)
             
-            for msg in pending:
-                # Process each message
-                await process_message_async(
-                    msg["id"],
-                    {
-                        "contact_id": msg["contact_id"],
-                        "message_body": msg["message"],
-                        "message_type": msg.get("type", "WhatsApp"),
-                        "location_id": msg.get("location_id"),
-                        "conversation_id": msg.get("conversation_id")
-                    }
-                )
+            if messages:
+                get_logger().info(f"Processing {len(messages)} messages")
                 
+                # Process each message
+                for message in messages:
+                    await process_single_message(message["id"])
+            
             # Wait before next check
             await asyncio.sleep(5)
             
         except Exception as e:
-            logger.error(f"Error in queue processor: {str(e)}")
-            await asyncio.sleep(10)
-
-
-# Start background task on startup
-@app.on_event("startup")
-async def startup_event():
-    """Start background tasks on app startup"""
-    asyncio.create_task(process_message_queue())
-    logger.info("Started message queue processor")
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+            get_logger().error(f"Queue processing error: {e}")
+            await asyncio.sleep(10)  # Wait longer on error

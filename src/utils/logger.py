@@ -59,7 +59,14 @@ def setup_logging(
     Returns:
         Configured logger instance
     """
-    settings = get_settings()
+    try:
+        settings = get_settings()
+    except Exception:
+        # If settings can't be loaded, use defaults
+        class DefaultSettings:
+            log_level = "INFO"
+            app_env = "development"
+        settings = DefaultSettings()
     
     # Get logger
     logger = logging.getLogger(name)
