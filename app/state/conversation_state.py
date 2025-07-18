@@ -101,6 +101,9 @@ class ConversationState(TypedDict):
     # Loop Prevention Fields (to prevent expensive agent loops)
     interaction_count: int  # Number of agent interactions in this conversation
     should_end: bool  # Explicit flag to end the conversation
+    
+    # Required by create_react_agent for internal loop management
+    remaining_steps: int  # Steps remaining for agent execution
 
 
 def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
@@ -188,7 +191,8 @@ def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
         
         # Loop Prevention
         interaction_count=0,
-        should_end=False
+        should_end=False,
+        remaining_steps=10  # Default steps for create_react_agent
     )
 
 
