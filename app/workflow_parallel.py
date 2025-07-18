@@ -11,7 +11,7 @@ from langgraph.types import Command
 from app.state.conversation_state import ConversationState
 from app.intelligence.analyzer import intelligence_node
 from app.intelligence.ghl_updater import ghl_update_node
-from app.agents.supervisor import supervisor_node
+from app.agents.supervisor import supervisor_node as original_supervisor_node
 
 # Import enhanced agents
 from app.agents.sofia_agent_v2_enhanced import sofia_node_v2, create_sofia_agent
@@ -22,9 +22,29 @@ from app.agents.maria_agent_v2 import maria_node_v2, create_maria_agent
 from app.utils.error_recovery import error_recovery_middleware, handle_graph_recursion
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
-from app.config import get_settings
 
 logger = get_logger("workflow_parallel")
+
+
+# Wrap supervisor to return state dict instead of Command
+async def supervisor_node(state: ConversationState) -> Dict[str, Any]:
+    """Wrapper for supervisor that returns state dict"""
+    try:
+        # Call original supervisor which returns Command
+        command = await original_supervisor_node(state)
+        
+        # Extract routing from Command
+        if hasattr(command, 'goto'):
+            if command.goto == END or command.goto == 'end':
+                return {"should_end": True, **command.update}
+            else:
+                return {"next_agent": command.goto, **command.update}
+        else:
+            # Fallback if not a Command
+            return {"next_agent": "maria"}
+    except Exception as e:
+        logger.error(f"Supervisor wrapper error: {e}")
+        return {"next_agent": "maria", "error": str(e)}
 
 
 # Parallel supervisor node that can run multiple agents concurrently
