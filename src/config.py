@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # App Config
     app_env: str = Field(default="development", env="APP_ENV")
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
-    port: int = Field(default=8000, env="PORT")
+    port: int = Field(default=10000, env="PORT")
     
     # OpenAI
     openai_api_key: str = Field(..., env="OPENAI_API_KEY")
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     
     # Supabase
     supabase_url: str = Field(..., env="SUPABASE_URL")
-    supabase_key: str = Field(..., env="SUPABASE_ANON_KEY")
+    supabase_key: str = Field(..., env="SUPABASE_KEY")
     
     # LangSmith (optional)
     langchain_tracing_v2: bool = Field(default=True, env="LANGCHAIN_TRACING_V2")
