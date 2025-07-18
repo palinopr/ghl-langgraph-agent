@@ -24,8 +24,6 @@ services:
         sync: false
       - key: WEBHOOK_SECRET
         sync: false
-      - key: PORT
-        value: "8000"
     
   # Background worker for processing queue
   - type: worker
