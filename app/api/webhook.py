@@ -76,20 +76,20 @@ async def receive_message_webhook(
                 content={"error": "Invalid webhook format"}
             )
         
-        # Add to message queue
-        queue_entry = await supabase_client.add_to_message_queue(message_data)
-        if not queue_entry:
-            logger.error("Failed to add message to queue")
-            return JSONResponse(
-                status_code=500,
-                content={"error": "Failed to queue message"}
-            )
+        # Use message batching for human-like responses
+        from app.utils.message_batcher import process_with_batching
         
-        # Process message in background
-        background_tasks.add_task(
-            process_single_message,
-            queue_entry["id"]
+        batch_result = await process_with_batching(
+            contact_id=message_data.get("id", "unknown"),
+            message=message_data,
+            process_callback=lambda msg: process_batched_message(msg, background_tasks)
         )
+        
+        if batch_result["status"] == "batching":
+            logger.info(
+                f"Message batched for {message_data.get('id')}, "
+                f"waiting {batch_result['wait_time']}s for more messages"
+            )
         
         # Return immediate acknowledgment
         return JSONResponse(
@@ -130,8 +130,8 @@ async def process_single_message(queue_id: str):
             "processing"
         )
         
-        # Run workflow
-        result = await run_workflow(message["message_data"])
+        # Run workflow with full webhook data
+        result = await run_workflow(webhook_data=message["message_data"])
         
         # Update status based on result
         if result.get("success"):
@@ -181,3 +181,27 @@ async def process_message_queue():
         except Exception as e:
             logger.error(f"Queue processing error: {e}")
             await asyncio.sleep(10)  # Wait longer on error
+
+
+async def process_batched_message(
+    message_data: Dict[str, Any],
+    background_tasks: BackgroundTasks
+):
+    """
+    Process a batched message (possibly multiple messages merged)
+    
+    Args:
+        message_data: Message data with merged content
+        background_tasks: FastAPI background task manager
+    """
+    # Add to message queue
+    queue_entry = await supabase_client.add_to_message_queue(message_data)
+    if not queue_entry:
+        logger.error("Failed to add batched message to queue")
+        return
+    
+    # Process message in background
+    background_tasks.add_task(
+        process_single_message,
+        queue_entry["id"]
+    )

@@ -6,6 +6,7 @@ import httpx
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import pytz
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from app.config import get_settings, get_ghl_headers
 from app.utils.simple_logger import get_logger
 
@@ -23,6 +24,12 @@ class GHLClient:
         self.calendar_id = self.settings.ghl_calendar_id
         self.assigned_user_id = self.settings.ghl_assigned_user_id
         
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((httpx.HTTPError, httpx.TimeoutException)),
+        before_sleep=lambda retry_state: logger.warning(f"Retrying GHL API call, attempt {retry_state.attempt_number}")
+    )
     async def _make_request(
         self, 
         method: str, 

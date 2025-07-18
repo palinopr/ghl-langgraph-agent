@@ -34,6 +34,7 @@ email-validator>=2.1.0
 orjson>=3.9.7,<3.10.17  # Added - recommended for JSON performance
 tenacity>=8.0.0  # Added - for retry logic
 cloudpickle>=3.0.0  # Added - for serialization
+redis>=5.0.0  # Added - for message batching
 
 # Development Tools
 pytest>=8.0.0

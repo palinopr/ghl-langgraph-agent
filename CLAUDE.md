@@ -1,7 +1,7 @@
 # Claude Context: LangGraph GHL Agent - Complete Implementation Guide
 
 ## Project Overview
-This is a LangGraph-based GoHighLevel (GHL) messaging agent that handles intelligent lead routing and appointment booking. The system uses three AI agents (Maria, Carlos, Sofia) orchestrated by a supervisor using the latest LangGraph patterns.
+This is a LangGraph-based GoHighLevel (GHL) messaging agent that handles intelligent lead routing and appointment booking. The system uses three AI agents (Maria, Carlos, Sofia) orchestrated by a supervisor using the latest LangGraph patterns with advanced features like message batching, intelligent scoring, and full conversation context loading.
 
 ## Architecture Evolution
 
@@ -11,19 +11,31 @@ This is a LangGraph-based GoHighLevel (GHL) messaging agent that handles intelli
 - **Sofia** (Hot Leads, Score 8-10): Appointment booking specialist
 - **Orchestrator**: Routes messages to appropriate agents based on intent
 
-### Modernized Architecture (v2) - CURRENT
+### Modernized Architecture (v2) - 2025-07-18
 - **Supervisor**: Central orchestrator using `create_react_agent` pattern
 - **Maria**: Support agent with handoff capabilities via Command objects
 - **Carlos**: Qualification agent with state-aware tools
 - **Sofia**: Appointment agent with direct booking and memory integration
 - **Memory Store**: Semantic search and conversation persistence
 
-## Tech Stack (Updated)
+### Enhanced Architecture (v3) - CURRENT (2025-07-18)
+- **Intelligence Layer**: Pre-processing analysis inspired by n8n workflow
+  - Spanish pattern extraction (names, business, budget)
+  - Deterministic lead scoring (1-10 scale)
+  - Budget confirmation detection
+  - Score persistence (never decreases)
+- **Supervisor**: Enhanced with score-based routing rules
+- **Agents**: Same as v2 but now receive enriched state
+- **Flow**: Message → Intelligence → Supervisor → Agent
+
+## Tech Stack (Updated - July 18, 2025)
 - **Framework**: LangGraph 0.3.27+ with LangChain 0.3.8+
-- **Patterns**: Command objects, create_react_agent, InjectedState
+- **Patterns**: Command objects, create_react_agent, InjectedState, add_messages reducer
 - **API**: FastAPI with webhook endpoints
 - **State Management**: LangGraph StateGraph with InMemorySaver + BaseStore
 - **Database**: Supabase for message queue and conversation history
+- **Cache**: Redis for message batching (optional)
+- **Monitoring**: LangSmith tracing integration
 - **Deployment**: LangGraph Platform (LangSmith)
 - **Python**: 3.11+ (required by LangGraph Platform)
 
@@ -374,6 +386,253 @@ def create_handoff_tool(agent_name: str):
 - [Memory Store](https://langchain-ai.github.io/langgraph/concepts/persistence/#store)
 - [Supervisor Pattern](https://langchain-ai.github.io/langgraph/concepts/multi_agent/)
 
+## Intelligence Layer Implementation (v3)
+
+### Overview
+Inspired by n8n workflow analysis, we added a deterministic intelligence layer that runs BEFORE the AI agents. This combines the precision of rule-based extraction with the flexibility of LLM agents.
+
+### Components
+
+#### 1. SpanishPatternExtractor
+```python
+# Extracts structured data using regex patterns
+- Names: "mi nombre es", "me llamo", "soy"
+- Business: "tengo un/una", "mi negocio", "trabajo en"
+- Budget: "como unos $300", "aproximadamente", "al mes"
+- Goals: "necesito", "quiero", "busco"
+```
+
+#### 2. LeadScorer
+```python
+# Deterministic scoring (1-10 scale)
+- Name only: 2-3 points
+- Name + Business: 3-4 points
+- Name + Business + Goal: 4-5 points
+- Name + Business + Budget: 6-7 points
+- Full info + clear intent: 8-10 points
+- Never decreases score (persistence rule)
+```
+
+#### 3. BudgetConfirmationDetector
+```python
+# Contextual confirmation detection
+- Detects "si/sí/yes/claro" after budget mention
+- Boosts score to 6+ when $300+ confirmed
+- Handles approximate amounts in Spanish
+```
+
+### Workflow Integration
+```python
+# New flow with intelligence layer
+START → intelligence_node → supervisor → [sofia/carlos/maria] → supervisor → END
+
+# Intelligence enriches state with:
+- lead_score: 1-10 deterministic score
+- extracted_data: Structured extraction
+- score_history: Track changes over time
+- suggested_agent: Routing recommendation
+- score_reasoning: Explanation
+```
+
+### Benefits Over Pure LLM Approach
+1. **Predictable Scoring**: Same input = same score
+2. **Explainable**: Can trace why score was given
+3. **Fast**: Regex extraction before LLM processing
+4. **Debuggable**: Clear rules and patterns
+5. **A/B Testable**: Can compare rule vs LLM performance
+
+### Usage Example
+```python
+# State after intelligence analysis
+{
+    "lead_score": 6,
+    "lead_category": "warm",
+    "suggested_agent": "carlos",
+    "extracted_data": {
+        "name": "Jaime",
+        "business_type": "restaurante",
+        "budget": "300+",
+        "goal": "automatizar marketing"
+    },
+    "score_reasoning": "Score 6: has name, has business (restaurante), has substantial budget (300+)"
+}
+```
+
+## Latest Updates (July 18, 2025)
+
+### 1. Message Batching for Human-Like Responses
+- **Problem**: Bot responds to each message individually
+- **Solution**: 15-second batch window to collect messages
+- **Result**: Natural conversation flow
+- **File**: `app/utils/message_batcher.py`
+
+### 2. Full Context Loading
+- **Problem**: Each message processed without history
+- **Solution**: Load complete conversation from GHL on every webhook
+- **Result**: Perfect context continuity
+- **Files**: `app/tools/webhook_enricher.py`, `app/tools/conversation_loader.py`
+
+### 3. Automatic Score Updates
+- **Problem**: Scores only in memory, lost on restart
+- **Solution**: Save scores to GHL custom fields after analysis
+- **Result**: Persistent lead progress
+- **File**: `app/intelligence/ghl_updater.py`
+
+### 4. LangSmith Tracing
+- **Problem**: No visibility into agent decisions
+- **Solution**: Complete tracing integration
+- **Result**: Full observability and debugging
+- **File**: `app/utils/tracing.py`
+
+### 5. Message Trimming
+- **Problem**: Token limits with long conversations
+- **Solution**: Intelligent message trimming
+- **Result**: Handles conversations of any length
+- **File**: `app/utils/message_utils.py`
+
+## Complete Process Flow
+
+### 1. Message Reception
+```
+Webhook → Message Batcher → Wait for more messages (15s window)
+```
+
+### 2. Context Loading
+```
+WebhookEnricher:
+- Loads contact details from GHL
+- Loads custom fields (including previous score)
+- Loads conversation history (50 messages)
+- Prepares enriched initial state
+```
+
+### 3. Intelligence Analysis
+```
+IntelligenceAnalyzer:
+- Extracts Spanish patterns (regex-based)
+- Calculates lead score (deterministic)
+- Detects budget confirmations
+- Never decreases score
+```
+
+### 4. GHL Updates
+```
+GHLUpdater:
+- Updates lead score → Custom field
+- Updates all extracted data → Custom fields
+- Adds tags based on score/category
+- Ensures persistence
+```
+
+### 5. Routing
+```
+Supervisor:
+- Reads enriched state with score
+- Routes based on score + context
+- Transfers control via Commands
+```
+
+## Key Design Decisions
+
+### 1. Stateless Architecture
+- Every message loads full context
+- No in-memory state between messages
+- Survives restarts, scales horizontally
+
+### 2. GHL as Source of Truth
+- All data persisted in GHL
+- Custom fields store state
+- Tags provide quick filtering
+
+### 3. Deterministic + AI Hybrid
+- Regex extraction for reliability
+- AI for complex understanding
+- Best of both worlds
+
+### 4. Human-Like Behavior
+- Message batching prevents spam
+- Natural response timing
+- Context-aware responses
+
+## Critical File Paths & Responsibilities
+
+### Core Workflow
+- `app/workflow_v2.py` - Main orchestration
+- `app/state/conversation_state.py` - State schema with add_messages
+
+### Intelligence Layer
+- `app/intelligence/analyzer.py` - Score calculation & extraction
+- `app/intelligence/ghl_updater.py` - Saves scores to GHL
+
+### Context Loading
+- `app/tools/webhook_enricher.py` - Enriches webhook data
+- `app/tools/conversation_loader.py` - Loads conversation history
+
+### Human-Like Features
+- `app/utils/message_batcher.py` - Message batching logic
+- `app/utils/message_utils.py` - Message trimming
+
+### Monitoring
+- `app/utils/tracing.py` - LangSmith integration
+- `app/__init__.py` - Auto-setup tracing
+
+## Custom Field Mappings (GHL)
+```python
+FIELD_MAPPINGS = {
+    "score": "wAPjuqxtfgKLCJqahjo1",        # Lead score (1-10)
+    "intent": "Q1n5kaciimUU6JN5PBD6",       # EXPLORANDO/EVALUANDO/LISTO_COMPRAR
+    "business_type": "HtoheVc48qvAfvRUKhfG", # Business type
+    "urgency_level": "dXasgCZFgqd62psjw7nd", # ALTA/NO_EXPRESADO
+    "goal": "r7jFiJBYHiEllsGn7jZC",         # Customer goal
+    "budget": "4Qe8P25JRLW0IcZc5iOs",       # Budget amount
+    "name": "TjB0I5iNfVwx3zyxZ9sW",         # Verified name
+    "preferred_day": "D1aD9KUDNm5Lp4Kz8yAD", # Appointment day
+    "preferred_time": "M70lUtadchW4f2pJGDJ5" # Appointment time
+}
+```
+
+## Environment Variables
+```bash
+# Required
+OPENAI_API_KEY=sk-...
+GHL_API_TOKEN=pit-...
+SUPABASE_URL=https://...
+SUPABASE_KEY=eyJ...
+
+# LangSmith (Recommended)
+LANGSMITH_API_KEY=lsv2_pt_...
+LANGSMITH_PROJECT=ghl-langgraph-agent
+
+# Optional
+REDIS_URL=redis://localhost:6379/0
+```
+
+## Testing Checklist
+- [ ] Message batching works (send 3 quick messages)
+- [ ] Score persists in GHL (check custom fields)
+- [ ] Tags update correctly (hot-lead, warm-lead, etc.)
+- [ ] Conversation history loads (check logs)
+- [ ] LangSmith shows traces
+- [ ] Spanish extraction works
+- [ ] Budget detection triggers score bump
+
+## Common Issues & Solutions
+
+### Issue: Score not updating
+- Check GHL API token has write permissions
+- Verify custom field IDs match
+- Check logs for GHL update errors
+
+### Issue: Messages processed individually
+- Ensure Redis is running (or fallback works)
+- Check batch window timing
+- Verify webhook processing
+
+### Issue: No conversation history
+- Check GHL API permissions
+- Verify contact ID is correct
+- Check conversation history endpoint
+
 ## Context for Future Development
 When working on this project:
 1. Always use v2 patterns (Command, create_react_agent)
@@ -382,3 +641,7 @@ When working on this project:
 4. Implement handoffs via Command objects
 5. Leverage memory store for context
 6. Test with Context7 MCP for latest docs
+7. Consider intelligence layer for structured extraction before LLM processing
+8. Use deterministic scoring for predictable lead qualification
+9. Ensure all state changes are persisted to GHL
+10. Test with rapid message sequences for human-like behavior

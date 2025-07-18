@@ -77,6 +77,12 @@ def create_sofia_agent():
     """Factory function to create Sofia agent"""
     settings = get_settings()
     
+    # Agent configuration with tracing
+    agent_config = {
+        "tags": ["agent:sofia", "hot-leads", "appointments"],
+        "metadata": {"agent_type": "appointment_setter"}
+    }
+    
     agent = create_react_agent(
         model=f"openai:{settings.openai_model}",
         tools=appointment_tools_v2,
@@ -85,7 +91,7 @@ def create_sofia_agent():
         name="sofia"
     )
     
-    logger.info("Created Sofia agent with create_react_agent")
+    logger.info("Created Sofia agent with create_react_agent and tracing enabled")
     return agent
 
 

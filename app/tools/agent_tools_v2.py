@@ -163,10 +163,10 @@ async def create_appointment_v2(
     contact_id: str,
     start_time: str,
     end_time: str,
-    title: str = "Consultation",
-    timezone: str = "America/New_York",
     state: Annotated[ConversationState, InjectedState],
-    tool_call_id: Annotated[str, InjectedToolCallId]
+    tool_call_id: Annotated[str, InjectedToolCallId],
+    title: str = "Consultation",
+    timezone: str = "America/New_York"
 ) -> Command:
     """
     Create appointment and return Command to update state and route
@@ -234,9 +234,9 @@ def save_conversation_context(
     content: str,
     context_type: Literal["preference", "business_info", "goal", "pain_point"],
     *,
-    contact_id: Optional[str] = None,
     store: Annotated[BaseStore, InjectedStore],
-    state: Annotated[ConversationState, InjectedState]
+    state: Annotated[ConversationState, InjectedState],
+    contact_id: Optional[str] = None
 ) -> str:
     """
     Save important conversation context to memory store

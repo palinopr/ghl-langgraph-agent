@@ -14,12 +14,12 @@ from app.config import get_settings
 logger = get_logger("supervisor")
 
 
-class SupervisorState(MessagesState):
-    """State for supervisor with routing information"""
-    current_agent: str | None
-    next_agent: str | None
-    routing_reason: str | None
-    conversation_summary: str | None
+from typing import Optional
+from app.state.conversation_state import ConversationState
+
+class SupervisorState(ConversationState):
+    """State for supervisor extending ConversationState to access all fields"""
+    pass  # Inherits all fields from ConversationState including intelligence fields
 
 
 def supervisor_prompt(state: SupervisorState) -> list[AnyMessage]:
@@ -27,37 +27,82 @@ def supervisor_prompt(state: SupervisorState) -> list[AnyMessage]:
     Dynamic prompt for the supervisor based on current state
     """
     current = state.get("current_agent", "none")
+    lead_score = state.get("lead_score", 0)
+    score_reasoning = state.get("score_reasoning", "No scoring available")
+    suggested_agent = state.get("suggested_agent", None)
+    lead_category = state.get("lead_category", "unknown")
+    
+    # Build context about extracted information
+    extracted = state.get("extracted_data", {})
+    context_info = []
+    if extracted.get("name"):
+        context_info.append(f"Name: {extracted['name']}")
+    if extracted.get("business_type"):
+        context_info.append(f"Business: {extracted['business_type']}")
+    if extracted.get("budget"):
+        context_info.append(f"Budget: {extracted['budget']}")
+    if extracted.get("goal"):
+        context_info.append(f"Goal: {extracted['goal']}")
+    
+    context_str = "\n".join(context_info) if context_info else "No information extracted yet"
     
     system_prompt = f"""You are an intelligent routing supervisor for Main Outlet Media.
-Your role is to analyze conversations and route to the appropriate specialist agent.
+Your role is to analyze conversations and route to the appropriate specialist agent based on lead score and context.
 
-Current agent: {current}
+Current Status:
+- Current agent: {current}
+- Lead Score: {lead_score}/10 ({lead_category})
+- Score Reasoning: {score_reasoning}
+- Intelligence Suggestion: Route to {suggested_agent or 'no suggestion'}
 
-Available agents and their specialties:
-1. **Sofia** - Appointment Setting Specialist
-   - Routes: appointment booking, scheduling, calendar inquiries
-   - Keywords: book, schedule, appointment, meeting, consultation, available times
+Extracted Information:
+{context_str}
+
+ROUTING RULES (PRIORITY ORDER):
+
+1. **Score-Based Primary Routing**:
+   - Score 8-10 (HOT LEADS) → Sofia (Appointment Booking)
+     * Has budget confirmed ($300+)
+     * Clear buying intent
+     * Ready for appointment
+     
+   - Score 5-7 (WARM LEADS) → Carlos (Lead Qualification)
+     * Has business information
+     * Expressed interest but needs nurturing
+     * Budget not confirmed yet
+     
+   - Score 1-4 (COLD LEADS) → Maria (Information Gathering)
+     * Limited information provided
+     * Just exploring options
+     * Needs basic education
+
+2. **Context-Based Override Rules**:
+   - If user explicitly asks for appointment → Sofia (regardless of score)
+   - If user mentions specific budget amount → Carlos (to qualify)
+   - If user has general questions → Maria (for support)
+   - If current agent is handling well → Let them continue
+
+3. **Special Cases**:
+   - Budget confirmation ("si" after $300 mention) → Immediate route to Sofia
+   - Multiple failed attempts by current agent → Escalate up (Maria→Carlos→Sofia)
+   - Technical issues or complaints → Always Maria
+
+Available agents:
+1. **Sofia** - Appointment Setting Specialist (HOT LEADS)
    - Use transfer_to_sofia tool
    
-2. **Carlos** - Lead Qualification Specialist  
-   - Routes: business information gathering, needs assessment, qualification
-   - Keywords: business, company, challenges, goals, budget, marketing needs
+2. **Carlos** - Lead Qualification Specialist (WARM LEADS)
    - Use transfer_to_carlos tool
    
-3. **Maria** - Customer Support Representative
-   - Routes: general inquiries, support issues, complaints, basic information
-   - Keywords: help, question, problem, issue, services, information
+3. **Maria** - Customer Support Representative (COLD LEADS)
    - Use transfer_to_maria tool
 
-Decision Guidelines:
-- Analyze the user's intent and message content
-- Consider the conversation history and context
-- If an agent is already handling effectively, let them continue
-- Only transfer when there's a clear need for different expertise
-- Use the appropriate transfer tool based on your analysis
-
-IMPORTANT: You must use one of the transfer tools to route the conversation.
-Do not try to answer questions yourself - always delegate to a specialist."""
+IMPORTANT INSTRUCTIONS:
+- Consider the lead score as PRIMARY routing factor
+- But allow context to override when user intent is clear
+- You MUST use one of the transfer tools to route
+- Include reasoning when transferring (e.g., "Transferring to Sofia because lead score is 8 and budget is confirmed")
+- Do NOT answer questions yourself - always delegate"""
     
     return [{"role": "system", "content": system_prompt}] + state["messages"]
 

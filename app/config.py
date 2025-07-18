@@ -53,6 +53,9 @@ class Settings(BaseSettings):
         env="LANGCHAIN_PROJECT"
     )
     
+    # Redis (optional for message batching)
+    redis_url: Optional[str] = Field(default=None, env="REDIS_URL")
+    
     # Custom Field IDs
     lead_score_field_id: str = Field(
         default="wAPjuqxtfgKLCJqahjo1",

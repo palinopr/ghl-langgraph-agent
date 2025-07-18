@@ -3,8 +3,7 @@ Conversation state definition for LangGraph workflow
 """
 from typing import TypedDict, List, Literal, Optional, Dict, Any, Annotated
 from datetime import datetime
-import operator
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, add_messages
 
 
 class ConversationState(TypedDict):
@@ -13,8 +12,8 @@ class ConversationState(TypedDict):
     This tracks all information needed throughout the conversation lifecycle.
     """
     
-    # Message history - using Annotated with operator.add for append behavior
-    messages: Annotated[List[BaseMessage], operator.add]
+    # Message history - using add_messages reducer for proper message handling
+    messages: Annotated[List[BaseMessage], add_messages]
     
     # Contact Information
     contact_id: str
@@ -87,6 +86,13 @@ class ConversationState(TypedDict):
     # Analysis Results
     ai_analysis: Optional[Dict[str, Any]]  # Store full AI analysis
     extracted_data: Dict[str, Any]  # Extracted information from messages
+    
+    # Intelligence Layer Results (new fields for structured analysis)
+    score_history: List[Dict[str, Any]]  # Track score changes over time
+    lead_category: Optional[Literal["cold", "warm", "hot"]]  # Explicit category
+    suggested_agent: Optional[Literal["maria", "carlos", "sofia"]]  # Routing suggestion
+    analysis_metadata: Optional[Dict[str, Any]]  # Analysis details and confidence
+    score_reasoning: Optional[str]  # Explanation for current score
 
 
 def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
@@ -163,7 +169,14 @@ def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
         # Raw Data
         webhook_data=webhook_data,
         ai_analysis=None,
-        extracted_data={}
+        extracted_data={},
+        
+        # Intelligence Layer
+        score_history=[],
+        lead_category="cold",
+        suggested_agent="maria",
+        analysis_metadata=None,
+        score_reasoning=None
     )
 
 
