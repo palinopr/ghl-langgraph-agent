@@ -31,22 +31,8 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Detailed health check"""
-    try:
-        # Check Supabase connection
-        await supabase_client.get_pending_messages(limit=1)
-        supabase_status = "connected"
-    except Exception as e:
-        logger.error(f"Supabase health check failed: {e}")
-        supabase_status = "error"
-    
-    return {
-        "status": "healthy",
-        "services": {
-            "supabase": supabase_status,
-            "langgraph": "ready"
-        }
-    }
+    """Simple health check - no external dependencies"""
+    return {"status": "healthy"}
 
 
 @app.post("/webhook/message")

@@ -1,24 +1,21 @@
 """
 Main entry point for the GoHighLevel LangGraph Agent
 """
+import os
 import uvicorn
 from src.api.webhook import app
-from src.config import get_settings
-from src.utils.logger import setup_logging
-
-# Set up logging
-setup_logging()
-
-# Get settings
-settings = get_settings()
-
 
 if __name__ == "__main__":
+    # Get port from environment with default
+    port = int(os.environ.get("PORT", 10000))
+    
+    print(f"Starting server on 0.0.0.0:{port}")
+    
     # Run the FastAPI application
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=settings.port,
+        port=port,
         reload=False,
         log_level="info"
     )
