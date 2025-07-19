@@ -640,8 +640,15 @@ class GHLClient:
         endpoint = f"/conversations/{conversation_id}/messages"
         result = await self._make_request("GET", endpoint)
         
+        # Handle nested structure: result['messages']['messages']
         if result and "messages" in result:
-            return result["messages"]
+            messages_data = result["messages"]
+            # Check if it's the nested structure
+            if isinstance(messages_data, dict) and "messages" in messages_data:
+                return messages_data["messages"]
+            # Fall back to direct list if structure is different
+            elif isinstance(messages_data, list):
+                return messages_data
         return []
     
     async def add_tags(self, contact_id: str, tags: List[str]) -> Optional[Dict]:

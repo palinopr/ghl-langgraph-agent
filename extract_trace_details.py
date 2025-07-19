@@ -6,10 +6,6 @@ import sys
 import os
 import json
 from datetime import datetime
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 try:
     from langsmith import Client
@@ -79,14 +75,35 @@ def extract_trace_details(trace_id):
         
         # Track important events
         conversation_events = []
+        contact_id_events = []
+        get_conversations_calls = []
         
         for i, child in enumerate(child_runs):
             print(f"\n{i+1}. {child.name} ({child.run_type})")
             print(f"   Start: {child.start_time}")
             print(f"   Status: {child.status}")
             
+            # Look for contact ID usage
+            if child.inputs and "contact_id" in str(child.inputs):
+                contact_id_events.append({
+                    "node": child.name,
+                    "time": child.start_time,
+                    "inputs": str(child.inputs)[:500]
+                })
+                print(f"   ⚠️  CONTACT ID FOUND: {str(child.inputs)[:200]}...")
+            
+            # Look for get_conversations calls
+            if "get_conversations" in child.name.lower():
+                get_conversations_calls.append({
+                    "time": child.start_time,
+                    "inputs": child.inputs,
+                    "outputs": child.outputs,
+                    "status": child.status
+                })
+                print(f"   📞 GET_CONVERSATIONS CALL")
+                
             # Show inputs if interesting
-            if child.inputs and any(key in str(child.inputs).lower() for key in ["challenge", "question", "answer", "customer"]):
+            if child.inputs and any(key in str(child.inputs).lower() for key in ["challenge", "question", "answer", "customer", "receptionist"]):
                 print(f"   Inputs Preview: {str(child.inputs)[:200]}...")
                 
             # Show outputs for LLM calls
@@ -119,6 +136,31 @@ def extract_trace_details(trace_id):
                 if child.outputs:
                     print(f"   Output: {str(child.outputs)[:200]}...")
                     
+        # Summary of contact ID usage
+        print(f"\n{'='*60}")
+        print("CONTACT ID USAGE:")
+        print(f"{'='*60}")
+        if contact_id_events:
+            for event in contact_id_events:
+                print(f"\n[{event['time'].strftime('%H:%M:%S')}] in {event['node']}")
+                print(f"Inputs: {event['inputs']}")
+        else:
+            print("No contact_id found in any inputs!")
+            
+        # Summary of get_conversations calls
+        print(f"\n{'='*60}")
+        print("GET_CONVERSATIONS CALLS:")
+        print(f"{'='*60}")
+        if get_conversations_calls:
+            for call in get_conversations_calls:
+                print(f"\n[{call['time'].strftime('%H:%M:%S')}] Status: {call['status']}")
+                if call['inputs']:
+                    print(f"Inputs: {json.dumps(call['inputs'], indent=2, default=str)[:500]}")
+                if call['outputs']:
+                    print(f"Outputs: {json.dumps(call['outputs'], indent=2, default=str)[:500]}")
+        else:
+            print("No get_conversations calls found!")
+        
         # Summary of findings
         print(f"\n{'='*60}")
         print("CHALLENGE-RELATED EVENTS:")
@@ -148,11 +190,6 @@ def extract_trace_details(trace_id):
         import traceback
         traceback.print_exc()
 
-# Analyze both traces
-trace_ids = [
-    "1f064982-efbc-6aba-9b85-f3b5227b2c2b",
-    "1f064974-3f93-6d5e-a756-1dd912bc6798"
-]
-
-for trace_id in trace_ids:
-    extract_trace_details(trace_id)
+# Analyze the specific trace
+trace_id = "1f0649dd-8dac-6802-9b24-a91f9943836c"
+extract_trace_details(trace_id)

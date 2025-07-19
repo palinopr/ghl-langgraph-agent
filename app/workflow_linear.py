@@ -18,6 +18,7 @@ from app.state.conversation_state import ConversationState
 
 # Import nodes
 from app.agents.receptionist_simple import receptionist_simple_node
+from app.agents.receptionist_simple_debug import receptionist_simple_debug_node
 from app.agents.supervisor_brain_simple import supervisor_brain_simple_node
 from app.agents.sofia_agent_v2 import sofia_node_v2
 from app.agents.carlos_agent_v2 import carlos_node_v2
@@ -89,7 +90,7 @@ def create_linear_workflow():
     workflow = StateGraph(ConversationState)
     
     # Add all nodes
-    workflow.add_node("receptionist", receptionist_simple_node)
+    workflow.add_node("receptionist", receptionist_simple_debug_node)  # TEMP: Using debug version
     workflow.add_node("supervisor_brain", supervisor_brain_simple_node)
     workflow.add_node("sofia", sofia_node_v2)
     workflow.add_node("carlos", carlos_node_v2)

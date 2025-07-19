@@ -9,7 +9,7 @@ from app.utils.simple_logger import get_logger
 from app.utils.workflow_tracker import can_start_workflow, end_workflow
 from app.state.conversation_state import create_initial_state
 from app.workflow_supervisor_brain import supervisor_brain_workflow
-from app.tools.webhook_enricher import enrich_webhook_data
+from app.tools.webhook_enricher import webhook_enricher
 from app.tools.conversation_loader import conversation_loader
 
 logger = get_logger("workflow_runner")
@@ -42,7 +42,7 @@ async def run_workflow_safe(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         
         # Enrich webhook data with full context
         logger.info(f"Enriching webhook data for contact {contact_id}")
-        enriched_data = await enrich_webhook_data(webhook_data)
+        enriched_data = await webhook_enricher.enrich_webhook_data(webhook_data)
         
         # Create initial state
         initial_state = create_initial_state(enriched_data)
