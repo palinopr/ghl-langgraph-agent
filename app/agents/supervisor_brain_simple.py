@@ -136,7 +136,7 @@ async def supervisor_brain_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
         # 2. UPDATE GHL
         ghl_client = GHLClient()
         
-        # Prepare custom fields
+        # Prepare custom fields - GHL expects array format with id/value pairs
         custom_fields = [
             {"id": FIELD_MAPPINGS["score"], "value": str(final_score)}
         ]
@@ -153,8 +153,14 @@ async def supervisor_brain_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
                 "value": final_budget
             })
             
+        if final_name:
+            custom_fields.append({
+                "id": FIELD_MAPPINGS["name"],
+                "value": final_name
+            })
+            
         # Update contact
-        contact_updates = {"customFields": custom_fields}
+        contact_updates = {"customFields": custom_fields}  # GHL API uses plural 'customFields'
         await ghl_client.update_contact(contact_id, contact_updates)
         
         # Update tags
