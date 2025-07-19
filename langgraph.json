@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "2.2.5",
-  "description": "GoHighLevel LangGraph Agent - v2.2.5 Fix Introduction Repetition",
+  "version": "2.2.6",
+  "description": "GoHighLevel LangGraph Agent - v2.2.6 Fix Answer Recognition",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },
