@@ -1,20 +1,23 @@
 """
-COMPLETE WORKFLOW - Consolidated Supervisor Brain Pattern
+LINEAR WORKFLOW - No Circular Agent Transfers
 Flow: Webhook → Receptionist → Supervisor Brain → Agent → Responder
 
-1. Receptionist loads all GHL data (like n8n's Get Contact)
-2. Supervisor Brain does EVERYTHING:
-   - Analyzes and scores lead
-   - Updates GHL (score, tags, fields, notes)
-   - Routes to appropriate agent
-3. Agents handle conversation
-4. Responder sends messages
+Key Changes:
+1. Agents CANNOT transfer to each other (no more loops!)
+2. Agents can ONLY escalate back to supervisor
+3. Supervisor makes ALL routing decisions (like n8n)
+4. Maximum 2 routing attempts to prevent infinite loops
+
+This implements the LINEAR flow pattern from n8n where:
+- One central routing decision (supervisor)
+- No agent-to-agent transfers
+- Clear, predictable flow
 """
-# Import the supervisor brain workflow
-from app.workflow_supervisor_brain import supervisor_brain_workflow
+# Import the LINEAR workflow (not circular!)
+from app.workflow_linear import linear_workflow
 
 # Export as main workflow
-workflow = supervisor_brain_workflow
+workflow = linear_workflow
 
 # Export for langgraph.json
 __all__ = ["workflow"]

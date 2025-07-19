@@ -12,8 +12,7 @@ from app.tools.agent_tools_v2 import (
     update_contact_with_state,
     create_appointment_v2,
     book_appointment_and_end,
-    transfer_to_carlos,
-    transfer_to_maria,
+    escalate_to_supervisor,
     check_calendar_availability,
     book_appointment_from_confirmation
 )
@@ -191,8 +190,11 @@ AVAILABLE TOOLS YOU MUST USE:
 - book_appointment_from_confirmation: Use when customer confirms a time (e.g., "mañana a las 3pm está bien")
 - create_appointment_v2: Manual booking with specific times
 - book_appointment_and_end: Finalize and end conversation
-- transfer_to_carlos: If budget not confirmed
-- transfer_to_maria: For general support
+- escalate_to_supervisor: Use when you need a different agent:
+  - reason="needs_qualification" - If budget not confirmed (for Carlos)
+  - reason="needs_support" - For general support (for Maria)
+  - reason="wrong_agent" - If you're not the right agent
+  - reason="customer_confused" - If conversation is off-track
 
 PROACTIVE APPOINTMENT OFFERING (Hot Leads):
 When dealing with hot leads (score 8+) ready to buy:
@@ -253,8 +255,7 @@ def create_sofia_agent():
         book_appointment_from_confirmation,
         create_appointment_v2,
         book_appointment_and_end,
-        transfer_to_carlos,
-        transfer_to_maria
+        escalate_to_supervisor  # Only escalation, no direct transfers!
     ]
     
     agent = create_react_agent(

@@ -328,7 +328,42 @@ def supervisor_brain_prompt(state: ConversationState) -> list[AnyMessage]:
     """
     contact_id = state.get("contact_id", "unknown")
     
-    system_prompt = f"""You are the Supervisor Brain for Main Outlet Media.
+    # Check if this is an escalation
+    if state.get("needs_rerouting") and state.get("escalation_reason"):
+        escalation_from = state.get("escalation_from", "unknown")
+        escalation_reason = state.get("escalation_reason")
+        escalation_details = state.get("escalation_details", "")
+        routing_attempts = state.get("routing_attempts", 0)
+        
+        system_prompt = f"""You are the Supervisor Brain handling an ESCALATION.
+
+🔴 ESCALATION RECEIVED:
+- From Agent: {escalation_from}
+- Reason: {escalation_reason}
+- Details: {escalation_details}
+- This is routing attempt {routing_attempts}/2
+
+ESCALATION REASONS EXPLAINED:
+- needs_appointment: Customer wants to schedule, route to Sofia
+- needs_qualification: Customer needs business assessment, route to Carlos
+- needs_support: Customer needs general help, route to Maria
+- customer_confused: Re-analyze from scratch
+- wrong_agent: Current agent can't help, find correct one
+
+⚠️ You MUST use ALL THREE tools in this EXACT order:
+1. analyze_and_score_lead() - Re-analyze the ENTIRE conversation
+2. update_ghl_complete("{contact_id}") - Update any new information
+3. route_to_agent() - Route to a DIFFERENT agent than {escalation_from}
+
+IMPORTANT: 
+- Do NOT route back to {escalation_from}
+- If routing_attempts >= 2, this is the LAST chance
+- Consider the escalation reason when choosing the new agent
+
+START NOW with analyze_and_score_lead()"""
+    else:
+        # Normal first-time routing
+        system_prompt = f"""You are the Supervisor Brain for Main Outlet Media.
 
 ⚠️ CRITICAL: You MUST use ALL THREE tools in this EXACT order:
 

@@ -179,18 +179,58 @@ Changes: Score updated from {previous_score} to {final_score}
         logger.info(f"GHL updated: Score={final_score}, Tags={tags}")
         
         # 3. ROUTING DECISION
-        if final_score >= 8:
-            # Hot lead - go straight to Sofia for closing
-            next_agent = "sofia"
-            routing_reason = "Hot lead ready for appointment (score 8+)"
-        elif final_score >= 5:
-            # Warm lead - needs qualification
-            next_agent = "carlos"
-            routing_reason = "Warm lead needs qualification"
+        # Check if this is an escalation (re-routing)
+        if state.get("needs_rerouting") and state.get("escalation_reason"):
+            escalation_from = state.get("escalation_from", "unknown")
+            escalation_reason = state.get("escalation_reason")
+            
+            logger.info(f"Handling escalation from {escalation_from}: {escalation_reason}")
+            
+            # Route based on escalation reason
+            if escalation_reason == "needs_appointment":
+                next_agent = "sofia"
+                routing_reason = f"Escalation: Customer needs appointment booking"
+            elif escalation_reason == "needs_qualification":
+                next_agent = "carlos"
+                routing_reason = f"Escalation: Customer needs business qualification"
+            elif escalation_reason == "needs_support":
+                next_agent = "maria"
+                routing_reason = f"Escalation: Customer needs general support"
+            else:
+                # Re-analyze based on score
+                if final_score >= 8:
+                    next_agent = "sofia"
+                elif final_score >= 5:
+                    next_agent = "carlos"
+                else:
+                    next_agent = "maria"
+                routing_reason = f"Escalation: Re-routed based on score {final_score}"
+            
+            # Don't route back to the same agent
+            if next_agent == escalation_from:
+                logger.warning(f"Avoiding circular routing back to {escalation_from}")
+                # Pick next best agent
+                if escalation_from == "maria" and final_score >= 5:
+                    next_agent = "carlos"
+                elif escalation_from == "carlos" and final_score >= 8:
+                    next_agent = "sofia"
+                elif escalation_from == "sofia" and final_score < 8:
+                    next_agent = "carlos" if final_score >= 5 else "maria"
+                routing_reason += f" (avoiding circular route to {escalation_from})"
         else:
-            # Cold lead - needs nurturing
-            next_agent = "maria"
-            routing_reason = "Cold lead needs nurturing"
+            # Normal first-time routing based on score
+            if final_score >= 8:
+                # Hot lead - go straight to Sofia for closing
+                next_agent = "sofia"
+                routing_reason = "Hot lead ready for appointment (score 8+)"
+            elif final_score >= 5:
+                # Warm lead - needs qualification
+                next_agent = "carlos"
+                routing_reason = "Warm lead needs qualification"
+            else:
+                # Cold lead - needs nurturing
+                next_agent = "maria"
+                routing_reason = "Cold lead needs nurturing"
             
         logger.info(f"Routing to {next_agent}: {routing_reason}")
         
@@ -209,7 +249,7 @@ SUPERVISOR ANALYSIS COMPLETE:
         )
         
         # Return updates
-        return {
+        result = {
             "messages": state.get("messages", []) + [summary_msg],
             "lead_score": final_score,
             "extracted_data": {
@@ -219,8 +259,18 @@ SUPERVISOR ANALYSIS COMPLETE:
             },
             "next_agent": next_agent,
             "supervisor_complete": True,
-            "interaction_count": state.get("interaction_count", 0) + 1
+            "interaction_count": state.get("interaction_count", 0) + 1,
+            "current_agent": next_agent  # Set current agent for routing
         }
+        
+        # Clear escalation flags if this was a re-routing
+        if state.get("needs_rerouting"):
+            result["needs_rerouting"] = False
+            result["escalation_reason"] = None
+            result["escalation_details"] = None
+            result["escalation_from"] = None
+            
+        return result
         
     except Exception as e:
         logger.error(f"Supervisor error: {str(e)}", exc_info=True)

@@ -24,12 +24,72 @@ from app.tools.calendar_slots import (
 logger = get_logger("agent_tools_v2")
 
 
-# ============ HANDOFF TOOLS ============
+# ============ LINEAR FLOW: ESCALATION ONLY ============
+@tool
+def escalate_to_supervisor(
+    reason: Literal["needs_appointment", "needs_qualification", "needs_support", "customer_confused", "wrong_agent"],
+    details: str,
+    state: Annotated[ConversationState, InjectedState],
+    tool_call_id: Annotated[str, InjectedToolCallId]
+) -> Command:
+    """
+    Escalate back to supervisor for re-routing when you cannot handle the request.
+    Use this instead of transferring directly to another agent.
+    
+    Reasons:
+    - needs_appointment: Customer wants to schedule but you can't (Maria/Carlos)
+    - needs_qualification: Customer needs business assessment but you can't (Maria/Sofia)
+    - needs_support: Customer needs general help but you can't (Carlos/Sofia)
+    - customer_confused: Customer seems lost or asking unrelated questions
+    - wrong_agent: You're not the right agent for this conversation
+    """
+    current_agent = state.get("current_agent", "unknown")
+    routing_attempts = state.get("routing_attempts", 0)
+    
+    # Prevent infinite escalations
+    if routing_attempts >= 2:
+        logger.warning(f"Max routing attempts reached ({routing_attempts}), cannot escalate further")
+        return Command(
+            goto="responder",
+            update={
+                "messages": state["messages"] + [ToolMessage(
+                    content="I apologize, but I'm having trouble routing your request. Please contact support directly.",
+                    tool_call_id=tool_call_id
+                )],
+                "should_end": True
+            },
+            graph=Command.PARENT
+        )
+    
+    logger.info(f"Agent {current_agent} escalating to supervisor: {reason} - {details}")
+    
+    tool_message = ToolMessage(
+        content=f"Escalating to supervisor for re-routing. Reason: {reason}",
+        tool_call_id=tool_call_id
+    )
+    
+    return Command(
+        goto="supervisor_brain",
+        update={
+            "messages": state["messages"] + [tool_message],
+            "escalation_reason": reason,
+            "escalation_details": details,
+            "escalation_from": current_agent,
+            "routing_attempts": routing_attempts + 1,
+            "needs_rerouting": True
+        },
+        graph=Command.PARENT
+    )
+
+
+# ============ DEPRECATED: Direct Agent Transfers (Kept for backward compatibility) ============
+# These should NOT be used in new code - use escalate_to_supervisor instead
 def create_handoff_tool(*, agent_name: str, description: Optional[str] = None):
     """
-    Creates a handoff tool using the latest Command pattern
-    This allows agents to transfer control to other agents
+    DEPRECATED: Creates direct agent-to-agent transfer tools.
+    Use escalate_to_supervisor instead for linear flow.
     """
+    logger.warning(f"DEPRECATED: create_handoff_tool for {agent_name} - use escalate_to_supervisor instead")
     name = f"transfer_to_{agent_name}"
     description = description or f"Transfer to {agent_name}"
 
@@ -38,49 +98,32 @@ def create_handoff_tool(*, agent_name: str, description: Optional[str] = None):
         state: Annotated[ConversationState, InjectedState],
         tool_call_id: Annotated[str, InjectedToolCallId],
     ) -> Command:
-        tool_message = {
-            "role": "tool",
-            "content": f"Successfully transferred to {agent_name}",
-            "name": name,
-            "tool_call_id": tool_call_id,
-        }
-        
-        # Log the handoff
-        logger.info(f"Handoff from {state.get('current_agent')} to {agent_name}")
-        
-        return Command(
-            goto=agent_name,
-            update={
-                "messages": state["messages"] + [tool_message],
-                "current_agent": agent_name,
-                "next_agent": agent_name,
-                "agent_history": state.get("agent_history", []) + [{
-                    "from": state.get("current_agent"),
-                    "to": agent_name,
-                    "timestamp": datetime.now(pytz.UTC).isoformat(),
-                    "reason": f"Handoff via {name} tool"
-                }]
-            },
-            graph=Command.PARENT,
+        # Instead of direct transfer, escalate to supervisor
+        logger.warning(f"DEPRECATED handoff to {agent_name} - escalating to supervisor instead")
+        return escalate_to_supervisor(
+            reason="wrong_agent",
+            details=f"Legacy transfer attempt to {agent_name}",
+            state=state,
+            tool_call_id=tool_call_id
         )
     
     return handoff_tool
 
 
-# Create handoff tools for each agent
+# Keep these for backward compatibility but they now escalate
 transfer_to_sofia = create_handoff_tool(
     agent_name="sofia",
-    description="Transfer to Sofia for appointment booking and scheduling"
+    description="DEPRECATED: Use escalate_to_supervisor with reason='needs_appointment'"
 )
 
 transfer_to_carlos = create_handoff_tool(
     agent_name="carlos",
-    description="Transfer to Carlos for lead qualification and business assessment"
+    description="DEPRECATED: Use escalate_to_supervisor with reason='needs_qualification'"
 )
 
 transfer_to_maria = create_handoff_tool(
     agent_name="maria",
-    description="Transfer to Maria for general support and information"
+    description="DEPRECATED: Use escalate_to_supervisor with reason='needs_support'"
 )
 
 
@@ -526,33 +569,30 @@ Thank you for choosing Main Outlet Media. Have a great day!
 
 
 # ============ TOOL COLLECTIONS FOR AGENTS ============
-# Sofia's appointment tools
+# Sofia's appointment tools (LINEAR FLOW - no direct transfers)
 appointment_tools_v2 = [
     get_contact_details_v2,
     update_contact_with_state,
     create_appointment_v2,
     book_appointment_and_end,
-    transfer_to_carlos,
-    transfer_to_maria,
+    escalate_to_supervisor,  # Use escalation instead of direct transfers
     save_conversation_context,
     search_conversation_history
 ]
 
-# Carlos's qualification tools  
+# Carlos's qualification tools (LINEAR FLOW - no direct transfers)
 qualification_tools_v2 = [
     get_contact_details_v2,
     update_contact_with_state,
-    transfer_to_sofia,
-    transfer_to_maria,
+    escalate_to_supervisor,  # Use escalation instead of direct transfers
     save_conversation_context,
     search_conversation_history
 ]
 
-# Maria's support tools
+# Maria's support tools (LINEAR FLOW - no direct transfers)
 support_tools_v2 = [
     get_contact_details_v2,
-    transfer_to_sofia,
-    transfer_to_carlos,
+    escalate_to_supervisor,  # Use escalation instead of direct transfers
     save_conversation_context,
     search_conversation_history
 ]
@@ -567,10 +607,12 @@ supervisor_tools = [
 
 # Export all tools
 __all__ = [
-    # Handoff tools
+    # LINEAR FLOW: Escalation tool
+    "escalate_to_supervisor",
+    # DEPRECATED: Legacy handoff tools (now escalate)
     "create_handoff_tool",
     "transfer_to_sofia",
-    "transfer_to_carlos",
+    "transfer_to_carlos", 
     "transfer_to_maria",
     # Tool collections
     "appointment_tools_v2",

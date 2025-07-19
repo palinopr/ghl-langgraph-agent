@@ -9,13 +9,13 @@ from langgraph.prebuilt.chat_agent_executor import AgentState
 from langgraph.types import Command
 from app.tools.agent_tools_v2 import (
     get_contact_details_v2,
-    transfer_to_sofia,
-    transfer_to_carlos
+    escalate_to_supervisor
 )
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
 from app.utils.model_factory import create_openai_model
 from app.utils.state_utils import filter_agent_result
+from app.utils.conversation_enforcer import get_conversation_analysis, get_next_response
 
 logger = get_logger("maria_v2")
 
@@ -31,25 +31,30 @@ class MariaState(AgentState):
 
 def maria_prompt(state: MariaState) -> list[AnyMessage]:
     """
-    Dynamic prompt function for Maria that includes context from state
+    Dynamic prompt function for Maria with STRICT conversation enforcement
     """
-    # Build context from state
-    contact_name = state.get("contact_name", "there")
-    previous_agent = state.get("current_agent")
-    
-    # Get the CURRENT message only (not history)
+    # Get messages for analysis
     messages = state.get("messages", [])
     current_message = ""
     
-    # Track conversation state by analyzing message history
-    asked_for_name = False
-    got_name = False
-    asked_for_business = False
-    got_business = False
-    asked_for_problem = False
-    got_problem = False
-    customer_name = None
-    business_type = None
+    # STRICT ENFORCEMENT: Use conversation analyzer
+    analysis = get_conversation_analysis(messages)
+    
+    # Get enforcement data
+    current_stage = analysis['current_stage'].value
+    next_action = analysis['next_action']
+    allowed_response = analysis['allowed_response']
+    collected_data = analysis['collected_data']
+    
+    # Map old variables for compatibility
+    asked_for_name = 'name' in analysis.get('last_question_asked', '')
+    got_name = collected_data['name'] is not None
+    asked_for_business = 'business' in analysis.get('last_question_asked', '')
+    got_business = collected_data['business'] is not None
+    asked_for_problem = 'problem' in analysis.get('last_question_asked', '')
+    got_problem = collected_data['problem'] is not None
+    customer_name = collected_data['name']
+    business_type = collected_data['business']
     
     # Analyze conversation flow
     for i, msg in enumerate(messages):
@@ -119,6 +124,14 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     
     system_prompt = f"""You are Maria, a professional WhatsApp automation consultant for Main Outlet Media.
 
+🚨 STRICT ENFORCEMENT MODE ACTIVE 🚨
+Current Stage: {current_stage}
+Next Action: {next_action}
+ALLOWED RESPONSE: "{allowed_response}"
+
+⚡ If response starts with "ESCALATE:", use escalate_to_supervisor tool
+⚡ Otherwise, respond with the EXACT allowed response above!
+
 Role: Handle COLD leads (score 1-4). Build trust and spark initial interest.
 ⚠️ IMPORTANT: You only handle scores 1-4. If score is 5+ → transfer to Carlos!
 
@@ -170,7 +183,7 @@ UNDERSTANDING CUSTOMER RESPONSES:
 
 BEFORE ANYTHING ELSE:
 ⚡ FIRST ACTION: Check the lead score in the context above
-⚡ If score >= 5: IMMEDIATELY use transfer_to_carlos tool
+⚡ If score >= 5: IMMEDIATELY use escalate_to_supervisor with reason="wrong_agent" 
 ⚡ Only continue with conversation if score is 1-4
 
 EXACT CONVERSATION FLOW (NEVER DEVIATE):
@@ -191,7 +204,7 @@ Customer: [any problem] → You: "Definitivamente puedo ayudarte con eso. Mis so
 ⚠️ Go DIRECTLY to budget! NO questions about "objetivo" or anything else!
 
 Step 5 - BUDGET CONFIRMATION:
-Customer: "Si" → USE transfer_to_carlos tool immediately!
+Customer: "Si" → USE escalate_to_supervisor with reason="needs_qualification" immediately!
 
 FORBIDDEN ACTIONS:
 ❌ NEVER ask about "objetivo" or "goals" after problem
@@ -200,17 +213,17 @@ FORBIDDEN ACTIONS:
 ❌ NEVER add questions not listed above
 
 AVAILABLE TOOLS:
-- transfer_to_carlos: Use IMMEDIATELY when:
-  - Lead score is 5 or higher (CHECK SCORE FIRST!)
-  - They confirm $300+ budget (say "si", "yes", "claro" to budget question)
-  - OR when you see they already have business type + budget confirmed
-- transfer_to_sofia: Use when they explicitly want to schedule NOW
+- escalate_to_supervisor: Use when you need a different agent:
+  - reason="wrong_agent" - If lead score is 5+ (you only handle 1-4)
+  - reason="needs_qualification" - After they confirm $300+ budget
+  - reason="needs_appointment" - If they want to schedule NOW
+  - reason="customer_confused" - If conversation is off-track
 - get_contact_details_v2: Check existing info (but don't call unless needed)
 
-CRITICAL TRANSFER RULES:
-1. CHECK SCORE FIRST: If score >= 5 → IMMEDIATELY use transfer_to_carlos
-2. After customer confirms budget → IMMEDIATELY use transfer_to_carlos
-3. Do NOT continue if you're not the right agent for this score!
+LINEAR FLOW RULES:
+1. CHECK SCORE FIRST: If score >= 5 → escalate with reason="wrong_agent"
+2. After budget confirmation → escalate with reason="needs_qualification"
+3. You CANNOT transfer directly to other agents - only escalate to supervisor!
 
 VALUE BUILDING:
 - Use specific examples for their business type
@@ -224,9 +237,9 @@ If asked about technology: "We use proprietary technology with the latest innova
 
 IMPORTANT CONTEXT CHECK:
 - Current lead score: Check state for lead_score
-- If score >= 5 and budget confirmed → Use transfer_to_carlos immediately
-- If customer just confirmed budget → Use transfer_to_carlos immediately
-- Do NOT restart conversation after transfers!
+- If score >= 5 → Use escalate_to_supervisor with reason="wrong_agent"
+- If customer just confirmed budget → Use escalate_to_supervisor with reason="needs_qualification"
+- You handle ONLY scores 1-4, escalate anything else!
 
 Communication Philosophy:
 1. Professional but friendly - Build trust from first message
@@ -246,11 +259,10 @@ def create_maria_agent():
     # Use explicit model initialization for proper tool binding
     model = create_openai_model(temperature=0.0)
     
-    # Create tools list without store-dependent tools
+    # Create tools list - LINEAR FLOW (no direct transfers)
     support_tools_simple = [
         get_contact_details_v2,
-        transfer_to_sofia,
-        transfer_to_carlos
+        escalate_to_supervisor  # Only escalation, no direct transfers!
     ]
     
     agent = create_react_agent(

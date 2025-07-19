@@ -1,7 +1,7 @@
 # Claude Context: LangGraph GHL Agent - Complete Implementation Guide
 
 ## Project Overview
-This is a LangGraph-based GoHighLevel (GHL) messaging agent that handles intelligent lead routing and appointment booking. The system uses three AI agents (Maria, Carlos, Sofia) orchestrated by a supervisor using the latest LangGraph patterns with advanced features like message batching, intelligent scoring, full conversation context loading, and Python 3.13 performance optimizations.
+This is a LangGraph-based GoHighLevel (GHL) messaging agent that handles intelligent lead routing and appointment booking. The system uses three AI agents (Maria, Carlos, Sofia) orchestrated by a supervisor using the latest LangGraph patterns with LINEAR FLOW (v3.0.0) - no agent-to-agent transfers, only escalations back to supervisor. This prevents expensive circular loops and matches the n8n workflow pattern.
 
 ## 🚀 Quick Start Commands
 ```bash
@@ -33,17 +33,28 @@ make deploy
 - **Sofia**: Appointment agent with direct booking and memory integration
 - **Memory Store**: Semantic search and conversation persistence
 
-### Enhanced Architecture (v3) - CURRENT (2025-07-18)
+### LINEAR FLOW Architecture (v3.0.0) - CURRENT (2025-07-19)
+- **No Agent-to-Agent Transfers**: Agents can ONLY escalate back to supervisor
+- **Centralized Routing**: Supervisor makes ALL routing decisions (like n8n)
+- **Escalation Pattern**: Agent → Supervisor → Different Agent (no loops!)
+- **Max 2 Routing Attempts**: Prevents infinite escalation loops
+- **Key Benefits**:
+  - No expensive circular agent loops
+  - Predictable, debuggable flow
+  - Matches n8n's linear routing pattern
+  - Clear escalation reasons tracked
+
+### Intelligence + Linear Flow (v3) - CURRENT
 - **Intelligence Layer**: Pre-processing analysis inspired by n8n workflow
   - Spanish pattern extraction (names, business, budget)
   - Deterministic lead scoring (1-10 scale)
   - Budget confirmation detection
   - Score persistence (never decreases)
-- **Supervisor**: Enhanced with score-based routing rules
-- **Agents**: Same as v2 but now receive enriched state
-- **Flow**: Message → Intelligence → Supervisor → Agent
+- **Supervisor**: Enhanced with score-based routing + escalation handling
+- **Agents**: Use `escalate_to_supervisor` tool instead of direct transfers
+- **Flow**: Message → Intelligence → Supervisor → Agent → (Escalate to Supervisor if needed)
 
-### Python 3.13 Performance Architecture (v4) - CURRENT
+### Python 3.13 Performance Architecture (v4)
 - **Free-Threading Mode**: GIL disabled for true parallelism
 - **JIT Compilation**: Hot paths optimized automatically
 - **Parallel Agents**: Multiple agents can run concurrently via TaskGroup
@@ -547,15 +558,34 @@ make monitor
 - `app/workflow_enhanced.py` - Enhanced workflow with all new features
 - `ENHANCEMENT_GUIDE.md` - Complete usage guide for new features
 
-## Recent Updates (July 18, 2025)
+## Recent Updates (July 19, 2025)
 
-### Latest Fix: Supervisor State Schema
+### v3.0.0 - LINEAR FLOW Implementation
+- **Problem**: Agents transferring to each other created expensive circular loops
+- **Root Cause**: Maria → Carlos → Sofia → Maria (infinite loop!)
+- **Solution**: Removed all agent-to-agent transfers, added escalation-only pattern
+- **Changes Made**:
+  1. Created `escalate_to_supervisor` tool - agents can ONLY go back to supervisor
+  2. Removed `transfer_to_X` tools from all agents
+  3. Added escalation handling to supervisor brain
+  4. Created new `workflow_linear.py` with proper routing
+  5. Max 2 routing attempts to prevent escalation loops
+- **Benefits**:
+  - No more circular agent loops
+  - Matches n8n's linear routing pattern
+  - Clear, predictable flow
+  - Better debugging and cost control
+- **Status**: ✅ Implemented and validated
+
+### Previous Updates (July 18, 2025)
+
+#### Latest Fix: Supervisor State Schema
 - **Problem**: `Missing required key(s) {'remaining_steps'} in state_schema`
 - **Solution**: Added `remaining_steps: int = 10` to SupervisorState class
 - **Impact**: Fixes create_react_agent compatibility for supervisor
 - **Status**: ✅ Fixed and deployed
 
-### Python 3.13 Optimizations Added
+#### Python 3.13 Optimizations Added
 - **Free-threading mode**: GIL disabled for parallelism
 - **JIT compilation**: Automatic optimization of hot paths
 - **Parallel workflows**: TaskGroup-based concurrent execution

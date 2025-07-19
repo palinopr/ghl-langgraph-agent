@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "2.3.0",
-  "description": "GoHighLevel LangGraph Agent - v2.3.0 ALL Agents Fixed + Proper Routing",
+  "version": "3.0.0",
+  "description": "GoHighLevel LangGraph Agent - v3.0.0 LINEAR FLOW (No Agent Loops)",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },

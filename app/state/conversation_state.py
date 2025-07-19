@@ -124,6 +124,13 @@ class ConversationState(TypedDict):
     
     # Appointment booking
     available_slots: Optional[List[Dict[str, Any]]]  # Available calendar slots
+    
+    # LINEAR FLOW: Escalation fields
+    escalation_reason: Optional[str]  # Why agent escalated
+    escalation_details: Optional[str]  # Details about escalation
+    escalation_from: Optional[str]  # Which agent escalated
+    needs_rerouting: Optional[bool]  # Flag for supervisor to re-route
+    routing_attempts: Optional[int]  # Track routing attempts to prevent loops
 
 
 def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
@@ -227,7 +234,14 @@ def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
         failed_messages=[],
         
         # Appointment booking
-        available_slots=None
+        available_slots=None,
+        
+        # LINEAR FLOW: Escalation fields
+        escalation_reason=None,
+        escalation_details=None,
+        escalation_from=None,
+        needs_rerouting=False,
+        routing_attempts=0
     )
 
 

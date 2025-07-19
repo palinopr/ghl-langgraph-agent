@@ -10,8 +10,7 @@ from langgraph.types import Command
 from app.tools.agent_tools_v2 import (
     get_contact_details_v2,
     update_contact_with_state,
-    transfer_to_sofia,
-    transfer_to_maria
+    escalate_to_supervisor
 )
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
@@ -168,8 +167,11 @@ DATA COLLECTION SEQUENCE (STRICT ORDER):
    - "Great! What email should I use to send you the demo link?"
 
 AVAILABLE TOOLS:
-- transfer_to_sofia: Use when they have business + confirmed $300+ budget + clear intent
-- transfer_to_maria: Use for general support questions
+- escalate_to_supervisor: Use when you need a different agent:
+  - reason="needs_appointment" - When they have budget + clear intent (for Sofia)
+  - reason="needs_support" - For general support questions (for Maria)
+  - reason="wrong_agent" - If you're not the right agent
+  - reason="customer_confused" - If conversation is off-track
 - update_contact_with_state: Save qualification data
 - get_contact_details_v2: Check existing info (but don't call unless needed)
 
@@ -200,7 +202,10 @@ Engagement Rules:
 - Close timing: After 4-5 positive exchanges
 - Exit strategy: After 3 failed attempts, offer value and leave contact
 
-CRITICAL: When budget is confirmed ($300+), you MUST use transfer_to_sofia tool immediately."""
+LINEAR FLOW RULES:
+1. When budget is confirmed ($300+) → escalate with reason="needs_appointment"
+2. For general support → escalate with reason="needs_support"
+3. You CANNOT transfer directly to other agents - only escalate to supervisor!"""
     
     return [{"role": "system", "content": system_prompt}] + state["messages"]
 
@@ -212,12 +217,11 @@ def create_carlos_agent():
     # Use explicit model initialization for proper tool binding
     model = create_openai_model(temperature=0.0)
     
-    # Create tools list without store-dependent tools
+    # Create tools list - LINEAR FLOW (no direct transfers)
     qualification_tools_simple = [
         get_contact_details_v2,
         update_contact_with_state,
-        transfer_to_sofia,
-        transfer_to_maria
+        escalate_to_supervisor  # Only escalation, no direct transfers!
     ]
     
     agent = create_react_agent(
