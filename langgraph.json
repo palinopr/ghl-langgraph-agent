@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "2.2.0",
-  "description": "GoHighLevel LangGraph Agent - v2.2 with Supervisor Brain Consolidation",
+  "version": "2.2.1",
+  "description": "GoHighLevel LangGraph Agent - v2.2.1 with Webhook Deduplication Fix",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },
