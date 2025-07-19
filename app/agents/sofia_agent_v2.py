@@ -23,6 +23,7 @@ from app.utils.state_utils import filter_agent_result
 from app.utils.conversation_enforcer import get_conversation_analysis, get_next_response
 from app.utils.conversation_formatter import format_conversation_for_agent, get_conversation_stage
 from app.utils.smart_responder import get_smart_response
+from app.tools.appointment_booking_simple import book_appointment_simple
 
 logger = get_logger("sofia_v2")
 
@@ -146,6 +147,27 @@ def sofia_prompt(state: SofiaState) -> list[AnyMessage]:
     conversation_summary = format_conversation_for_agent(state)
     stage_info = get_conversation_stage(state)
     
+    # PRIORITY CHECK: If customer is asking for appointment times or selecting time, override everything
+    customer_asks_times = False
+    customer_selects_time = False
+    
+    if current_message:
+        if any(word in current_message.lower() for word in ["horarios", "disponibles", "horas", "cuándo", "qué días", "qué horas"]):
+            customer_asks_times = True
+            logger.info(f"🚨 CUSTOMER ASKING FOR APPOINTMENT TIMES: '{current_message}'")
+        
+        # Check if customer is selecting a specific time
+        time_patterns = ["2pm", "10am", "11am", "4pm", "martes", "miércoles", "jueves", "primera", "segunda", "perfecto"]
+        if any(pattern in current_message.lower() for pattern in time_patterns):
+            # Check if last AI message offered times
+            for msg in reversed(messages):
+                if hasattr(msg, '__class__') and msg.__class__.__name__ == 'AIMessage':
+                    content = msg.content.lower() if hasattr(msg, 'content') else ""
+                    if "disponibilidad" in content or "2pm" in content or "11am" in content:
+                        customer_selects_time = True
+                        logger.info(f"🚨 CUSTOMER SELECTING TIME: '{current_message}'")
+                        break
+    
     system_prompt = f"""You are Sofia, an expert closer who books appointments for HOT leads (score 8-10) at Main Outlet Media.
 
 {conversation_summary}
@@ -154,14 +176,25 @@ def sofia_prompt(state: SofiaState) -> list[AnyMessage]:
 🎯 Next Action: {stage_info['next_question']}
 💡 Context: {stage_info['context']}
 
+🚨 PRIORITY OVERRIDE: Customer is {
+"SELECTING AN APPOINTMENT TIME!" if customer_selects_time else "asking for appointment times!"
+} 🚨
+{
+f"USE book_appointment_simple TOOL IMMEDIATELY with customer_confirmation='{current_message}', contact_id='{state.get('contact_id', '')}', contact_name='{state.get('extracted_data', {}).get('name', '') or analysis['collected_data'].get('name', 'Cliente')}', contact_email='{state.get('extracted_data', {}).get('email', '') or analysis['collected_data'].get('email', '')}'" if customer_selects_time 
+else "USE check_calendar_availability TOOL IMMEDIATELY!" if customer_asks_times 
+else f'''
 🚨 STRICT ENFORCEMENT MODE ACTIVE 🚨
 Current Stage: {current_stage}
 Next Action: {next_action}
 ALLOWED RESPONSE: "{allowed_response}"
 
 ⚡ If response starts with "ESCALATE:", use escalate_to_supervisor tool
-⚡ If allowed response is "USE_APPOINTMENT_TOOL", use book_appointment_from_confirmation tool
-⚡ Otherwise, respond with the EXACT allowed response above!
+⚡ If allowed response is "USE_APPOINTMENT_TOOL", use book_appointment_simple tool with:
+   - customer_confirmation: The time the customer just selected (from current message)
+   - contact_id: {state.get('contact_id', '')}
+   - contact_name: {state.get('extracted_data', {}).get('name', '') or analysis['collected_data'].get('name', 'Cliente')}
+   - contact_email: {state.get('extracted_data', {}).get('email', '') or analysis['collected_data'].get('email', '')}
+⚡ Otherwise, respond with the EXACT allowed response above!'''}
 
 Role: Close naturally using advanced sales psychology.
 
@@ -285,6 +318,7 @@ def create_sofia_agent():
         get_contact_details_v2,
         update_contact_with_state,
         check_calendar_availability,
+        book_appointment_simple,  # Simplified version that works with SofiaState
         book_appointment_from_confirmation,
         create_appointment_v2,
         book_appointment_and_end,
@@ -315,17 +349,48 @@ async def sofia_node_v2(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]
         logger.info(f"Sofia extracted_data: {state.get('extracted_data', {})}")
         logger.info(f"Sofia webhook_data: {state.get('webhook_data', {})}")
         
-        # Check if we should use smart response
-        smart_response = get_smart_response(state, "sofia")
-        logger.info(f"Smart response result: {smart_response}")
+        # Get incoming message
+        webhook_data = state.get("webhook_data", {})
+        incoming_message = webhook_data.get("message", "").lower()
         
-        if smart_response:
-            logger.info(f"Using smart response for Sofia: {smart_response[:50]}...")
-            # Add the smart response as a message
-            from langchain_core.messages import AIMessage
-            return {
-                "messages": [AIMessage(content=smart_response, name="sofia")]
-            }
+        # Check if customer is asking for appointment slots
+        asks_for_slots = any(word in incoming_message for word in ["horarios", "disponibles", "horas", "cuándo"])
+        confirms_appointment = incoming_message in ["sí", "si", "claro", "ok", "perfecto", "dale", "yes"]
+        
+        # Check last AI message for appointment context
+        messages = state.get("messages", [])
+        last_ai_asked_appointment = False
+        for msg in reversed(messages):
+            if hasattr(msg, '__class__') and msg.__class__.__name__ == 'AIMessage':
+                content = msg.content.lower() if hasattr(msg, 'content') else ""
+                if "agendar" in content or "llamada" in content:
+                    last_ai_asked_appointment = True
+                    break
+        
+        # Skip smart responder if we need appointment tools
+        # Also check for time patterns
+        time_patterns = ["2pm", "10am", "11am", "4pm", "martes", "miércoles", "jueves", "primera", "segunda"]
+        selecting_time = any(pattern in incoming_message for pattern in time_patterns)
+        
+        if asks_for_slots or (confirms_appointment and last_ai_asked_appointment) or selecting_time:
+            logger.info("Skipping smart responder - appointment tools needed")
+            logger.info(f"  asks_for_slots: {asks_for_slots}")
+            logger.info(f"  confirms_appointment: {confirms_appointment}")
+            logger.info(f"  last_ai_asked_appointment: {last_ai_asked_appointment}")
+            logger.info(f"  selecting_time: {selecting_time}")
+            # Continue to agent
+        else:
+            # Check if we should use smart response
+            smart_response = get_smart_response(state, "sofia")
+            logger.info(f"Smart response result: {smart_response}")
+            
+            if smart_response:
+                logger.info(f"Using smart response for Sofia: {smart_response[:50]}...")
+                # Add the smart response as a message
+                from langchain_core.messages import AIMessage
+                return {
+                    "messages": [AIMessage(content=smart_response, name="sofia")]
+                }
         
         # Create the agent
         agent = create_sofia_agent()

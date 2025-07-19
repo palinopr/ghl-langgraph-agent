@@ -149,7 +149,7 @@ def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
     initial_message = HumanMessage(
         content=webhook_data.get("message", ""),
         additional_kwargs={
-            "contact_id": webhook_data.get("id"),
+            "contact_id": webhook_data.get("contactId", webhook_data.get("id")),
             "timestamp": now.isoformat()
         }
     )
@@ -159,7 +159,7 @@ def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
         messages=[initial_message],
         
         # Contact Info
-        contact_id=webhook_data.get("id", ""),
+        contact_id=webhook_data.get("contactId", webhook_data.get("id", "")),
         contact_name=webhook_data.get("name"),
         contact_email=webhook_data.get("email"),
         contact_phone=webhook_data.get("phone"),

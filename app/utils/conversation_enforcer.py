@@ -248,8 +248,26 @@ class ConversationEnforcer:
             analysis["current_stage"] = ConversationStage.WAITING_FOR_TIME_SELECTION
             analysis["next_action"] = "PROCESS_TIME_SELECTION"
         elif selected_time:
-            analysis["current_stage"] = ConversationStage.CONFIRMING_APPOINTMENT
-            analysis["next_action"] = "CONFIRM_APPOINTMENT"
+            # Check if this is the current message (just selected)
+            # If so, stay in WAITING_FOR_TIME_SELECTION for tool usage
+            current_msg_is_time_selection = False
+            if messages and len(messages) > 0:
+                last_human_msg = messages[-1]
+                if isinstance(last_human_msg, HumanMessage) or (hasattr(last_human_msg, 'type') and last_human_msg.type == "human"):
+                    content = last_human_msg.content.lower() if hasattr(last_human_msg, 'content') else ""
+                    time_indicators = ["am", "pm", ":00", "primera", "segunda", "tercera", 
+                                     "10:", "2:", "4:", "mañana", "tarde"]
+                    if any(indicator in content for indicator in time_indicators):
+                        current_msg_is_time_selection = True
+            
+            if current_msg_is_time_selection:
+                # Customer JUST selected a time - Sofia should use appointment tool
+                analysis["current_stage"] = ConversationStage.WAITING_FOR_TIME_SELECTION
+                analysis["next_action"] = "PROCESS_TIME_SELECTION"
+            else:
+                # Time was already processed, move to confirmation
+                analysis["current_stage"] = ConversationStage.CONFIRMING_APPOINTMENT
+                analysis["next_action"] = "CONFIRM_APPOINTMENT"
         
         # Set allowed response based on stage
         self._set_allowed_response(analysis)

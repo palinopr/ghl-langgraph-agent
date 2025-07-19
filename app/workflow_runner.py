@@ -25,7 +25,7 @@ async def run_workflow_safe(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Workflow result or error
     """
-    contact_id = webhook_data.get("id", "unknown")
+    contact_id = webhook_data.get("contactId", webhook_data.get("id", "unknown"))
     
     # Check if workflow already running for this contact
     if not await can_start_workflow(contact_id):

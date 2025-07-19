@@ -1,5 +1,187 @@
 # Claude Context: LangGraph GHL Agent - Complete Implementation Guide
 
+## 🚀 ALWAYS USE PRODUCTION-LIKE TESTING (Updated July 19, 2025)
+
+### The Right Way to Test Changes Locally
+
+**IMPORTANT**: Always test using the production-like environment setup to catch issues before deployment. This approach has proven to identify issues that simple unit tests miss.
+
+#### 1. Set Up Exact Production Environment
+```bash
+# Use the automated setup script
+chmod +x setup_exact_environment.sh
+./setup_exact_environment.sh
+
+# Or manually with Python 3.13
+python3.13 -m venv venv_langgraph
+source venv_langgraph/bin/activate
+pip install -r requirements.txt
+```
+
+#### 2. Run Production-Like Tests
+```bash
+# Test with real GHL data and production workflow
+python run_like_production.py
+
+# Options:
+# 1. Single message test (e.g., "Restaurante")
+# 2. Full conversation test (complete flow)
+# 3. Custom contact and message
+```
+
+#### 3. What This Tests
+- ✅ Real GHL API calls with actual contact data
+- ✅ Full workflow execution (Receptionist → Supervisor → Agent → Responder)
+- ✅ Conversation history loading
+- ✅ Custom field persistence
+- ✅ Message deduplication
+- ✅ Proper routing logic
+- ✅ Tool execution (appointment booking, etc.)
+
+### Context Engineering Insights from Live Testing
+
+#### 1. Business Extraction Issue
+**Problem**: Single-word responses like "Restaurante" weren't being extracted
+**Discovery**: Used LangSmith trace analysis to find extraction wasn't matching
+**Solution**: Enhanced extraction with direct word matching in `supervisor_brain_simple.py`
+```python
+direct_business_words = [
+    "restaurante", "restaurant", "tienda", "salon", "salón", 
+    "barbería", "barberia", "clinica", "clínica", "consultorio",
+    # ... more business types
+]
+```
+
+#### 2. Conversation Stage Detection
+**Problem**: Customer selecting "10:00 AM" went to wrong stage
+**Discovery**: Conversation enforcer was jumping to CONFIRMING instead of WAITING_FOR_TIME_SELECTION
+**Solution**: Fixed stage logic to detect when customer JUST selected time
+```python
+if current_msg_is_time_selection:
+    analysis["current_stage"] = ConversationStage.WAITING_FOR_TIME_SELECTION
+    analysis["next_action"] = "PROCESS_TIME_SELECTION"
+```
+
+#### 3. Tool State Validation
+**Problem**: Appointment tool expected full ConversationState but got SofiaState
+**Discovery**: Tool validation errors with 54 missing fields
+**Solution**: Created simplified tool `book_appointment_simple` that works with minimal state
+
+#### 4. Smart Responder Interference
+**Problem**: Smart responder was bypassing agent logic
+**Discovery**: When smart responder returned a response, Sofia never ran her agent
+**Solution**: Smart responder correctly returns None for appointment selections, allowing agent to run
+
+### Key Testing Commands for Common Scenarios
+
+```bash
+# Test business extraction fix
+echo "1" | python run_like_production.py  # Tests "Restaurante"
+
+# Test full appointment flow
+echo "2" | python run_like_production.py  # Tests complete conversation
+
+# Debug specific issue with traces
+python fetch_trace_curl.py <trace_id>  # Analyze production traces
+
+# Test appointment tool directly
+python test_sofia_appointment_tool.py
+
+# Verify conversation enforcer logic
+python -c "from app.utils.conversation_enforcer import ConversationEnforcer; ..."
+```
+
+### Production Debugging Checklist
+- [ ] Check LangSmith traces for actual agent behavior
+- [ ] Verify conversation history is loaded correctly
+- [ ] Confirm custom fields are persisted to GHL
+- [ ] Test with real contact IDs from production
+- [ ] Check if smart responder is interfering
+- [ ] Verify conversation enforcer stage detection
+- [ ] Confirm tools have access to required state fields
+
+### Critical Lessons Learned from Live Testing
+
+1. **Always Test with Real Data**
+   - Mock data doesn't catch GHL API format issues
+   - Real contact IDs reveal permission problems
+   - Production traces show actual behavior vs expected
+
+2. **Layer-by-Layer Debugging**
+   - Start with workflow execution
+   - Check each node's input/output
+   - Verify state transformations
+   - Confirm API calls match expectations
+
+3. **State Schema Mismatches**
+   - Tools expect specific state schemas
+   - Agent states (SofiaState) differ from ConversationState
+   - Create adapter tools when needed
+
+4. **The Smart Responder Pattern**
+   - Useful for common responses
+   - Can bypass critical agent logic
+   - Must return None for complex flows
+
+5. **Conversation Context is King**
+   - Every decision depends on full history
+   - Missing context = wrong routing
+   - Always load conversation from GHL
+
+### Files Most Often Modified During Debugging
+
+1. **app/agents/supervisor_brain_simple.py**
+   - Business extraction logic
+   - Lead scoring decisions
+   - Routing logic
+
+2. **app/utils/conversation_enforcer.py**
+   - Conversation stage detection
+   - Allowed response determination
+   - Stage transition logic
+
+3. **app/agents/sofia_agent_v2.py**
+   - Tool selection logic
+   - Prompt engineering
+   - State handling
+
+4. **app/tools/agent_tools_v2.py**
+   - Tool implementations
+   - State expectations
+   - API interactions
+
+### Common Pitfalls to Avoid
+
+1. **Testing Without Full Context**
+   - Always load conversation history
+   - Include previous custom fields
+   - Simulate real webhook data
+
+2. **Assuming Mock Data Works**
+   - GHL API has specific formats
+   - Timestamps need milliseconds
+   - Slots must be real, not generated
+
+3. **Ignoring State Flow**
+   - Each node transforms state
+   - Order matters (Receptionist first!)
+   - State accumulates through workflow
+
+4. **Forgetting About Smart Responder**
+   - It runs before agent logic
+   - Can short-circuit important flows
+   - Check when agent isn't executing
+
+### The Golden Rule of LangGraph Debugging
+
+**"When in doubt, run it like production!"**
+
+Production-like testing reveals issues that unit tests miss. Always validate changes using `run_like_production.py` before deployment.
+
+---
+
+## Original Context Below (Historical Reference)
+
 ## 🔧 Testing Appointment Booking Fix (July 19, 2025)
 
 ### How to Test Appointment Booking Locally

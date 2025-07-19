@@ -48,11 +48,12 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     collected_data = analysis['collected_data']
     
     # Map old variables for compatibility
-    asked_for_name = 'name' in analysis.get('last_question_asked', '')
+    last_question = analysis.get('last_question_asked', '') if analysis else ''
+    asked_for_name = 'name' in last_question if isinstance(last_question, str) else False
     got_name = collected_data['name'] is not None
-    asked_for_business = 'business' in analysis.get('last_question_asked', '')
+    asked_for_business = 'business' in last_question if isinstance(last_question, str) else False
     got_business = collected_data['business'] is not None
-    asked_for_problem = 'problem' in analysis.get('last_question_asked', '')
+    asked_for_problem = 'problem' in last_question if isinstance(last_question, str) else False
     got_problem = collected_data['problem'] is not None
     customer_name = collected_data['name']
     business_type = collected_data['business']

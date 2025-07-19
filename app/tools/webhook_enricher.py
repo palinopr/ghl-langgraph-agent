@@ -35,7 +35,7 @@ class WebhookEnricher:
         Returns:
             Enriched data with full context
         """
-        contact_id = webhook_data.get("id")
+        contact_id = webhook_data.get("contactId", webhook_data.get("id"))
         if not contact_id:
             logger.error("No contact ID in webhook data")
             return webhook_data
@@ -54,7 +54,7 @@ class WebhookEnricher:
             # PARALLEL API CALLS - Python 3.13 free-threading optimization
             # Fetch contact details
             # Note: Conversation history is now loaded by Receptionist agent
-            contact = await self.ghl_client.get_contact(contact_id)
+            contact = await self.ghl_client.get_contact_details(contact_id)
             
             # Process contact details
             if contact:

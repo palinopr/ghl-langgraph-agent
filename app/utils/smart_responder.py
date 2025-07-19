@@ -133,8 +133,11 @@ def get_smart_response(state: Dict[str, Any], agent_name: str) -> Optional[str]:
         offered_appointment = False
         if ("horarios disponibles" in last_ai_message or 
             "10:00 am" in last_ai_message or
+            "11am" in last_ai_message or 
+            "2pm" in last_ai_message or
             "¡excelente! tengo estos horarios" in last_ai_message or
-            "cuál prefieres" in last_ai_message):
+            "cuál prefieres" in last_ai_message or
+            "tengo disponibilidad" in last_ai_message):
             offered_appointment = True
             logger.info("Last AI message offered appointment times")
         
