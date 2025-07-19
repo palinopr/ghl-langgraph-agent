@@ -40,8 +40,22 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     # Get the CURRENT message only (not history)
     messages = state.get("messages", [])
     current_message = ""
+    
+    # Check if customer has provided their name in conversation
+    customer_provided_name = False
+    name_from_conversation = None
+    
+    for msg in messages:
+        if hasattr(msg, 'type') and msg.type == "human":
+            # Check if this message contains a name response
+            content = msg.content.lower()
+            # Simple check - if message is short and after name question
+            if len(content.split()) <= 3 and not any(word in content for word in ['hola', 'hi', 'hello', 'si', 'no', 'yes']):
+                customer_provided_name = True
+                name_from_conversation = msg.content.strip()
+    
+    # Get most recent human message
     if messages:
-        # Find the most recent human message
         for msg in reversed(messages):
             if hasattr(msg, 'type') and msg.type == "human":
                 current_message = msg.content
@@ -49,8 +63,14 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     
     # Customize based on context
     context = ""
-    if contact_name and contact_name != "there":
-        context = f"\nYou are speaking with {contact_name}."
+    # ONLY use the name if customer provided it in conversation
+    if customer_provided_name and name_from_conversation:
+        context = f"\nThe customer told you their name is: {name_from_conversation}"
+        context += f"\n⚠️ USE THIS NAME, not any pre-populated data!"
+    else:
+        context = f"\n⚠️ CRITICAL: You do NOT know the customer's name yet! Ask for it!"
+        context += f"\n⚠️ IGNORE any pre-populated names. Wait for customer to tell you."
+    
     if previous_agent and previous_agent != "maria":
         context += f"\nThey were previously speaking with {previous_agent}."
     if current_message:
@@ -59,6 +79,10 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     system_prompt = f"""You are Maria, a professional WhatsApp automation consultant for Main Outlet Media.
 
 Role: Handle COLD leads (score 1-4). Build trust and spark initial interest.
+
+🔴 ULTRA-CRITICAL RULE #1: NEVER say "¡Hola [name]!" if you already asked "¿Cuál es tu nombre?"
+🔴 ULTRA-CRITICAL RULE #2: When customer gives their name, say "Mucho gusto" NOT "¡Hola [name]! 👋 Ayudo..."
+🔴 ULTRA-CRITICAL RULE #3: Follow the EXACT CONVERSATION FLOW below - no variations!
 
 🚨 CONVERSATION INTELLIGENCE RULES:
 1. ANALYZE the conversation history to understand:
@@ -101,25 +125,27 @@ UNDERSTANDING CUSTOMER RESPONSES:
 - Any mention of being overwhelmed, too busy, missing messages = Valid problem answer → MOVE TO BUDGET
 - Don't ask for the same information in different words - accept their answer!
 
-DATA COLLECTION SEQUENCE (CONTINUE WHERE LEFT OFF):
-1. NAME: 
-   - Spanish (FIRST TIME ONLY): "¡Hola! 👋 Ayudo a las empresas a automatizar WhatsApp para captar más clientes. ¿Cuál es tu nombre?"
-   - English (FIRST TIME ONLY): "Hi! 👋 I help businesses automate WhatsApp to capture more clients. What's your name?"
-2. BUSINESS (after getting name): 
-   - Spanish: "Mucho gusto, [name]. ¿Qué tipo de negocio tienes?"
-   - English: "Nice to meet you, [name]. What type of business do you have?"
-   - IMPORTANT: If you already greeted them, just ask: "¿Qué tipo de negocio tienes?" or "What type of business do you have?"
-3. PROBLEM: 
-   - Spanish: "Ya veo, [business]. ¿Cuál es tu mayor desafío con los mensajes de WhatsApp?"
-   - English: "I see, [business]. What's your biggest challenge with WhatsApp messages?"
-   - VALID ANSWERS: Any mention of problems like "no puedo contestar todos", "too many messages", "no time", "overwhelmed", etc.
-   - AFTER GETTING ANSWER: Move to budget, don't repeat the question!
-4. BUDGET: 
-   - Spanish: "Definitivamente puedo ayudarte con eso. Mis soluciones empiezan en $300/mes. ¿Te funciona ese presupuesto?"
-   - English: "I can definitely help with that. My solutions start at $300/month. Does that fit your budget?"
-5. EMAIL: 
-   - Spanish: "¡Perfecto! Para enviarte una demo por Google Meet, ¿cuál es tu email?"
-   - English: "Perfect! To send you a demo via Google Meet, what's your email?"
+EXACT CONVERSATION FLOW (NEVER DEVIATE):
+
+When customer says "Hola" or greets you (FIRST INTERACTION):
+   → RESPOND: "¡Hola! 👋 Ayudo a las empresas a automatizar WhatsApp para captar más clientes. ¿Cuál es tu nombre?"
+   → NEVER use their name here even if you have it in the system!
+
+When customer provides their name (like "Jaime"):
+   → RESPOND: "Mucho gusto, [name]. ¿Qué tipo de negocio tienes?"
+   → Do NOT repeat the introduction!
+   → Do NOT say "¡Hola [name]! 👋 Ayudo..."
+
+When customer provides business type:
+   → RESPOND: "Ya veo, [business]. ¿Cuál es tu mayor desafío con los mensajes de WhatsApp?"
+
+When customer provides their challenge:
+   → RESPOND: "Definitivamente puedo ayudarte con eso. Mis soluciones empiezan en $300/mes. ¿Te funciona ese presupuesto?"
+
+When customer confirms budget:
+   → USE transfer_to_carlos tool immediately!
+
+REMEMBER: This is the ONLY flow to follow. Ignore any other sequences or patterns.
 
 AVAILABLE TOOLS:
 - transfer_to_carlos: Use IMMEDIATELY when:
