@@ -57,6 +57,60 @@ result = await run_workflow_safe(webhook_data)
 - ✅ Budget stays unchanged
 - ✅ Confirmation message sent
 
+## 🔧 Appointment Booking Fix - FINAL SOLUTION (July 19, 2025)
+
+### Root Cause Found
+The appointment booking was failing because:
+1. **GHL requires valid calendar slots** - Cannot book arbitrary times
+2. **Free-slots API format mismatch** - Returns dict with dates, not array
+3. **Timestamp format** - API expects milliseconds, not ISO format
+
+### Fixes Applied
+
+1. **GHL Client** (`app/tools/ghl_client.py`)
+   ```python
+   # Fixed timestamp format for free-slots API
+   params = {
+       "startDate": int(start_date.timestamp() * 1000),  # Milliseconds
+       "endDate": int(end_date.timestamp() * 1000),
+       "timezone": timezone
+   }
+   
+   # Fixed response parsing for dict format
+   if result and isinstance(result, dict):
+       slots = []
+       for date_key, date_data in result.items():
+           if date_key == "traceId":
+               continue
+           if isinstance(date_data, dict) and "slots" in date_data:
+               for slot_time in date_data["slots"]:
+                   start = datetime.fromisoformat(slot_time)
+                   end = start + timedelta(hours=1)
+                   slots.append({
+                       "startTime": start,
+                       "endTime": end,
+                       "available": True
+                   })
+   ```
+
+2. **Agent Tools** (`app/tools/agent_tools_v2.py`)
+   - Now uses real calendar slots from GHL
+   - Falls back to generated slots only if API fails
+
+### Verified Working
+```bash
+# Test appointment creation with valid slot
+✅ SUCCESS! Appointment created:
+   - ID: Vl9uMtdhxVuG9Z6sxMeT
+   - Status: booked
+   - Google Meet link: https://meet.google.com/bkz-icsn-yxq
+```
+
+### Important Notes
+- Always use actual calendar slots from GHL
+- Cannot book appointments at arbitrary times
+- Must check slot availability before booking
+
 # Claude Context: LangGraph GHL Agent - Complete Implementation Guide
 
 ## Project Overview

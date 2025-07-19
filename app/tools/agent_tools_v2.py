@@ -256,14 +256,8 @@ async def check_calendar_availability(
             logger.info("Using generated slots as GHL API didn't return any")
             slots = generate_available_slots(num_slots=num_slots)
         else:
-            # Convert GHL slots to our format
-            slots = []
-            for ghl_slot in ghl_slots[:num_slots]:
-                slots.append({
-                    "startTime": datetime.fromisoformat(ghl_slot.get("startTime")),
-                    "endTime": datetime.fromisoformat(ghl_slot.get("endTime")),
-                    "available": True
-                })
+            # GHL slots are already in our format from the client
+            slots = ghl_slots[:num_slots]
         
         # Format slots for customer
         formatted_message = format_slots_for_customer(slots, language)
@@ -328,6 +322,11 @@ async def book_appointment_from_confirmation(
         contact_id: GHL contact ID
         contact_name: Contact's name for appointment title
     """
+    logger.info(f"🎯 BOOK_APPOINTMENT_FROM_CONFIRMATION CALLED!")
+    logger.info(f"  - customer_confirmation: {customer_confirmation}")
+    logger.info(f"  - contact_id: {contact_id}")
+    logger.info(f"  - contact_name: {contact_name}")
+    
     try:
         # Get available slots from state or generate new ones
         available_slots = state.get("available_slots", [])
@@ -352,6 +351,7 @@ async def book_appointment_from_confirmation(
             )
         
         # Create appointment with the selected slot
+        logger.info(f"📅 Creating appointment with slot: {selected_slot}")
         result = await ghl_client.create_appointment(
             contact_id=contact_id,
             start_time=selected_slot["startTime"],
@@ -359,6 +359,7 @@ async def book_appointment_from_confirmation(
             title=f"Consulta WhatsApp Automation - {contact_name}",
             timezone="America/New_York"
         )
+        logger.info(f"📅 GHL create_appointment result: {result}")
         
         if result:
             appointment_id = result.get('id', str(uuid.uuid4()))

@@ -359,15 +359,35 @@ class GHLClient:
             end_date = start_date + timedelta(days=7)
             
         endpoint = f"/calendars/{self.calendar_id}/free-slots"
+        # GHL expects timestamps in milliseconds
         params = {
-            "startDate": start_date.isoformat(),
-            "endDate": end_date.isoformat(),
+            "startDate": int(start_date.timestamp() * 1000),
+            "endDate": int(end_date.timestamp() * 1000),
             "timezone": timezone
         }
         
         result = await self._make_request("GET", endpoint, params=params)
         
-        if result and isinstance(result, list):
+        # GHL returns slots as a dict with dates as keys
+        if result and isinstance(result, dict):
+            slots = []
+            for date_key, date_data in result.items():
+                if date_key == "traceId":  # Skip traceId field
+                    continue
+                if isinstance(date_data, dict) and "slots" in date_data:
+                    for slot_time in date_data["slots"]:
+                        # Parse the slot time and create a 1-hour duration
+                        # GHL returns ISO format with timezone
+                        start = datetime.fromisoformat(slot_time)
+                        end = start + timedelta(hours=1)
+                        slots.append({
+                            "startTime": start,
+                            "endTime": end,
+                            "available": True
+                        })
+            logger.info(f"Found {len(slots)} total slots from GHL")
+            return slots
+        elif result and isinstance(result, list):
             return result
             
         logger.warning("No calendar slots returned")
@@ -420,6 +440,12 @@ class GHLClient:
         Returns:
             Created appointment data or None
         """
+        logger.info(f"📞 GHL CREATE_APPOINTMENT API CALLED!")
+        logger.info(f"  - contact_id: {contact_id}")
+        logger.info(f"  - start_time: {start_time}")
+        logger.info(f"  - end_time: {end_time}")
+        logger.info(f"  - title: {title}")
+        
         # GHL uses calendars/events/appointments endpoint
         endpoint = "/calendars/events/appointments"
         
@@ -438,15 +464,19 @@ class GHLClient:
             "meetingLocationType": "gmeet"
         }
         
+        logger.info(f"📜 GHL API Request Data: {data}")
+        
         result = await self._make_request("POST", endpoint, data=data)
+        
+        logger.info(f"📝 GHL API Response: {result}")
         
         if result:
             logger.info(
-                f"Appointment created for {contact_id} at {start_time}"
+                f"✅ Appointment created for {contact_id} at {start_time}"
             )
             return result
         else:
-            logger.error(f"Failed to create appointment for {contact_id}")
+            logger.error(f"❌ Failed to create appointment for {contact_id}")
             return None
     
     async def get_calendar_slots(
