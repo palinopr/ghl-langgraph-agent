@@ -37,19 +37,26 @@ async def supervisor_brain_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
             current_message = webhook_data["message"]
             logger.info(f"Using message from webhook: {current_message}")
         else:
-            # Fallback: look for the latest human message in messages
+            # Fallback: Find the FIRST human message (which is the new one)
+            # When called from LangGraph API, the first message is the user's input
             messages = state.get("messages", [])
-            # Since receptionist prepends history, the NEW message is near the end
-            # Look for human messages starting from the end
-            for msg in reversed(messages):
+            
+            # Look for the first human message without ghl_history source
+            for msg in messages:
                 if hasattr(msg, '__class__') and msg.__class__.__name__ == 'HumanMessage':
-                    current_message = msg.content
-                    break
+                    # Check if it's NOT from history
+                    additional_kwargs = getattr(msg, 'additional_kwargs', {})
+                    if additional_kwargs.get('source') != 'ghl_history':
+                        current_message = msg.content
+                        logger.info(f"Found user message: {current_message}")
+                        break
                     
-            # Last fallback to first message if no human message found
+            # If no non-history human message, try the very first message
             if not current_message and messages and len(messages) > 0:
-                if hasattr(messages[0], 'content'):
-                    current_message = messages[0].content
+                if hasattr(messages[0], 'content') and hasattr(messages[0], '__class__'):
+                    if messages[0].__class__.__name__ == 'HumanMessage':
+                        current_message = messages[0].content
+                        logger.info(f"Using first message as fallback: {current_message}")
         
         logger.info(f"Analyzing message: {current_message}")
                 

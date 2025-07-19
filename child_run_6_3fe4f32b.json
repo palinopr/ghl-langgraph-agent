@@ -1,0 +1,296 @@
+{
+  "name": "agent",
+  "inputs": {
+    "messages": [
+      {
+        "content": "Restaurante",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "2eeebb86-c6ac-463d-8e87-b6956e6fcedc",
+        "example": false
+      },
+      {
+        "content": "Restaurante",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:07:16.724Z",
+          "message_id": "4BmXWuwdckKKztyOA2me",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "human",
+        "id": "370b57d1-f401-433c-a2ab-f15da15732ab",
+        "example": false
+      },
+      {
+        "content": "Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:07:07.000Z",
+          "message_id": "HdUEl6gGPqcfgneT9VP3",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "ai",
+        "id": "ceb9468f-e724-497c-b708-4d11ebe06b6f",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "Jaime",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:06:56.233Z",
+          "message_id": "eUq8C23vuF9ucYBvtJ8D",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "human",
+        "id": "1a2b50e1-f3f6-4f5a-be96-4540b18a92e0",
+        "example": false
+      },
+      {
+        "content": "\u00a1Hola! \ud83d\udc4b Ayudo a las empresas a automatizar WhatsApp para captar m\u00e1s clientes. \u00bfCu\u00e1l es tu nombre?",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:06:47.000Z",
+          "message_id": "C3AQkGa2OeEFVr2VVW5E",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "ai",
+        "id": "f95a4155-51be-4301-9fc8-3fbe5bdd4dd4",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "Hola",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:06:39.432Z",
+          "message_id": "e9PzA3f1lKxABtkAsO84",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "human",
+        "id": "586ea109-e450-4d49-aaa3-512bfc03316f",
+        "example": false
+      },
+      {
+        "content": "\nDATA LOADED SUCCESSFULLY:\n- Contact: Jaime Ortiz\n- Email: none\n- Phone: +13054870475\n- Previous Score: 2/10\n- Business: not specified\n- Budget: not confirmed\n- Messages in history: 5\n",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "name": "receptionist",
+        "id": "b091ff0f-71ae-4ffd-9729-1aaa55afb33f",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "\nSUPERVISOR ANALYSIS COMPLETE:\n- Score: 3/10\n- Business: NO_MENCIONADO\n- Routing to: MARIA\n- Reason: Cold lead needs nurturing\n",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "name": "supervisor_brain",
+        "id": "f5ef28c1-8a69-4c16-b715-e1f451191375",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ],
+    "contact_id": "FpTy2TZYNWBK9AYj9Jo9",
+    "contact_name": "Jaime Ortiz",
+    "is_last_step": false,
+    "remaining_steps": 24
+  },
+  "inputs_preview": "ai: \nSUPERVISOR ANALYSIS COMPLETE:\n- Score: 3/10\n- Business: NO_MENCIONADO\n- Routing to: MARIA\n- Reason: Cold lead needs nurturing\n",
+  "run_type": "chain",
+  "start_time": "2025-07-19T21:07:22.490861",
+  "end_time": "2025-07-19T21:07:23.890967",
+  "extra": {
+    "metadata": {
+      "graph_id": "agent",
+      "created_by": "system",
+      "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca",
+      "run_attempt": 1,
+      "langgraph_version": "0.5.3",
+      "langgraph_api_version": "0.2.98",
+      "langgraph_plan": "enterprise",
+      "langgraph_host": "saas",
+      "langgraph_api_url": null,
+      "run_id": "1f064e45-bb3d-6835-9e97-a6140d66431f",
+      "user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",
+      "x-scheme": "https",
+      "thread_id": "77778e46-c3ea-42cd-886d-2410185ef27f",
+      "x-real-ip": "10.0.0.9",
+      "user-agent": "axios/0.21.4",
+      "x-request-id": "e6d3f0151a71cc4c18c6591b6bd01c2c",
+      "x-forwarded-for": "10.0.0.9",
+      "x-forwarded-host": "ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app",
+      "x-forwarded-port": "443",
+      "x-forwarded-proto": "https",
+      "x-forwarded-scheme": "https",
+      "langgraph_request_id": "e6d3f0151a71cc4c18c6591b6bd01c2c",
+      "langgraph_auth_user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",
+      "langgraph_step": 1,
+      "langgraph_node": "agent",
+      "langgraph_triggers": [
+        "branch:to:agent"
+      ],
+      "langgraph_path": [
+        "__pregel_pull",
+        "agent"
+      ],
+      "langgraph_checkpoint_ns": "maria:aba3ced9-3885-da71-760b-ece61065274d|agent:54ebc934-c8d1-e972-6860-cb1627e92491",
+      "checkpoint_ns": "maria:aba3ced9-3885-da71-760b-ece61065274d",
+      "LANGSMITH_LANGGRAPH_API_REVISION": "e375385",
+      "LANGSMITH_LANGGRAPH_API_VARIANT": "cloud",
+      "LANGSMITH_LANGGRAPH_GIT_REF_SHA": "7b8cf4bc3daedbc38231ec8dba0b482e5173613c",
+      "LANGSMITH_HOST_PROJECT_ID": "b91140bf-d8b2-4d1f-b36a-53f18f2db65d",
+      "LANGSMITH_PROJECT": "ghl-langgraph-agent",
+      "LANGSMITH_TENANT_ID": "d46348af-8871-4fc1-bb27-5d17f0589bd5",
+      "LANGCHAIN_CALLBACKS_BACKGROUND": "true",
+      "LANGSMITH_TRACING": "true",
+      "LANGSMITH_HOST_PROJECT_NAME": "ghl-langgraph-agent",
+      "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",
+      "LANGSMITH_LANGGRAPH_GIT_REPO": "https://github.com/palinopr/ghl-langgraph-agent",
+      "LANGSMITH_LANGGRAPH_GIT_REF": "main",
+      "LANGSMITH_AUTH_ENDPOINT": "https://api.smith.langchain.com",
+      "LANGSMITH_AUTH_VERIFY_TENANT_ID": "False",
+      "LANGSMITH_HOST_REVISION_ID": "75332189-7425-4de1-b449-274d37192d12",
+      "revision_id": "7b8cf4bc3daedbc38231ec8dba0b482e5173613c",
+      "ls_run_depth": 3
+    },
+    "runtime": {
+      "sdk": "langsmith-py",
+      "sdk_version": "0.4.8",
+      "library": "langchain-core",
+      "platform": "Linux-6.6.87+-x86_64-with-glibc2.36",
+      "runtime": "python",
+      "py_implementation": "CPython",
+      "runtime_version": "3.13.5",
+      "langchain_version": "0.3.26",
+      "langchain_core_version": "0.3.69",
+      "library_version": "0.3.69"
+    }
+  },
+  "error": null,
+  "execution_order": 1,
+  "serialized": null,
+  "outputs": {
+    "messages": [
+      {
+        "content": "Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 14,
+            "prompt_tokens": 2138,
+            "total_tokens": 2152,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4-turbo-2024-04-09",
+          "system_fingerprint": "fp_de235176ee",
+          "id": "chatcmpl-Bv946YeXW0ZyyBcfJ7D5MjneHHcOf",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "name": "maria",
+        "id": "run--6b58c573-c87c-4583-a4fe-33fb168194bd-0",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 2138,
+          "output_tokens": 14,
+          "total_tokens": 2152,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      }
+    ]
+  },
+  "outputs_preview": "ai: Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?",
+  "parent_run_id": "81733c35-0b7f-4549-9069-bb61c455c672",
+  "manifest_id": null,
+  "manifest_s3_id": null,
+  "events": [
+    {
+      "name": "start",
+      "time": "2025-07-19T21:07:22.490861+00:00"
+    },
+    {
+      "name": "end",
+      "time": "2025-07-19T21:07:23.890967+00:00"
+    }
+  ],
+  "tags": [
+    "graph:step:1"
+  ],
+  "inputs_s3_urls": null,
+  "outputs_s3_urls": null,
+  "s3_urls": null,
+  "trace_id": "1f064e45-bb3d-6835-9e97-a6140d66431f",
+  "dotted_order": "20250719T210720250862Z1f064e45-bb3d-6835-9e97-a6140d66431f.20250719T210722474742Ze4b8a6b5-b840-4a05-a181-9912debf4841.20250719T210722489439Z81733c35-0b7f-4549-9069-bb61c455c672.20250719T210722490861Z3fe4f32b-8415-4db7-9066-df8845c8355d",
+  "id": "3fe4f32b-8415-4db7-9066-df8845c8355d",
+  "status": "success",
+  "child_run_ids": [
+    "db27e9bd-8203-4933-8b26-55f8622c91e0",
+    "30ca7d1b-4630-403e-acd6-f02cd67db7e4",
+    "9242cdcf-91ac-4f8a-8fd9-9cdeeb7631f7",
+    "6b58c573-c87c-4583-a4fe-33fb168194bd",
+    "898dd2e3-c2c3-4e4d-9723-0be23565f62d"
+  ],
+  "direct_child_run_ids": [
+    "db27e9bd-8203-4933-8b26-55f8622c91e0",
+    "898dd2e3-c2c3-4e4d-9723-0be23565f62d"
+  ],
+  "parent_run_ids": [
+    "1f064e45-bb3d-6835-9e97-a6140d66431f",
+    "e4b8a6b5-b840-4a05-a181-9912debf4841",
+    "81733c35-0b7f-4549-9069-bb61c455c672"
+  ],
+  "feedback_stats": null,
+  "reference_example_id": null,
+  "total_tokens": 2152,
+  "prompt_tokens": 2138,
+  "completion_tokens": 14,
+  "prompt_token_details": null,
+  "completion_token_details": null,
+  "total_cost": 0.0218,
+  "prompt_cost": 0.02138,
+  "completion_cost": 0.00042,
+  "prompt_cost_details": null,
+  "completion_cost_details": null,
+  "price_model_id": null,
+  "first_token_time": null,
+  "session_id": "a807d9fb-2c58-4d09-a4b2-4037e0668fcc",
+  "app_path": "/o/d46348af-8871-4fc1-bb27-5d17f0589bd5/projects/p/a807d9fb-2c58-4d09-a4b2-4037e0668fcc/r/3fe4f32b-8415-4db7-9066-df8845c8355d?trace_id=1f064e45-bb3d-6835-9e97-a6140d66431f&start_time=2025-07-19T21:07:20.250862",
+  "last_queued_at": null,
+  "in_dataset": false,
+  "share_token": null,
+  "trace_tier": "shortlived",
+  "trace_first_received_at": "2025-07-19T21:07:20.782593",
+  "ttl_seconds": 1209600,
+  "trace_upgrade": false,
+  "reference_dataset_id": null,
+  "thread_id": "77778e46-c3ea-42cd-886d-2410185ef27f"
+}

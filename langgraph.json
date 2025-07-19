@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "3.0.3",
-  "description": "GoHighLevel LangGraph Agent - v3.0.3 LINEAR FLOW with Conversation Tracking Fix",
+  "version": "3.0.4",
+  "description": "GoHighLevel LangGraph Agent - v3.0.4 LINEAR FLOW with Supervisor Message Extraction Fix",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },

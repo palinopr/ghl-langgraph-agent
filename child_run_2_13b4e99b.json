@@ -1,0 +1,479 @@
+{
+  "name": "supervisor_brain",
+  "inputs": {
+    "messages": [
+      {
+        "content": "Restaurante",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "2eeebb86-c6ac-463d-8e87-b6956e6fcedc",
+        "example": false
+      },
+      {
+        "content": "Restaurante",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:07:16.724Z",
+          "message_id": "4BmXWuwdckKKztyOA2me",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "human",
+        "id": "370b57d1-f401-433c-a2ab-f15da15732ab",
+        "example": false
+      },
+      {
+        "content": "Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:07:07.000Z",
+          "message_id": "HdUEl6gGPqcfgneT9VP3",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "ai",
+        "id": "ceb9468f-e724-497c-b708-4d11ebe06b6f",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "Jaime",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:06:56.233Z",
+          "message_id": "eUq8C23vuF9ucYBvtJ8D",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "human",
+        "id": "1a2b50e1-f3f6-4f5a-be96-4540b18a92e0",
+        "example": false
+      },
+      {
+        "content": "\u00a1Hola! \ud83d\udc4b Ayudo a las empresas a automatizar WhatsApp para captar m\u00e1s clientes. \u00bfCu\u00e1l es tu nombre?",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:06:47.000Z",
+          "message_id": "C3AQkGa2OeEFVr2VVW5E",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "ai",
+        "id": "f95a4155-51be-4301-9fc8-3fbe5bdd4dd4",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "Hola",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:06:39.432Z",
+          "message_id": "e9PzA3f1lKxABtkAsO84",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "human",
+        "id": "586ea109-e450-4d49-aaa3-512bfc03316f",
+        "example": false
+      },
+      {
+        "content": "\nDATA LOADED SUCCESSFULLY:\n- Contact: Jaime Ortiz\n- Email: none\n- Phone: +13054870475\n- Previous Score: 2/10\n- Business: not specified\n- Budget: not confirmed\n- Messages in history: 5\n",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "name": "receptionist",
+        "id": "b091ff0f-71ae-4ffd-9729-1aaa55afb33f",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ],
+    "contact_id": "FpTy2TZYNWBK9AYj9Jo9",
+    "contact_name": "Jaime Ortiz",
+    "contact_email": "",
+    "contact_phone": "(305) 487-0475",
+    "contact_info": {
+      "id": "FpTy2TZYNWBK9AYj9Jo9",
+      "dateAdded": "2025-07-19T21:06:38.830Z",
+      "type": "lead",
+      "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+      "phone": "+13054870475",
+      "country": "US",
+      "attributionSource": {
+        "sessionSource": "Social media",
+        "url": null,
+        "medium": "whatsapp",
+        "ctwaClid": null,
+        "adName": null,
+        "adId": null
+      },
+      "lastAttributionSource": {
+        "sessionSource": "Social media",
+        "url": null,
+        "medium": "whatsapp",
+        "ctwaClid": null,
+        "adName": null,
+        "adId": null
+      },
+      "createdBy": {
+        "source": "WhatsApp",
+        "channel": "ISTIO_MESH",
+        "sourceId": "sHFG9Rw6BdGh6d6bfMqG",
+        "timestamp": "2025-07-19T21:06:38.830Z"
+      },
+      "fullNameLowerCase": "jaime ortiz",
+      "lastName": "Ortiz",
+      "lastNameLowerCase": "ortiz",
+      "firstName": "Jaime",
+      "firstNameLowerCase": "jaime",
+      "additionalPhones": [],
+      "tags": [
+        "cold-lead",
+        "needs-nurturing"
+      ],
+      "dateUpdated": "2025-07-19T21:07:18.283Z",
+      "customFields": [
+        {
+          "id": "TjB0I5iNfVwx3zyxZ9sW",
+          "value": "Jaime"
+        },
+        {
+          "id": "wAPjuqxtfgKLCJqahjo1",
+          "value": "2"
+        }
+      ],
+      "additionalEmails": []
+    },
+    "previous_custom_fields": {
+      "name": "Jaime",
+      "score": "2"
+    },
+    "conversation_history": [
+      {
+        "id": "4BmXWuwdckKKztyOA2me",
+        "direction": "inbound",
+        "status": "delivered",
+        "type": 19,
+        "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+        "body": "Restaurante",
+        "contactId": "FpTy2TZYNWBK9AYj9Jo9",
+        "contentType": "text/plain",
+        "conversationId": "xnviI5NWupnX3NmYXbvZ",
+        "dateAdded": "2025-07-19T21:07:16.724Z",
+        "altId": "wamid.HBgLMTMwNTQ4NzA0NzUVAgASGBQzQTZDMEJBNDkzMUQ5MDVBNTAwQgA=",
+        "messageType": "TYPE_WHATSAPP"
+      },
+      {
+        "id": "HdUEl6gGPqcfgneT9VP3",
+        "direction": "outbound",
+        "status": "delivered",
+        "type": 19,
+        "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+        "attachments": [],
+        "body": "Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?",
+        "contactId": "FpTy2TZYNWBK9AYj9Jo9",
+        "contentType": "text/plain",
+        "conversationId": "xnviI5NWupnX3NmYXbvZ",
+        "dateAdded": "2025-07-19T21:07:07.000Z",
+        "source": "app",
+        "altId": "wamid.HBgLMTMwNTQ4NzA0NzUVAgARGBI3MzRBNUNGRUQyNDk5M0U1NEUA",
+        "messageType": "TYPE_WHATSAPP"
+      },
+      {
+        "id": "eUq8C23vuF9ucYBvtJ8D",
+        "direction": "inbound",
+        "status": "delivered",
+        "type": 19,
+        "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+        "body": "Jaime",
+        "contactId": "FpTy2TZYNWBK9AYj9Jo9",
+        "contentType": "text/plain",
+        "conversationId": "xnviI5NWupnX3NmYXbvZ",
+        "dateAdded": "2025-07-19T21:06:56.233Z",
+        "altId": "wamid.HBgLMTMwNTQ4NzA0NzUVAgASGBQzQUE4MzYxRjFFQkVGOEZDRDE2RAA=",
+        "messageType": "TYPE_WHATSAPP"
+      },
+      {
+        "id": "C3AQkGa2OeEFVr2VVW5E",
+        "direction": "outbound",
+        "status": "sent",
+        "type": 19,
+        "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+        "attachments": [],
+        "body": "\u00a1Hola! \ud83d\udc4b Ayudo a las empresas a automatizar WhatsApp para captar m\u00e1s clientes. \u00bfCu\u00e1l es tu nombre?",
+        "contactId": "FpTy2TZYNWBK9AYj9Jo9",
+        "contentType": "text/plain",
+        "conversationId": "xnviI5NWupnX3NmYXbvZ",
+        "dateAdded": "2025-07-19T21:06:47.000Z",
+        "source": "app",
+        "altId": "wamid.HBgLMTMwNTQ4NzA0NzUVAgARGBIxMkI4ODVERUE0RTg2QzFBRUIA",
+        "messageType": "TYPE_WHATSAPP"
+      },
+      {
+        "id": "nt6T2hCp8dgD54PwvyCl",
+        "direction": "outbound",
+        "type": 28,
+        "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+        "body": "Opportunity created",
+        "contactId": "FpTy2TZYNWBK9AYj9Jo9",
+        "conversationId": "xnviI5NWupnX3NmYXbvZ",
+        "dateAdded": "2025-07-19T21:06:42.432Z",
+        "source": "app",
+        "messageType": "TYPE_ACTIVITY_OPPORTUNITY"
+      },
+      {
+        "id": "e9PzA3f1lKxABtkAsO84",
+        "direction": "inbound",
+        "status": "delivered",
+        "type": 19,
+        "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+        "body": "Hola",
+        "contactId": "FpTy2TZYNWBK9AYj9Jo9",
+        "contentType": "text/plain",
+        "conversationId": "xnviI5NWupnX3NmYXbvZ",
+        "dateAdded": "2025-07-19T21:06:39.432Z",
+        "altId": "wamid.HBgLMTMwNTQ4NzA0NzUVAgASGBQzQTk3QTdEQjkxRUNDMDZBMEFDMQA=",
+        "messageType": "TYPE_WHATSAPP"
+      }
+    ],
+    "data_loaded": true,
+    "receptionist_complete": true
+  },
+  "inputs_preview": "ai: \nDATA LOADED SUCCESSFULLY:\n- Contact: Jaime Ortiz\n- Email: none\n- Phone: +13054870475\n- Previous Score: 2/10\n- Business: not specified\n- Budget...",
+  "run_type": "chain",
+  "start_time": "2025-07-19T21:07:20.959358",
+  "end_time": "2025-07-19T21:07:22.472386",
+  "extra": {
+    "metadata": {
+      "graph_id": "agent",
+      "created_by": "system",
+      "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca",
+      "run_attempt": 1,
+      "langgraph_version": "0.5.3",
+      "langgraph_api_version": "0.2.98",
+      "langgraph_plan": "enterprise",
+      "langgraph_host": "saas",
+      "langgraph_api_url": null,
+      "run_id": "1f064e45-bb3d-6835-9e97-a6140d66431f",
+      "user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",
+      "x-scheme": "https",
+      "thread_id": "77778e46-c3ea-42cd-886d-2410185ef27f",
+      "x-real-ip": "10.0.0.9",
+      "user-agent": "axios/0.21.4",
+      "x-request-id": "e6d3f0151a71cc4c18c6591b6bd01c2c",
+      "x-forwarded-for": "10.0.0.9",
+      "x-forwarded-host": "ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app",
+      "x-forwarded-port": "443",
+      "x-forwarded-proto": "https",
+      "x-forwarded-scheme": "https",
+      "langgraph_request_id": "e6d3f0151a71cc4c18c6591b6bd01c2c",
+      "langgraph_auth_user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",
+      "langgraph_step": 2,
+      "langgraph_node": "supervisor_brain",
+      "langgraph_triggers": [
+        "branch:to:supervisor_brain"
+      ],
+      "langgraph_path": [
+        "__pregel_pull",
+        "supervisor_brain"
+      ],
+      "langgraph_checkpoint_ns": "supervisor_brain:14e27b98-65a9-4a79-0f61-c359aa732fcd",
+      "LANGSMITH_LANGGRAPH_API_REVISION": "e375385",
+      "LANGSMITH_LANGGRAPH_API_VARIANT": "cloud",
+      "LANGSMITH_LANGGRAPH_GIT_REF_SHA": "7b8cf4bc3daedbc38231ec8dba0b482e5173613c",
+      "LANGSMITH_HOST_PROJECT_ID": "b91140bf-d8b2-4d1f-b36a-53f18f2db65d",
+      "LANGSMITH_PROJECT": "ghl-langgraph-agent",
+      "LANGSMITH_TENANT_ID": "d46348af-8871-4fc1-bb27-5d17f0589bd5",
+      "LANGCHAIN_CALLBACKS_BACKGROUND": "true",
+      "LANGSMITH_TRACING": "true",
+      "LANGSMITH_HOST_PROJECT_NAME": "ghl-langgraph-agent",
+      "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",
+      "LANGSMITH_LANGGRAPH_GIT_REPO": "https://github.com/palinopr/ghl-langgraph-agent",
+      "LANGSMITH_LANGGRAPH_GIT_REF": "main",
+      "LANGSMITH_AUTH_ENDPOINT": "https://api.smith.langchain.com",
+      "LANGSMITH_AUTH_VERIFY_TENANT_ID": "False",
+      "LANGSMITH_HOST_REVISION_ID": "75332189-7425-4de1-b449-274d37192d12",
+      "revision_id": "7b8cf4bc3daedbc38231ec8dba0b482e5173613c",
+      "ls_run_depth": 1
+    },
+    "runtime": {
+      "sdk": "langsmith-py",
+      "sdk_version": "0.4.8",
+      "library": "langchain-core",
+      "platform": "Linux-6.6.87+-x86_64-with-glibc2.36",
+      "runtime": "python",
+      "py_implementation": "CPython",
+      "runtime_version": "3.13.5",
+      "langchain_version": "0.3.26",
+      "langchain_core_version": "0.3.69",
+      "library_version": "0.3.69"
+    }
+  },
+  "error": null,
+  "execution_order": 1,
+  "serialized": null,
+  "outputs": {
+    "messages": [
+      {
+        "content": "Restaurante",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "2eeebb86-c6ac-463d-8e87-b6956e6fcedc",
+        "example": false
+      },
+      {
+        "content": "Restaurante",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:07:16.724Z",
+          "message_id": "4BmXWuwdckKKztyOA2me",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "human",
+        "id": "370b57d1-f401-433c-a2ab-f15da15732ab",
+        "example": false
+      },
+      {
+        "content": "Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:07:07.000Z",
+          "message_id": "HdUEl6gGPqcfgneT9VP3",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "ai",
+        "id": "ceb9468f-e724-497c-b708-4d11ebe06b6f",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "Jaime",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:06:56.233Z",
+          "message_id": "eUq8C23vuF9ucYBvtJ8D",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "human",
+        "id": "1a2b50e1-f3f6-4f5a-be96-4540b18a92e0",
+        "example": false
+      },
+      {
+        "content": "\u00a1Hola! \ud83d\udc4b Ayudo a las empresas a automatizar WhatsApp para captar m\u00e1s clientes. \u00bfCu\u00e1l es tu nombre?",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:06:47.000Z",
+          "message_id": "C3AQkGa2OeEFVr2VVW5E",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "ai",
+        "id": "f95a4155-51be-4301-9fc8-3fbe5bdd4dd4",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "Hola",
+        "additional_kwargs": {
+          "timestamp": "2025-07-19T21:06:39.432Z",
+          "message_id": "e9PzA3f1lKxABtkAsO84",
+          "source": "ghl_history"
+        },
+        "response_metadata": {},
+        "type": "human",
+        "id": "586ea109-e450-4d49-aaa3-512bfc03316f",
+        "example": false
+      },
+      {
+        "content": "\nDATA LOADED SUCCESSFULLY:\n- Contact: Jaime Ortiz\n- Email: none\n- Phone: +13054870475\n- Previous Score: 2/10\n- Business: not specified\n- Budget: not confirmed\n- Messages in history: 5\n",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "name": "receptionist",
+        "id": "b091ff0f-71ae-4ffd-9729-1aaa55afb33f",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "\nSUPERVISOR ANALYSIS COMPLETE:\n- Score: 3/10\n- Business: NO_MENCIONADO\n- Routing to: MARIA\n- Reason: Cold lead needs nurturing\n",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "name": "supervisor_brain",
+        "id": "f5ef28c1-8a69-4c16-b715-e1f451191375",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ],
+    "lead_score": 3,
+    "extracted_data": {
+      "name": "Jaime",
+      "business_type": "NO_MENCIONADO",
+      "budget": ""
+    },
+    "next_agent": "maria",
+    "supervisor_complete": true,
+    "interaction_count": 1,
+    "current_agent": "maria"
+  },
+  "outputs_preview": "maria",
+  "parent_run_id": "1f064e45-bb3d-6835-9e97-a6140d66431f",
+  "manifest_id": null,
+  "manifest_s3_id": null,
+  "events": [
+    {
+      "name": "start",
+      "time": "2025-07-19T21:07:20.959358+00:00"
+    },
+    {
+      "name": "end",
+      "time": "2025-07-19T21:07:22.472386+00:00"
+    }
+  ],
+  "tags": [
+    "graph:step:2"
+  ],
+  "inputs_s3_urls": null,
+  "outputs_s3_urls": null,
+  "s3_urls": null,
+  "trace_id": "1f064e45-bb3d-6835-9e97-a6140d66431f",
+  "dotted_order": "20250719T210720250862Z1f064e45-bb3d-6835-9e97-a6140d66431f.20250719T210720959358Z13b4e99b-a8ff-4c86-a82c-bc20fe6ba226",
+  "id": "13b4e99b-a8ff-4c86-a82c-bc20fe6ba226",
+  "status": "success",
+  "child_run_ids": [
+    "46ad5edb-89e6-4d83-90c4-baeb39a97da0"
+  ],
+  "direct_child_run_ids": [
+    "46ad5edb-89e6-4d83-90c4-baeb39a97da0"
+  ],
+  "parent_run_ids": [
+    "1f064e45-bb3d-6835-9e97-a6140d66431f"
+  ],
+  "feedback_stats": null,
+  "reference_example_id": null,
+  "total_tokens": 0,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "prompt_token_details": null,
+  "completion_token_details": null,
+  "total_cost": null,
+  "prompt_cost": null,
+  "completion_cost": null,
+  "prompt_cost_details": null,
+  "completion_cost_details": null,
+  "price_model_id": null,
+  "first_token_time": null,
+  "session_id": "a807d9fb-2c58-4d09-a4b2-4037e0668fcc",
+  "app_path": "/o/d46348af-8871-4fc1-bb27-5d17f0589bd5/projects/p/a807d9fb-2c58-4d09-a4b2-4037e0668fcc/r/13b4e99b-a8ff-4c86-a82c-bc20fe6ba226?trace_id=1f064e45-bb3d-6835-9e97-a6140d66431f&start_time=2025-07-19T21:07:20.250862",
+  "last_queued_at": null,
+  "in_dataset": false,
+  "share_token": null,
+  "trace_tier": "shortlived",
+  "trace_first_received_at": "2025-07-19T21:07:20.782593",
+  "ttl_seconds": 1209600,
+  "trace_upgrade": false,
+  "reference_dataset_id": null,
+  "thread_id": "77778e46-c3ea-42cd-886d-2410185ef27f"
+}
