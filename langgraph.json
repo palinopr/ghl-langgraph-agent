@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "2.2.1",
-  "description": "GoHighLevel LangGraph Agent - v2.2.1 with Webhook Deduplication Fix",
+  "version": "2.2.2",
+  "description": "GoHighLevel LangGraph Agent - v2.2.2 with Conversation History Fix",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },
