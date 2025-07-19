@@ -70,10 +70,40 @@ async def supervisor_brain_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
         # Extract new information
         extracted = {"name": None, "business_type": None, "budget": None}
         
-        # Look for restaurant mention
-        if any(word in current_message.lower() for word in ["restaurante", "restaurant", "comida"]):
-            extracted["business_type"] = "restaurante"
-            logger.info("Found restaurant mention!")
+        # Enhanced business extraction
+        logger.info(f"🔍 Attempting to extract business from: '{current_message}'")
+        
+        # Direct business type matches
+        direct_business_words = [
+            "restaurante", "restaurant", "tienda", "salon", "salón", 
+            "barbería", "barberia", "clinica", "clínica", "consultorio",
+            "agencia", "hotel", "gym", "gimnasio", "spa", "café", "cafe",
+            "pizzería", "pizzeria", "panadería", "panaderia", "farmacia",
+            "comida", "negocio"
+        ]
+        
+        message_lower = current_message.lower().strip()
+        
+        # Check direct matches first
+        for business in direct_business_words:
+            if business in message_lower:
+                extracted["business_type"] = business
+                logger.info(f"✅ Found business type via direct match: {business}")
+                break
+        
+        # If not found, try pattern matching
+        if not extracted["business_type"]:
+            # Handle single-word responses (like just "Restaurante")
+            if len(message_lower.split()) <= 2 and message_lower.strip().rstrip('.,!?'):
+                cleaned = message_lower.strip().rstrip('.,!?')
+                if cleaned in direct_business_words or any(biz in cleaned for biz in direct_business_words):
+                    extracted["business_type"] = cleaned
+                    logger.info(f"✅ Found business type via single-word: {cleaned}")
+        
+        if extracted["business_type"]:
+            logger.info(f"✅ Business type extracted: {extracted['business_type']}")
+        else:
+            logger.info(f"❌ No business type found in: '{current_message}'")
             
         # Look for name patterns with validation
         name_patterns = [
@@ -153,6 +183,7 @@ async def supervisor_brain_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
         
         logger.info(f"Lead analysis: Score {previous_score} -> {final_score}")
         logger.info(f"Extracted - Name: {extracted['name']}, Business: {extracted['business_type']}, Budget: {extracted['budget']}")
+        logger.info(f"Final values - Name: {final_name}, Business: {final_business}, Budget: {final_budget}")
         
         # 2. UPDATE GHL
         ghl_client = GHLClient()
