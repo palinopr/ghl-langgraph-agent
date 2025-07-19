@@ -11,8 +11,8 @@ client = Client()
 
 # Trace IDs to analyze
 trace_ids = [
-    "1f064367-4946-694b-a363-8b5a4341c2c5",
-    "1f064366-b578-60e0-a6e9-4ea65b52fd64"
+    "1f064982-efbc-6aba-9b85-f3b5227b2c2b",
+    "1f064974-3f93-6d5e-a756-1dd912bc6798"
 ]
 
 def analyze_trace(trace_id):

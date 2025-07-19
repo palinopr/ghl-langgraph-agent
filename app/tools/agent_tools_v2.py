@@ -63,8 +63,30 @@ def escalate_to_supervisor(
     
     logger.info(f"Agent {current_agent} escalating to supervisor: {reason} - {details}")
     
+    # Build handoff context summary
+    contact_name = state.get("contact_name") or state.get("extracted_data", {}).get("name", "Unknown")
+    business = state.get("business_type") or state.get("extracted_data", {}).get("business_type", "Not specified")
+    problem = state.get("extracted_data", {}).get("problem", "Not mentioned")
+    budget = state.get("budget") or state.get("extracted_data", {}).get("budget", "Not confirmed")
+    score = state.get("lead_score", 0)
+    
+    handoff_context = f"""
+🔄 ESCALATION from {current_agent.upper()}
+Reason: {reason}
+Details: {details}
+
+📋 CONTEXT SUMMARY:
+• Customer: {contact_name}
+• Business: {business}
+• Problem: {problem}
+• Budget: {budget}
+• Score: {score}/10
+
+This saves you from re-reading the entire conversation!
+"""
+    
     tool_message = ToolMessage(
-        content=f"Escalating to supervisor for re-routing. Reason: {reason}",
+        content=handoff_context,
         tool_call_id=tool_call_id
     )
     

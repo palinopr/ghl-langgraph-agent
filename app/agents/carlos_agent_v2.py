@@ -16,6 +16,7 @@ from app.utils.simple_logger import get_logger
 from app.config import get_settings
 from app.utils.model_factory import create_openai_model
 from app.utils.state_utils import filter_agent_result
+from app.utils.conversation_enforcer import get_conversation_analysis, get_next_response
 
 logger = get_logger("carlos_v2")
 
@@ -33,53 +34,34 @@ class CarlosState(AgentState):
 
 def carlos_prompt(state: CarlosState) -> list[AnyMessage]:
     """
-    Dynamic prompt function for Carlos that includes context from state
+    Dynamic prompt function for Carlos with STRICT conversation enforcement
     """
-    # Build context from state
-    contact_name = state.get("contact_name", "there")
-    business_type = state.get("business_type")
-    
-    # Get the CURRENT message only (not history)
+    # Get messages for analysis
     messages = state.get("messages", [])
     current_message = ""
     
-    # Track conversation state by analyzing message history
-    asked_for_name = False
-    got_name = False
-    asked_for_business = False
-    got_business = False
-    asked_for_problem = False
-    got_problem = False
-    asked_for_budget = False
-    got_budget = False
-    customer_name = None
-    business_type_from_conv = None
+    # STRICT ENFORCEMENT: Use conversation analyzer
+    analysis = get_conversation_analysis(messages)
     
-    # Analyze conversation flow
-    for i, msg in enumerate(messages):
-        if hasattr(msg, 'role') and msg.role == "assistant":
-            content = msg.content.lower() if hasattr(msg, 'content') else ""
-            if "¿cuál es tu nombre?" in content or "what's your name?" in content or "what's your name?" in content:
-                asked_for_name = True
-            elif "¿qué tipo de negocio" in content or "what type of business" in content:
-                asked_for_business = True
-            elif "¿cuál es tu mayor desafío" in content or "biggest challenge" in content or "what's taking most of your time" in content:
-                asked_for_problem = True
-            elif "$" in content and ("presupuesto" in content or "budget" in content or "investment" in content):
-                asked_for_budget = True
-        elif hasattr(msg, 'type') and msg.type == "human" and i > 0:
-            # Check what question preceded this answer
-            if asked_for_name and not got_name and not asked_for_business:
-                customer_name = msg.content.strip()
-                got_name = True
-            elif asked_for_business and not got_business and got_name:
-                business_type_from_conv = msg.content.strip()
-                got_business = True
-            elif asked_for_problem and not got_problem:
-                got_problem = True
-            elif asked_for_budget and not got_budget:
-                if msg.content.lower() in ["si", "sí", "yes", "claro", "ok", "perfecto"]:
-                    got_budget = True
+    # Get enforcement data
+    current_stage = analysis['current_stage'].value
+    next_action = analysis['next_action']
+    allowed_response = analysis['allowed_response']
+    collected_data = analysis['collected_data']
+    
+    # Map for compatibility with existing prompt
+    asked_for_name = 'name' in analysis.get('last_question_asked', '')
+    got_name = collected_data['name'] is not None
+    asked_for_business = 'business' in analysis.get('last_question_asked', '')
+    got_business = collected_data['business'] is not None
+    asked_for_problem = 'problem' in analysis.get('last_question_asked', '')
+    got_problem = collected_data['problem'] is not None
+    asked_for_budget = 'budget' in analysis.get('last_question_asked', '')
+    got_budget = collected_data['budget_confirmed']
+    customer_name = collected_data['name']
+    business_type_from_conv = collected_data['business']
+    
+    # No need for manual analysis - enforcer handles it!
     
     # Get most recent human message
     if messages:
@@ -112,6 +94,14 @@ def carlos_prompt(state: CarlosState) -> list[AnyMessage]:
         context += f"\n\n📍 CURRENT MESSAGE: '{current_message}'"
     
     system_prompt = f"""You are Carlos, an automation consultant for WARM leads (score 5-7) at Main Outlet Media.
+
+🚨 STRICT ENFORCEMENT MODE ACTIVE 🚨
+Current Stage: {current_stage}
+Next Action: {next_action}
+ALLOWED RESPONSE: "{allowed_response}"
+
+⚡ If response starts with "ESCALATE:", use escalate_to_supervisor tool
+⚡ Otherwise, respond with the EXACT allowed response above!
 
 Role: Build trust and desire through genuine, adaptive conversations.
 
@@ -193,9 +183,9 @@ If asked about technology: "Thank you for your interest! We use proprietary tech
 {context}
 
 Current Lead Status:
-- Name: {contact_name}
-- Business: {business_type or "unknown"}
-- Budget: {"NOT CONFIRMED" if not business_type else "needs confirmation"}
+- Name: {state.get("contact_name", customer_name or "there")}
+- Business: {business_type_from_conv or "unknown"}
+- Budget: {"NOT CONFIRMED" if not business_type_from_conv else "needs confirmation"}
 
 Engagement Rules:
 - Length: 150-250 chars per message

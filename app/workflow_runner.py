@@ -10,7 +10,7 @@ from app.utils.workflow_tracker import can_start_workflow, end_workflow
 from app.state.conversation_state import create_initial_state
 from app.workflow_supervisor_brain import supervisor_brain_workflow
 from app.tools.webhook_enricher import enrich_webhook_data
-from app.tools.conversation_loader import load_conversation_history
+from app.tools.conversation_loader import conversation_loader
 
 logger = get_logger("workflow_runner")
 
@@ -49,7 +49,7 @@ async def run_workflow_safe(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         
         # Load conversation history
         logger.info(f"Loading conversation history for contact {contact_id}")
-        history = await load_conversation_history(contact_id)
+        history = await conversation_loader.load_conversation_history(contact_id)
         if history:
             # Prepend history to messages
             initial_state["messages"] = history + initial_state["messages"]

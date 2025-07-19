@@ -56,6 +56,11 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     customer_name = collected_data['name']
     business_type = collected_data['business']
     
+    # Initialize additional flags (will be updated in analysis)
+    asked_for_name = False
+    asked_for_business = False
+    asked_for_problem = False
+    
     # Analyze conversation flow
     for i, msg in enumerate(messages):
         if hasattr(msg, 'role') and msg.role == "assistant":

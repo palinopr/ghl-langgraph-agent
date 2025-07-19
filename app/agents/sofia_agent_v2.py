@@ -20,6 +20,7 @@ from app.utils.simple_logger import get_logger
 from app.config import get_settings
 from app.utils.model_factory import create_openai_model
 from app.utils.state_utils import filter_agent_result
+from app.utils.conversation_enforcer import get_conversation_analysis, get_next_response
 
 logger = get_logger("sofia_v2")
 
@@ -38,29 +39,40 @@ class SofiaState(AgentState):
 
 def sofia_prompt(state: SofiaState) -> list[AnyMessage]:
     """
-    Dynamic prompt function for Sofia that includes context from state
+    Dynamic prompt function for Sofia with STRICT conversation enforcement
     """
-    # Build context from state
-    contact_name = state.get("contact_name", "there")
-    appointment_status = state.get("appointment_status")
-    
-    # Get the CURRENT message only (not history)
+    # Get messages for analysis
     messages = state.get("messages", [])
     current_message = ""
     
-    # Track conversation state by analyzing message history
+    # STRICT ENFORCEMENT: Use conversation analyzer
+    analysis = get_conversation_analysis(messages)
+    
+    # Get enforcement data
+    current_stage = analysis['current_stage'].value
+    next_action = analysis['next_action']
+    allowed_response = analysis['allowed_response']
+    collected_data = analysis['collected_data']
+    
+    # Map for compatibility
+    customer_name = collected_data['name']
+    business_type_from_conv = collected_data['business']
+    got_email = collected_data['email'] is not None
+    
+    # Get from state
+    contact_name = state.get("contact_name", customer_name or "there")
+    appointment_status = state.get("appointment_status")
+    
+    # Initialize flags
     asked_for_name = False
-    got_name = False
-    asked_for_business = False
-    got_business = False
+    asked_for_business = False  
     asked_for_problem = False
-    got_problem = False
     asked_for_budget = False
-    got_budget = False
     asked_for_email = False
-    got_email = False
-    customer_name = None
-    business_type_from_conv = None
+    got_name = collected_data['name'] is not None
+    got_business = collected_data['business'] is not None
+    got_problem = collected_data['problem'] is not None
+    got_budget = collected_data['budget_confirmed']
     
     # Analyze conversation flow
     for i, msg in enumerate(messages):
@@ -129,6 +141,14 @@ def sofia_prompt(state: SofiaState) -> list[AnyMessage]:
         context += f"\n\n📍 CURRENT MESSAGE: '{current_message}'"
     
     system_prompt = f"""You are Sofia, an expert closer who books appointments for HOT leads (score 8-10) at Main Outlet Media.
+
+🚨 STRICT ENFORCEMENT MODE ACTIVE 🚨
+Current Stage: {current_stage}
+Next Action: {next_action}
+ALLOWED RESPONSE: "{allowed_response}"
+
+⚡ If response starts with "ESCALATE:", use escalate_to_supervisor tool
+⚡ Otherwise, respond with the EXACT allowed response above!
 
 Role: Close naturally using advanced sales psychology.
 
