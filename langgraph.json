@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "2.2.7",
-  "description": "GoHighLevel LangGraph Agent - v2.2.7 Fix Routing and Restart Issues",
+  "version": "2.2.8",
+  "description": "GoHighLevel LangGraph Agent - v2.2.8 CRITICAL Fix Name Usage and Repetition",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },
