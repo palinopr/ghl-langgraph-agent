@@ -47,42 +47,9 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     allowed_response = analysis['allowed_response']
     collected_data = analysis['collected_data']
     
-    # Map old variables for compatibility
-    last_question = analysis.get('last_question_asked', '') if analysis else ''
-    asked_for_name = 'name' in last_question if isinstance(last_question, str) else False
-    got_name = collected_data['name'] is not None
-    asked_for_business = 'business' in last_question if isinstance(last_question, str) else False
-    got_business = collected_data['business'] is not None
-    asked_for_problem = 'problem' in last_question if isinstance(last_question, str) else False
-    got_problem = collected_data['problem'] is not None
+    # Extract data from conversation analysis
     customer_name = collected_data['name']
     business_type = collected_data['business']
-    
-    # Initialize additional flags (will be updated in analysis)
-    asked_for_name = False
-    asked_for_business = False
-    asked_for_problem = False
-    
-    # Analyze conversation flow
-    for i, msg in enumerate(messages):
-        if hasattr(msg, 'role') and msg.role == "assistant":
-            content = msg.content.lower() if hasattr(msg, 'content') else ""
-            if "¿cuál es tu nombre?" in content or "what's your name?" in content:
-                asked_for_name = True
-            elif "¿qué tipo de negocio tienes?" in content or "what type of business" in content:
-                asked_for_business = True
-            elif "¿cuál es tu mayor desafío" in content or "what's your biggest challenge" in content:
-                asked_for_problem = True
-        elif hasattr(msg, 'type') and msg.type == "human" and i > 0:
-            # Check what question preceded this answer
-            if asked_for_name and not got_name and not asked_for_business:
-                customer_name = msg.content.strip()
-                got_name = True
-            elif asked_for_business and not got_business and got_name:
-                business_type = msg.content.strip()
-                got_business = True
-            elif asked_for_problem and not got_problem and got_business:
-                got_problem = True
     
     # Get most recent human message
     if messages:
@@ -96,28 +63,28 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     
     # Build conversation state context
     context += "\n📊 CONVERSATION STATE:"
-    if not asked_for_name:
-        context += "\n- Haven't asked for name yet → ASK FOR NAME"
-    elif asked_for_name and not got_name:
-        context += "\n- Asked for name, waiting for response → CURRENT MESSAGE IS THEIR NAME"
-    elif got_name and not asked_for_business:
-        context += f"\n- Got name: '{customer_name}' → ASK FOR BUSINESS TYPE"
-    elif asked_for_business and not got_business:
-        context += f"\n- Asked for business, waiting for response → CURRENT MESSAGE IS BUSINESS TYPE"
-        context += f"\n⚠️ CRITICAL: '{current_message}' is the BUSINESS, not a name!"
-    elif got_business and not asked_for_problem:
-        context += f"\n- Got business: '{business_type}' → ASK FOR PROBLEM/CHALLENGE"
-    elif asked_for_problem and not got_problem:
-        context += "\n- Asked for problem, waiting for response → MOVE TO BUDGET"
-    elif got_problem:
-        context += "\n- Got problem → ASK ABOUT BUDGET"
+    context += f"\n- Current Stage: {current_stage}"
+    context += f"\n- Next Action: {next_action}"
+    context += f"\n- Language: {analysis.get('language', 'es').upper()}"
     
-    # Add warnings
-    if customer_name:
-        context += f"\n\n✅ Customer name is: {customer_name}"
-    if business_type:
-        context += f"\n✅ Business type is: {business_type}"
-        context += f"\n⚠️ NEVER say 'Mucho gusto, {business_type}' - that's the business, not the name!"
+    # Show collected data
+    if collected_data['name']:
+        context += f"\n✅ Customer name: {collected_data['name']}"
+    if collected_data['business']:
+        context += f"\n✅ Business type: {collected_data['business']}"
+    if collected_data['problem']:
+        context += f"\n✅ Problem identified: {collected_data['problem'][:50]}..."
+    if collected_data['budget_confirmed']:
+        context += f"\n✅ Budget confirmed: YES"
+    if collected_data['email']:
+        context += f"\n✅ Email: {collected_data['email']}"
+    
+    # Show what we're expecting
+    if analysis.get('expecting_answer_for'):
+        context += f"\n\n⏳ EXPECTING: Answer for {analysis['expecting_answer_for']}"
+    
+    # Add allowed response
+    context += f"\n\n🎯 ALLOWED RESPONSE: \"{allowed_response}\""
     
     if current_message:
         context += f"\n\n📍 CURRENT MESSAGE: '{current_message}'"

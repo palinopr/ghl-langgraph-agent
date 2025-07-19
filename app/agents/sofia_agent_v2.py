@@ -66,47 +66,12 @@ def sofia_prompt(state: SofiaState) -> list[AnyMessage]:
     contact_name = state.get("contact_name", customer_name or "there")
     appointment_status = state.get("appointment_status")
     
-    # Initialize flags
-    asked_for_name = False
-    asked_for_business = False  
-    asked_for_problem = False
-    asked_for_budget = False
-    asked_for_email = False
+    # Use conversation enforcer data - no redundant analysis needed
     got_name = collected_data['name'] is not None
     got_business = collected_data['business'] is not None
     got_problem = collected_data['problem'] is not None
     got_budget = collected_data['budget_confirmed']
-    
-    # Analyze conversation flow
-    for i, msg in enumerate(messages):
-        if hasattr(msg, 'role') and msg.role == "assistant":
-            content = msg.content.lower() if hasattr(msg, 'content') else ""
-            if "¿cuál es tu nombre?" in content or "what's your name?" in content:
-                asked_for_name = True
-            elif "¿qué tipo de negocio" in content or "what type of business" in content:
-                asked_for_business = True
-            elif "¿cuál es tu mayor desafío" in content or "biggest challenge" in content or "what's taking most" in content:
-                asked_for_problem = True
-            elif "$" in content and ("presupuesto" in content or "budget" in content or "investment" in content):
-                asked_for_budget = True
-            elif "email" in content or "correo" in content:
-                asked_for_email = True
-        elif hasattr(msg, 'type') and msg.type == "human" and i > 0:
-            # Check what question preceded this answer
-            if asked_for_name and not got_name and not asked_for_business:
-                customer_name = msg.content.strip()
-                got_name = True
-            elif asked_for_business and not got_business and got_name:
-                business_type_from_conv = msg.content.strip()
-                got_business = True
-            elif asked_for_problem and not got_problem:
-                got_problem = True
-            elif asked_for_budget and not got_budget:
-                if msg.content.lower() in ["si", "sí", "yes", "claro", "ok", "perfecto"]:
-                    got_budget = True
-            elif asked_for_email and not got_email:
-                if "@" in msg.content:
-                    got_email = True
+    got_email = collected_data['email'] is not None
     
     # Get most recent human message
     if messages:
