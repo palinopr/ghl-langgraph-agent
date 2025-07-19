@@ -22,23 +22,18 @@ def quick_check():
     
     # 2. Check for common edge errors
     try:
-        # For parallel workflow
-        from app.workflow_parallel import create_parallel_workflow
+        # For supervisor brain workflow (simpler, non-parallel)
+        from app.workflow_supervisor_brain import create_supervisor_brain_workflow
         from langgraph.checkpoint.memory import MemorySaver
         from langgraph.store.memory import InMemoryStore
         
-        wf = create_parallel_workflow()
-        
-        # This is where deployment usually fails - during compilation
-        compiled = wf.compile(
-            checkpointer=MemorySaver(),
-            store=InMemoryStore()
-        )
+        # The workflow is already compiled
+        compiled = create_supervisor_brain_workflow()
         print("✅ Workflow compiles without errors")
         
         # Check graph structure
-        if hasattr(wf, '_edges'):
-            print(f"✅ Workflow has {len(wf._edges)} edges defined")
+        if hasattr(compiled, '_edges'):
+            print(f"✅ Workflow has {len(compiled._edges)} edges defined")
         
     except ValueError as e:
         if "unknown node" in str(e):

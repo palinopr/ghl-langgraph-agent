@@ -87,6 +87,11 @@ class ConversationState(TypedDict):
     # Raw webhook data (for reference)
     webhook_data: Dict[str, Any]
     
+    # Data loaded by receptionist
+    contact_info: Optional[Dict[str, Any]]  # Full contact details from GHL
+    previous_custom_fields: Optional[Dict[str, Any]]  # Custom fields from GHL
+    conversation_history: Optional[List[Dict[str, Any]]]  # Previous messages
+    
     # Analysis Results
     ai_analysis: Optional[Dict[str, Any]]  # Store full AI analysis
     extracted_data: Dict[str, Any]  # Extracted information from messages
@@ -104,6 +109,21 @@ class ConversationState(TypedDict):
     
     # Required by create_react_agent for internal loop management
     remaining_steps: int  # Steps remaining for agent execution
+    
+    # Workflow-specific fields for node coordination
+    next_agent: Optional[Literal["sofia", "carlos", "maria"]]  # Next agent to route to
+    supervisor_complete: Optional[bool]  # Whether supervisor has completed analysis
+    data_loaded: Optional[bool]  # Whether receptionist loaded all data
+    receptionist_complete: Optional[bool]  # Whether receptionist completed
+    
+    # Responder tracking fields
+    responder_status: Optional[str]  # Status of message sending
+    messages_sent_count: Optional[int]  # Number of messages sent
+    messages_failed_count: Optional[int]  # Number of failed messages
+    failed_messages: Optional[List[str]]  # List of failed message details
+    
+    # Appointment booking
+    available_slots: Optional[List[Dict[str, Any]]]  # Available calendar slots
 
 
 def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
@@ -192,7 +212,22 @@ def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
         # Loop Prevention
         interaction_count=0,
         should_end=False,
-        remaining_steps=10  # Default steps for create_react_agent
+        remaining_steps=10,  # Default steps for create_react_agent
+        
+        # Workflow coordination
+        next_agent=None,
+        supervisor_complete=False,
+        data_loaded=False,
+        receptionist_complete=False,
+        
+        # Responder tracking
+        responder_status=None,
+        messages_sent_count=0,
+        messages_failed_count=0,
+        failed_messages=[],
+        
+        # Appointment booking
+        available_slots=None
     )
 
 

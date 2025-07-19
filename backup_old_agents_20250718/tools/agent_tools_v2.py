@@ -167,10 +167,10 @@ async def update_contact_with_state(
 
 @tool
 async def check_calendar_availability(
-    state: Annotated[ConversationState, InjectedState],
-    tool_call_id: Annotated[str, InjectedToolCallId],
     num_slots: int = 3,
-    language: str = "es"
+    language: str = "es",
+    state: Annotated[ConversationState, InjectedState],
+    tool_call_id: Annotated[str, InjectedToolCallId]
 ) -> Command:
     """
     Check calendar availability and return formatted available slots

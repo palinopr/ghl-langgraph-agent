@@ -1,9 +1,10 @@
 """
-Complete Workflow with Supervisor Brain
-Consolidated pattern matching n8n flow:
+Complete Workflow with Receptionist Pattern
+Matches n8n flow exactly:
 1. Webhook → Receptionist (loads all data)
-2. Supervisor Brain (analyzes, scores, updates GHL, routes)
-3. Agents → Responder
+2. Intelligence (analyzes and scores)
+3. Supervisor (routes with context)
+4. Agents → Responder
 """
 from typing import Dict, Any, Literal
 from langgraph.graph import StateGraph, END, START
@@ -13,9 +14,11 @@ from langgraph.store.memory import InMemoryStore
 # Import state
 from app.state.conversation_state import ConversationState
 
-# Import nodes
-from app.agents.receptionist_simple import receptionist_simple_node
-from app.agents.supervisor_brain_simple import supervisor_brain_simple_node
+# Import nodes in order
+from app.agents.receptionist_agent import receptionist_node
+from app.intelligence.analyzer import intelligence_node
+from app.intelligence.ghl_updater import ghl_update_node
+from app.agents.supervisor import supervisor_node
 from app.agents.sofia_agent_v2 import sofia_node_v2
 from app.agents.carlos_agent_v2 import carlos_node_v2
 from app.agents.maria_agent_v2 import maria_node_v2
@@ -24,7 +27,7 @@ from app.agents.responder_agent import responder_node
 # Import utilities
 from app.utils.simple_logger import get_logger
 
-logger = get_logger("workflow_supervisor_brain")
+logger = get_logger("workflow_with_receptionist")
 
 
 # Routing function from supervisor
@@ -48,21 +51,25 @@ def route_from_supervisor(state: ConversationState) -> Literal["sofia", "carlos"
     return "end"
 
 
-def create_supervisor_brain_workflow():
+def create_complete_workflow():
     """
-    Create workflow with consolidated Supervisor Brain:
+    Create workflow matching n8n pattern:
     
     1. Receptionist - Loads all GHL data
-    2. Supervisor Brain - Analyzes, scores, updates GHL, routes
-    3. Agents - Handle conversation
-    4. Responder - Sends messages
+    2. Intelligence - Analyzes and scores
+    3. GHL Update - Persists changes
+    4. Supervisor - Routes with context
+    5. Agents - Handle conversation
+    6. Responder - Sends messages
     """
     # Create workflow
     workflow = StateGraph(ConversationState)
     
     # Add all nodes
-    workflow.add_node("receptionist", receptionist_simple_node)
-    workflow.add_node("supervisor_brain", supervisor_brain_simple_node)
+    workflow.add_node("receptionist", receptionist_node)
+    workflow.add_node("intelligence", intelligence_node)
+    workflow.add_node("ghl_update", ghl_update_node)
+    workflow.add_node("supervisor", supervisor_node)
     workflow.add_node("sofia", sofia_node_v2)
     workflow.add_node("carlos", carlos_node_v2)
     workflow.add_node("maria", maria_node_v2)
@@ -71,12 +78,14 @@ def create_supervisor_brain_workflow():
     # Set entry point - receptionist first!
     workflow.set_entry_point("receptionist")
     
-    # Linear flow: Receptionist → Supervisor Brain
-    workflow.add_edge("receptionist", "supervisor_brain")
+    # Linear flow for data preparation
+    workflow.add_edge("receptionist", "intelligence")
+    workflow.add_edge("intelligence", "ghl_update")
+    workflow.add_edge("ghl_update", "supervisor")
     
-    # Conditional routing from supervisor brain
+    # Conditional routing from supervisor
     workflow.add_conditional_edges(
-        "supervisor_brain",
+        "supervisor",
         route_from_supervisor,
         {
             "sofia": "sofia",
@@ -105,22 +114,21 @@ def create_supervisor_brain_workflow():
     )
     
     logger.info("""
-    ✅ Supervisor Brain workflow created:
+    ✅ Complete workflow created matching n8n:
     1. Receptionist loads all GHL data first
-    2. Supervisor Brain does EVERYTHING:
-       - Analyzes and scores lead
-       - Updates GHL (score, tags, fields, notes)
-       - Routes to appropriate agent
-    3. Agents process with complete information
-    4. Responder ensures delivery
+    2. Intelligence analyzes and scores
+    3. GHL Update persists changes
+    4. Supervisor routes with full context
+    5. Agents process with complete information
+    6. Responder ensures delivery
     
-    Flow: Webhook → Receptionist → Supervisor Brain → Agent → Responder
+    Flow: Webhook → Receptionist → Intelligence → Update → Supervisor → Agent → Responder
     """)
     
     return app
 
 
 # Create and export
-supervisor_brain_workflow = create_supervisor_brain_workflow()
+complete_workflow = create_complete_workflow()
 
-__all__ = ["supervisor_brain_workflow"]
+__all__ = ["complete_workflow"]
