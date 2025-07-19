@@ -24,6 +24,7 @@ from app.utils.conversation_enforcer import get_conversation_analysis, get_next_
 from app.utils.conversation_formatter import format_conversation_for_agent, get_conversation_stage
 from app.utils.smart_responder import get_smart_response
 from app.tools.appointment_booking_simple import book_appointment_simple
+from app.utils.pre_model_hooks import sofia_context_hook
 
 logger = get_logger("sofia_v2")
 
@@ -297,6 +298,7 @@ def create_sofia_agent():
         tools=appointment_tools_simple,
         state_schema=SofiaState,
         prompt=sofia_prompt,
+        pre_model_hook=sofia_context_hook,  # Add context awareness
         name="sofia"
     )
     

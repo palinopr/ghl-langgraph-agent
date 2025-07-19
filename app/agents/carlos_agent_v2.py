@@ -18,6 +18,7 @@ from app.utils.model_factory import create_openai_model
 from app.utils.state_utils import filter_agent_result
 from app.utils.conversation_enforcer import get_conversation_analysis, get_next_response
 from app.utils.conversation_formatter import format_conversation_for_agent, get_conversation_stage
+from app.utils.pre_model_hooks import carlos_context_hook
 
 logger = get_logger("carlos_v2")
 
@@ -232,6 +233,7 @@ def create_carlos_agent():
         tools=qualification_tools_simple,
         state_schema=CarlosState,
         prompt=carlos_prompt,
+        pre_model_hook=carlos_context_hook,  # Add context awareness
         name="carlos"
     )
     

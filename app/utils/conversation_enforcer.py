@@ -7,6 +7,8 @@ from enum import Enum
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 import re
 from app.utils.simple_logger import get_logger
+from app.utils.conversation_analyzer import ConversationAnalyzer
+from app.state.enhanced_conversation_state import ConversationStage as EnhancedStage
 
 logger = get_logger("conversation_enforcer")
 
@@ -94,180 +96,66 @@ class ConversationEnforcer:
     def analyze_conversation(self, messages: List[BaseMessage]) -> Dict[str, Any]:
         """
         Analyze conversation to determine EXACT current state
-        Returns structured analysis that agents MUST follow
+        Now uses the enhanced ConversationAnalyzer to prevent repetition
         """
+        # Use the enhanced analyzer that properly tracks what's been asked/answered
+        enhanced_analysis = ConversationAnalyzer.analyze_conversation(messages)
+        
+        # Convert to our format while keeping all the enhanced tracking
         analysis = {
-            "current_stage": ConversationStage.GREETING,
+            "current_stage": self._map_enhanced_stage(enhanced_analysis["current_stage"]),
             "collected_data": {
-                "name": None,
-                "business": None,
-                "problem": None,
-                "budget_confirmed": False,
-                "email": None
+                "name": enhanced_analysis["collected_data"]["name"],
+                "business": enhanced_analysis["collected_data"]["business_type"],
+                "problem": enhanced_analysis["collected_data"]["challenge"],
+                "budget_confirmed": enhanced_analysis["collected_data"]["budget_confirmed"],
+                "email": enhanced_analysis["collected_data"]["email"]
             },
-            "language": "es",  # Default Spanish
-            "last_question_asked": None,
-            "expecting_answer_for": None,
-            "next_action": "SEND_GREETING",
+            "language": enhanced_analysis["language"],
+            "last_question_asked": enhanced_analysis.get("last_ai_question"),
+            "expecting_answer_for": enhanced_analysis["expecting_answer_for"],
+            "next_action": self._determine_next_action(enhanced_analysis),
             "allowed_response": None,
-            "forbidden_actions": []
+            "forbidden_actions": [],
+            # Keep enhanced tracking info
+            "questions_asked": list(enhanced_analysis["questions_asked"]),
+            "next_question_to_ask": enhanced_analysis["next_question_to_ask"]
         }
         
-        # Track what questions were asked and answered
-        asked_for_name = False
-        got_name = False
-        asked_for_business = False
-        got_business = False
-        asked_for_problem = False
-        got_problem = False
-        asked_for_budget = False
-        got_budget = False
-        asked_for_email = False
-        got_email = False
-        offered_times = False
+        # Check for appointment time selection
         selected_time = False
+        current_msg_is_time_selection = False
         
-        # Analyze each message in order
-        for i, msg in enumerate(messages):
+        # Check if appointment times were offered
+        offered_times = False
+        for msg in messages:
             if isinstance(msg, AIMessage) or (hasattr(msg, 'role') and msg.role == "assistant"):
                 content = msg.content.lower() if hasattr(msg, 'content') else ""
-                
-                # Track what was asked
-                if "¿cuál es tu nombre?" in content or "what's your name?" in content:
-                    asked_for_name = True
-                    analysis["last_question_asked"] = "name"
-                    analysis["expecting_answer_for"] = "name"
-                elif "¿qué tipo de negocio" in content or "what type of business" in content:
-                    asked_for_business = True
-                    analysis["last_question_asked"] = "business"
-                    analysis["expecting_answer_for"] = "business"
-                elif "¿cuál es tu mayor desafío" in content or "biggest challenge" in content:
-                    asked_for_problem = True
-                    analysis["last_question_asked"] = "problem"
-                    analysis["expecting_answer_for"] = "problem"
-                elif "$300" in content and ("presupuesto" in content or "budget" in content):
-                    asked_for_budget = True
-                    analysis["last_question_asked"] = "budget"
-                    analysis["expecting_answer_for"] = "budget"
-                elif "correo electrónico" in content or "email" in content:
-                    asked_for_email = True
-                    analysis["last_question_asked"] = "email"
-                    analysis["expecting_answer_for"] = "email"
-                elif ("horarios disponibles" in content or 
-                      "10:00 am" in content or 
-                      "tengo estos horarios" in content or
-                      "¿cuál prefieres?" in content):
+                if ("horarios disponibles" in content or 
+                    "10:00 am" in content or 
+                    "tengo estos horarios" in content or
+                    "¿cuál prefieres?" in content):
                     offered_times = True
-                    analysis["last_question_asked"] = "appointment_time"
-                    analysis["expecting_answer_for"] = "appointment_time"
-                    
-            elif isinstance(msg, HumanMessage) or (hasattr(msg, 'type') and msg.type == "human"):
-                content = msg.content.strip() if hasattr(msg, 'content') else ""
-                
-                # Detect language
-                if any(word in content.lower() for word in ["hello", "hi", "yes", "no", "what", "how"]):
-                    analysis["language"] = "en"
-                
-                # Process answers based on what we're expecting
-                if analysis["expecting_answer_for"] == "name" and not got_name:
-                    # The ENTIRE message is their name (unless it's a greeting)
-                    if content.lower() not in ["hola", "hi", "hello", "buenos días", "buenas tardes"]:
-                        analysis["collected_data"]["name"] = content
-                        got_name = True
-                        analysis["expecting_answer_for"] = None
-                        
-                elif analysis["expecting_answer_for"] == "business" and not got_business:
-                    # The ENTIRE message is their business type
-                    analysis["collected_data"]["business"] = content.lower()
-                    got_business = True
-                    analysis["expecting_answer_for"] = None
-                    
-                elif analysis["expecting_answer_for"] == "problem" and not got_problem:
-                    # Any response is their problem
-                    analysis["collected_data"]["problem"] = content
-                    got_problem = True
-                    analysis["expecting_answer_for"] = None
-                    
-                elif analysis["expecting_answer_for"] == "budget" and not got_budget:
-                    # Check for budget confirmation
-                    if content.lower() in ["si", "sí", "yes", "claro", "ok", "perfecto", "dale", "va", "bueno"]:
-                        analysis["collected_data"]["budget_confirmed"] = True
-                        got_budget = True
-                        analysis["expecting_answer_for"] = None
-                        
-                elif analysis["expecting_answer_for"] == "email" and not got_email:
-                    # Check for email
-                    if "@" in content:
-                        analysis["collected_data"]["email"] = content
-                        got_email = True
-                        analysis["expecting_answer_for"] = None
-                        
-                elif analysis["expecting_answer_for"] == "appointment_time" and not selected_time:
-                    # Check for time selection patterns
-                    time_indicators = ["am", "pm", ":00", "primera", "segunda", "tercera", 
-                                     "10:", "2:", "4:", "mañana", "tarde"]
-                    if any(indicator in content.lower() for indicator in time_indicators):
-                        selected_time = True
-                        analysis["expecting_answer_for"] = None
+                    break
         
-        # Determine current stage based on what we have
-        if not asked_for_name:
-            analysis["current_stage"] = ConversationStage.GREETING
-            analysis["next_action"] = "SEND_GREETING"
-        elif asked_for_name and not got_name:
-            analysis["current_stage"] = ConversationStage.WAITING_FOR_NAME
-            analysis["next_action"] = "PROCESS_NAME"
-        elif got_name and not asked_for_business:
-            analysis["current_stage"] = ConversationStage.WAITING_FOR_NAME
-            analysis["next_action"] = "ASK_FOR_BUSINESS"
-        elif asked_for_business and not got_business:
-            analysis["current_stage"] = ConversationStage.WAITING_FOR_BUSINESS
-            analysis["next_action"] = "PROCESS_BUSINESS"
-        elif got_business and not asked_for_problem:
-            analysis["current_stage"] = ConversationStage.WAITING_FOR_BUSINESS
-            analysis["next_action"] = "ASK_FOR_PROBLEM"
-        elif asked_for_problem and not got_problem:
-            analysis["current_stage"] = ConversationStage.WAITING_FOR_PROBLEM
-            analysis["next_action"] = "PROCESS_PROBLEM"
-        elif got_problem and not asked_for_budget:
-            analysis["current_stage"] = ConversationStage.WAITING_FOR_PROBLEM
-            analysis["next_action"] = "ASK_FOR_BUDGET"
-        elif asked_for_budget and not got_budget:
-            analysis["current_stage"] = ConversationStage.WAITING_FOR_BUDGET
-            analysis["next_action"] = "PROCESS_BUDGET"
-        elif got_budget and not asked_for_email:
-            analysis["current_stage"] = ConversationStage.WAITING_FOR_BUDGET
-            analysis["next_action"] = "ASK_FOR_EMAIL"
-        elif asked_for_email and not got_email:
-            analysis["current_stage"] = ConversationStage.WAITING_FOR_EMAIL
-            analysis["next_action"] = "PROCESS_EMAIL"
-        elif got_email and not offered_times:
-            analysis["current_stage"] = ConversationStage.OFFERING_TIMES
-            analysis["next_action"] = "OFFER_APPOINTMENT_TIMES"
-        elif offered_times and not selected_time:
+        # Check last message for time selection
+        if messages and len(messages) > 0:
+            last_human_msg = messages[-1]
+            if isinstance(last_human_msg, HumanMessage) or (hasattr(last_human_msg, 'type') and last_human_msg.type == "human"):
+                content = last_human_msg.content.lower() if hasattr(last_human_msg, 'content') else ""
+                time_indicators = ["am", "pm", ":00", "primera", "segunda", "tercera", 
+                                 "10:", "2:", "4:", "mañana", "tarde"]
+                if any(indicator in content for indicator in time_indicators):
+                    selected_time = True
+                    current_msg_is_time_selection = True
+        
+        # Override stage for appointment flow
+        if offered_times and current_msg_is_time_selection:
             analysis["current_stage"] = ConversationStage.WAITING_FOR_TIME_SELECTION
             analysis["next_action"] = "PROCESS_TIME_SELECTION"
-        elif selected_time:
-            # Check if this is the current message (just selected)
-            # If so, stay in WAITING_FOR_TIME_SELECTION for tool usage
-            current_msg_is_time_selection = False
-            if messages and len(messages) > 0:
-                last_human_msg = messages[-1]
-                if isinstance(last_human_msg, HumanMessage) or (hasattr(last_human_msg, 'type') and last_human_msg.type == "human"):
-                    content = last_human_msg.content.lower() if hasattr(last_human_msg, 'content') else ""
-                    time_indicators = ["am", "pm", ":00", "primera", "segunda", "tercera", 
-                                     "10:", "2:", "4:", "mañana", "tarde"]
-                    if any(indicator in content for indicator in time_indicators):
-                        current_msg_is_time_selection = True
-            
-            if current_msg_is_time_selection:
-                # Customer JUST selected a time - Sofia should use appointment tool
-                analysis["current_stage"] = ConversationStage.WAITING_FOR_TIME_SELECTION
-                analysis["next_action"] = "PROCESS_TIME_SELECTION"
-            else:
-                # Time was already processed, move to confirmation
-                analysis["current_stage"] = ConversationStage.CONFIRMING_APPOINTMENT
-                analysis["next_action"] = "CONFIRM_APPOINTMENT"
+        elif offered_times and selected_time and not current_msg_is_time_selection:
+            analysis["current_stage"] = ConversationStage.CONFIRMING_APPOINTMENT
+            analysis["next_action"] = "CONFIRM_APPOINTMENT"
         
         # Set allowed response based on stage
         self._set_allowed_response(analysis)
@@ -275,7 +163,51 @@ class ConversationEnforcer:
         # Set forbidden actions
         analysis["forbidden_actions"] = self._get_forbidden_actions(analysis)
         
+        # Log what we're tracking to prevent repetition
+        if analysis["questions_asked"]:
+            logger.info(f"Questions already asked: {', '.join(analysis['questions_asked'])}")
+        if analysis["expecting_answer_for"]:
+            logger.info(f"Expecting answer for: {analysis['expecting_answer_for']}")
+        
         return analysis
+    
+    def _map_enhanced_stage(self, enhanced_stage: EnhancedStage) -> ConversationStage:
+        """Map enhanced stages to our conversation stages"""
+        mapping = {
+            EnhancedStage.GREETING: ConversationStage.GREETING,
+            EnhancedStage.COLLECTING_NAME: ConversationStage.WAITING_FOR_NAME,
+            EnhancedStage.COLLECTING_BUSINESS: ConversationStage.WAITING_FOR_BUSINESS,
+            EnhancedStage.COLLECTING_CHALLENGE: ConversationStage.WAITING_FOR_PROBLEM,
+            EnhancedStage.COLLECTING_BUDGET: ConversationStage.WAITING_FOR_BUDGET,
+            EnhancedStage.COLLECTING_EMAIL: ConversationStage.WAITING_FOR_EMAIL,
+            EnhancedStage.OFFERING_APPOINTMENT: ConversationStage.OFFERING_TIMES,
+            EnhancedStage.BOOKING_APPOINTMENT: ConversationStage.WAITING_FOR_TIME_SELECTION,
+            EnhancedStage.COMPLETED: ConversationStage.COMPLETED
+        }
+        return mapping.get(enhanced_stage, ConversationStage.GREETING)
+    
+    def _determine_next_action(self, enhanced_analysis: Dict[str, Any]) -> str:
+        """Determine next action based on enhanced analysis"""
+        stage = enhanced_analysis["current_stage"]
+        next_q = enhanced_analysis["next_question_to_ask"]
+        
+        # Map next question to action
+        if next_q == "name":
+            return "SEND_GREETING" if stage == EnhancedStage.GREETING else "ASK_FOR_NAME"
+        elif next_q == "business":
+            return "ASK_FOR_BUSINESS"
+        elif next_q == "challenge":
+            return "ASK_FOR_PROBLEM"
+        elif next_q == "budget":
+            return "ASK_FOR_BUDGET"
+        elif next_q == "email":
+            return "ASK_FOR_EMAIL"
+        elif next_q == "appointment_time":
+            return "OFFER_APPOINTMENT_TIMES"
+        elif enhanced_analysis["expecting_answer_for"]:
+            return f"PROCESS_{enhanced_analysis['expecting_answer_for'].upper()}"
+        
+        return "SEND_GREETING"
     
     def _set_allowed_response(self, analysis: Dict[str, Any]):
         """Set the EXACT response allowed for current stage"""

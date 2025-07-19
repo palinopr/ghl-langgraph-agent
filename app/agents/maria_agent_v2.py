@@ -17,6 +17,7 @@ from app.utils.model_factory import create_openai_model
 from app.utils.state_utils import filter_agent_result
 from app.utils.conversation_enforcer import get_conversation_analysis, get_next_response
 from app.utils.conversation_formatter import format_conversation_for_agent, get_conversation_stage
+from app.utils.pre_model_hooks import maria_context_hook
 
 logger = get_logger("maria_v2")
 
@@ -249,6 +250,7 @@ def create_maria_agent():
         tools=support_tools_simple,
         state_schema=MariaState,
         prompt=maria_prompt,
+        pre_model_hook=maria_context_hook,  # Add context awareness
         name="maria"
     )
     
