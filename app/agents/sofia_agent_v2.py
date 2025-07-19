@@ -48,19 +48,84 @@ def sofia_prompt(state: SofiaState) -> list[AnyMessage]:
     # Get the CURRENT message only (not history)
     messages = state.get("messages", [])
     current_message = ""
+    
+    # Track conversation state by analyzing message history
+    asked_for_name = False
+    got_name = False
+    asked_for_business = False
+    got_business = False
+    asked_for_problem = False
+    got_problem = False
+    asked_for_budget = False
+    got_budget = False
+    asked_for_email = False
+    got_email = False
+    customer_name = None
+    business_type_from_conv = None
+    
+    # Analyze conversation flow
+    for i, msg in enumerate(messages):
+        if hasattr(msg, 'role') and msg.role == "assistant":
+            content = msg.content.lower() if hasattr(msg, 'content') else ""
+            if "¿cuál es tu nombre?" in content or "what's your name?" in content:
+                asked_for_name = True
+            elif "¿qué tipo de negocio" in content or "what type of business" in content:
+                asked_for_business = True
+            elif "¿cuál es tu mayor desafío" in content or "biggest challenge" in content or "what's taking most" in content:
+                asked_for_problem = True
+            elif "$" in content and ("presupuesto" in content or "budget" in content or "investment" in content):
+                asked_for_budget = True
+            elif "email" in content or "correo" in content:
+                asked_for_email = True
+        elif hasattr(msg, 'type') and msg.type == "human" and i > 0:
+            # Check what question preceded this answer
+            if asked_for_name and not got_name and not asked_for_business:
+                customer_name = msg.content.strip()
+                got_name = True
+            elif asked_for_business and not got_business and got_name:
+                business_type_from_conv = msg.content.strip()
+                got_business = True
+            elif asked_for_problem and not got_problem:
+                got_problem = True
+            elif asked_for_budget and not got_budget:
+                if msg.content.lower() in ["si", "sí", "yes", "claro", "ok", "perfecto"]:
+                    got_budget = True
+            elif asked_for_email and not got_email:
+                if "@" in msg.content:
+                    got_email = True
+    
+    # Get most recent human message
     if messages:
-        # Find the most recent human message
         for msg in reversed(messages):
             if hasattr(msg, 'type') and msg.type == "human":
                 current_message = msg.content
                 break
     
-    # Customize prompt based on state
-    context = ""
+    # Build conversation state context
+    context = "\n📊 CONVERSATION STATE:"
+    if not got_name:
+        context += "\n- Need to get name"
+    elif got_name and not got_business:
+        context += f"\n- Got name: '{customer_name}' → ASK FOR BUSINESS TYPE"
+    elif got_business and not got_problem:
+        context += f"\n- Got business: '{business_type_from_conv}' → ASK FOR GOAL"
+    elif got_problem and not got_budget:
+        context += "\n- Got goal → ASK ABOUT BUDGET"
+    elif got_budget and not got_email:
+        context += "\n- Got budget → ASK FOR EMAIL"
+    elif got_email:
+        context += "\n- Got email → OFFER APPOINTMENT TIMES"
+    
+    # Add warnings
+    if customer_name:
+        context += f"\n\n✅ Customer name is: {customer_name}"
+    if business_type_from_conv:
+        context += f"\n✅ Business type is: {business_type_from_conv}"
+        context += f"\n⚠️ NEVER confuse business with name!"
+    
     if appointment_status == "booked":
-        context = "\nIMPORTANT: An appointment has already been booked. Focus on confirming details and wrapping up."
-    elif contact_name and contact_name != "there":
-        context = f"\nYou are speaking with {contact_name}."
+        context += "\n\n✅ Appointment already booked - confirm and wrap up"
+    
     if current_message:
         context += f"\n\n📍 CURRENT MESSAGE: '{current_message}'"
     
