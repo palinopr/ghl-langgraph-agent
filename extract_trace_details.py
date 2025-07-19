@@ -191,5 +191,10 @@ def extract_trace_details(trace_id):
         traceback.print_exc()
 
 # Analyze the specific trace
-trace_id = "1f0649dd-8dac-6802-9b24-a91f9943836c"
-extract_trace_details(trace_id)
+if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "--trace-id" and len(sys.argv) > 2:
+        trace_id = sys.argv[2]
+    else:
+        # Default trace ID
+        trace_id = "1f064b62-61bc-6f2d-9273-668c50712976"
+    extract_trace_details(trace_id)
