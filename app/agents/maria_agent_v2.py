@@ -37,12 +37,25 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     contact_name = state.get("contact_name", "there")
     previous_agent = state.get("current_agent")
     
+    # Get the CURRENT message only (not history)
+    messages = state.get("messages", [])
+    current_message = ""
+    if messages:
+        # Find the most recent human message
+        for msg in reversed(messages):
+            if hasattr(msg, 'type') and msg.type == "human":
+                current_message = msg.content
+                break
+    
     # Customize based on context
     context = ""
     if contact_name and contact_name != "there":
         context = f"\nYou are speaking with {contact_name}."
     if previous_agent and previous_agent != "maria":
         context += f"\nThey were previously speaking with {previous_agent}."
+    if current_message:
+        context += f"\n\n🚨 IMPORTANT: Only respond to the CURRENT message: '{current_message}'"
+        context += "\nDo NOT reference or respond to any previous conversation history."
     
     system_prompt = f"""You are Maria, a professional WhatsApp automation consultant for Main Outlet Media.
 
@@ -95,7 +108,28 @@ Communication Philosophy:
 4. No pressure - Let it be their decision
 5. Relationship building - Long-term approach"""
     
-    return [{"role": "system", "content": system_prompt}] + state["messages"]
+    # Only include recent messages, not full history
+    messages_to_include = state.get("messages", [])
+    
+    # Filter to only include the current conversation turn
+    # Look for the most recent human message and include only messages after that
+    filtered_messages = []
+    found_current_human = False
+    
+    for msg in reversed(messages_to_include):
+        if not found_current_human and hasattr(msg, 'type') and msg.type == "human":
+            found_current_human = True
+        if found_current_human:
+            filtered_messages.insert(0, msg)
+            # Only include the current human message and any AI responses after it
+            if hasattr(msg, 'type') and msg.type == "human" and len(filtered_messages) > 1:
+                break
+    
+    # If no human message found, just use the last few messages
+    if not filtered_messages:
+        filtered_messages = messages_to_include[-3:] if len(messages_to_include) > 3 else messages_to_include
+    
+    return [{"role": "system", "content": system_prompt}] + filtered_messages
 
 
 def create_maria_agent():

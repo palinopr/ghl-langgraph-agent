@@ -45,8 +45,8 @@ async def receptionist_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
         
         logger.info(f"Loaded custom fields: {custom_fields}")
         
-        # 3. Load conversation history
-        logger.info("Loading conversation history...")
+        # 3. Load conversation history (for context only, not for agent messages)
+        logger.info("Loading conversation history for context...")
         messages = []
         try:
             conversations = await ghl_client.get_conversations(contact_id)
@@ -55,7 +55,7 @@ async def receptionist_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
                 conv_messages = await ghl_client.get_conversation_messages(conv_id)
                 if conv_messages and isinstance(conv_messages, list):
                     messages = conv_messages[-50:] if len(conv_messages) > 50 else conv_messages
-                    logger.info(f"Loaded {len(messages)} historical messages")
+                    logger.info(f"Loaded {len(messages)} historical messages for context")
         except Exception as e:
             logger.warning(f"Could not load conversation history: {e}")
         
