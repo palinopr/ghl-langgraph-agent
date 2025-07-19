@@ -9,9 +9,13 @@ from app.constants import FIELD_MAPPINGS
 from app.utils.simple_logger import get_logger
 from app.utils.data_validation import validate_response, extract_valid_data, validate_budget_confirmation
 from app.utils.debug_logger import DebugLogger, TimingContext, debug_async
+from app.utils.deployment_check import log_deployment_info
 import re
 
 logger = get_logger("supervisor_brain_simple")
+
+# Log deployment info once at module load
+log_deployment_info()
 
 
 @debug_async("SUPERVISOR_BRAIN")
