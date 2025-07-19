@@ -22,7 +22,7 @@ from app.agents.supervisor_brain_simple import supervisor_brain_simple_node
 from app.agents.sofia_agent_v2 import sofia_node_v2
 from app.agents.carlos_agent_v2 import carlos_node_v2
 from app.agents.maria_agent_v2 import maria_node_v2
-from app.agents.responder_agent import responder_node
+from app.agents.responder_agent_fixed import responder_node_fixed as responder_node
 
 # Import utilities
 from app.utils.simple_logger import get_logger
