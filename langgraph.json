@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "3.0.5",
-  "description": "GoHighLevel LangGraph Agent - v3.0.5 LINEAR FLOW with All Fixes Applied",
+  "version": "3.0.6",
+  "description": "GoHighLevel LangGraph Agent - v3.0.6 LINEAR FLOW with Maria Conversation Flow Fix",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },

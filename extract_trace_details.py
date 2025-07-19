@@ -62,7 +62,7 @@ def extract_trace_details(trace_id):
         print(f"{'='*60}")
         
         # Use the correct project name
-        project_name = os.getenv("LANGCHAIN_PROJECT", "ghl-langgraph-migration")
+        project_name = os.getenv("LANGSMITH_PROJECT", os.getenv("LANGCHAIN_PROJECT", "ghl-langgraph-agent"))
         
         child_runs = list(client.list_runs(
             project_name=project_name,
@@ -192,8 +192,12 @@ def extract_trace_details(trace_id):
 
 # Analyze the specific trace
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "--trace-id" and len(sys.argv) > 2:
-        trace_id = sys.argv[2]
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--trace-id" and len(sys.argv) > 2:
+            trace_id = sys.argv[2]
+        else:
+            # Direct trace ID as argument
+            trace_id = sys.argv[1]
     else:
         # Default trace ID
         trace_id = "1f064b62-61bc-6f2d-9273-668c50712976"

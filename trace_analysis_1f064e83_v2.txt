@@ -1,0 +1,398 @@
+
+================================================================================
+EXTRACTING TRACE: 1f064e83-5da7-67a6-9202-964f8abf7ada
+================================================================================
+
+Main Run Details:
+- Name: agent
+- Type: chain
+- Status: success
+- Start: 2025-07-19 21:34:54.739477
+- Project: a807d9fb-2c58-4d09-a4b2-4037e0668fcc
+
+============================================================
+FULL INPUTS:
+============================================================
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Restaurante"
+    }
+  ],
+  "contact_id": "SKuSTzoQNRBFdBlFtWRz",
+  "contact_name": "Jaime Ortiz",
+  "contact_email": "",
+  "contact_phone": "(305) 487-0475"
+}
+
+============================================================
+FULL OUTPUTS:
+============================================================
+{
+  "messages": [
+    {
+      "content": "Restaurante",
+      "additional_kwargs": {},
+      "response_metadata": {},
+      "type": "human",
+      "id": "7ba58ab1-2fd1-448a-a3b6-35a667124f0e",
+      "example": false
+    },
+    {
+      "content": "Restaurante",
+      "additional_kwargs": {
+        "timestamp": "2025-07-19T21:34:50.697Z",
+        "message_id": "tFzIfi7LIzQk3RVg1cNJ",
+        "source": "ghl_history"
+      },
+      "response_metadata": {},
+      "type": "human",
+      "id": "93309b6d-48db-42cb-9e5c-c4b32eb8d0fc",
+      "example": false
+    },
+    {
+      "content": "Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?",
+      "additional_kwargs": {
+        "timestamp": "2025-07-19T21:34:29.000Z",
+        "message_id": "el2uv4jzyiSHB3lSpPHL",
+        "source": "ghl_history"
+      },
+      "response_metadata": {},
+      "type": "ai",
+      "id": "18f79617-c8d3-45cc-8347-045c8da6cdc6",
+      "example": false,
+      "tool_calls": [],
+      "invalid_tool_calls": []
+    },
+    {
+      "content": "Jaime",
+      "additional_kwargs": {
+        "timestamp": "2025-07-19T21:34:20.865Z",
+        "message_id": "yJxZ4BK1cpVP6QDjV97r",
+        "source": "ghl_history"
+      },
+      "response_metadata": {},
+      "type": "human",
+      "id": "a166f9b6-a94a-4191-95b8-756116586360",
+      "example": false
+    },
+    {
+      "content": "\u00a1Hola! \ud83d\udc4b Ayudo a las empresas a automatizar WhatsApp para captar m\u00e1s clientes. \u00bfCu\u00e1l es tu nombre?",
+      "additional_kwargs": {
+        "timestamp": "2025-07-19T21:34:10.000Z",
+        "message_id": "wRIlrBSuqSJBAZpqzpkv",
+        "source": "ghl_history"
+      },
+      "response_metadata": {},
+      "type": "ai",
+      "id": "f8861b1a-947f-4b79-b3da-5974ec5d0143",
+      "example": false,
+      "tool_calls": [],
+      "invalid_tool_calls": []
+    },
+    {
+      "content": "Hola",
+      "additional_kwargs": {
+        "timestamp": "2025-07-19T21:34:02.832Z",
+        "message_id": "Jvt3qcsub93AfC3G6mQ9",
+        "source": "ghl_history"
+      },
+      "response_metadata": {},
+      "type": "human",
+      "id": "f8e682f2-8573-4317-82a5-511f2e02d075",
+      "example": false
+    },
+    {
+      "content": "\nDATA LOADED SUCCESSFULLY:\n- Contact: Jaime Ortiz\n- Email: none\n- Phone: +13054870475\n- Previous Score: 2/10\n- Business: not specified\n- Budget: not confirmed\n- Messages in history: 5\n",
+      "additional_kwargs": {},
+      "response_metadata": {},
+      "type": "ai",
+      "name": "receptionist",
+      "id": "778fbd1e-b5e1-4564-b59d-c475ac302124",
+      "example": false,
+      "tool_calls": [],
+      "invalid_tool_calls": []
+    },
+    {
+      "content": "\nSUPERVISOR ANALYSIS COMPLETE:\n- Score: 4/10\n- Business: restaurante\n- Routing to: MARIA\n- Reason: Cold lead needs nurturing\n",
+      "additional_kwargs": {},
+      "response_metadata": {},
+      "type": "ai",
+      "name": "supervisor_brain",
+      "id": "78525635-b99f-456e-8289-6ef85d9c36ac",
+      "example": false,
+      "tool_calls": [],
+      "invalid_tool_calls": []
+    },
+    {
+      "content": "Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?",
+      "additional_kwargs": {
+        "refusal": null
+      },
+      "response_metadata": {
+        "token_usage": {
+          "completion_tokens": 14,
+          "prompt_tokens": 2135,
+          "total_tokens": 2149,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": 0,
+            "audio_tokens": 0,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cached_tokens": 0
+          }
+        },
+        "model_name": "gpt-4-turbo-2024-04-09",
+        "system_fingerprint": "fp_de235176ee",
+        "id": "chatcmpl-Bv9UoVHMrdpBJzvWmyZFg0VoupqxZ",
+        "service_tier": "default",
+        "finish_reason": "stop",
+        "logprobs": null
+      },
+      "type": "ai",
+      "name": "maria",
+      "id": "run--3873ba65-4d1d-4dcf-b4e2-89efbcca5a61-0",
+      "example": false,
+      "tool_calls": [],
+      "invalid_tool_calls": [],
+      "usage_metadata": {
+        "input_tokens": 2135,
+        "output_tokens": 14,
+        "total_tokens": 2149,
+        "input_token_details": {
+          "audio": 0,
+          "cache_read": 0
+        },
+        "output_token_details": {
+          "audio": 0,
+          "reasoning": 0
+        }
+      }
+    }
+  ],
+  "contact_id": "SKuSTzoQNRBFdBlFtWRz",
+  "contact_name": "Jaime Ortiz",
+  "contact_email": "",
+  "contact_phone": "(305) 487-0475",
+  "lead_score": 4,
+  "current_agent": "maria",
+  "response_sent": true,
+  "contact_info": {
+    "id": "SKuSTzoQNRBFdBlFtWRz",
+    "dateAdded": "2025-07-19T21:34:01.966Z",
+    "type": "lead",
+    "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+    "phone": "+13054870475",
+    "country": "US",
+    "attributionSource": {
+      "sessionSource": "Social media",
+      "url": null,
+      "medium": "whatsapp",
+      "ctwaClid": null,
+      "adName": null,
+      "adId": null
+    },
+    "lastAttributionSource": {
+      "sessionSource": "Social media",
+      "url": null,
+      "medium": "whatsapp",
+      "ctwaClid": null,
+      "adName": null,
+      "adId": null
+    },
+    "createdBy": {
+      "source": "WhatsApp",
+      "channel": "ISTIO_MESH",
+      "sourceId": "sHFG9Rw6BdGh6d6bfMqG",
+      "timestamp": "2025-07-19T21:34:01.966Z"
+    },
+    "fullNameLowerCase": "jaime ortiz",
+    "lastName": "Ortiz",
+    "lastNameLowerCase": "ortiz",
+    "firstName": "Jaime",
+    "firstNameLowerCase": "jaime",
+    "additionalPhones": [],
+    "tags": [
+      "cold-lead",
+      "needs-nurturing"
+    ],
+    "dateUpdated": "2025-07-19T21:34:52.145Z",
+    "customFields": [
+      {
+        "id": "TjB0I5iNfVwx3zyxZ9sW",
+        "value": "Jaime"
+      },
+      {
+        "id": "wAPjuqxtfgKLCJqahjo1",
+        "value": "2"
+      }
+    ],
+    "additionalEmails": []
+  },
+  "previous_custom_fields": {
+    "name": "Jaime",
+    "score": "2"
+  },
+  "conversation_history": [
+    {
+      "id": "tFzIfi7LIzQk3RVg1cNJ",
+      "direction": "inbound",
+      "status": "delivered",
+      "type": 19,
+      "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+      "body": "Restaurante",
+      "contactId": "SKuSTzoQNRBFdBlFtWRz",
+      "contentType": "text/plain",
+      "conversationId": "U2AABEWNU6zq0kJqhlF1",
+      "dateAdded": "2025-07-19T21:34:50.697Z",
+      "altId": "wamid.HBgLMTMwNTQ4NzA0NzUVAgASGBQzQTE3MEMxNThDMDVGQUJDQ0Q5MgA=",
+      "messageType": "TYPE_WHATSAPP"
+    },
+    {
+      "id": "el2uv4jzyiSHB3lSpPHL",
+      "direction": "outbound",
+      "status": "delivered",
+      "type": 19,
+      "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+      "attachments": [],
+      "body": "Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?",
+      "contactId": "SKuSTzoQNRBFdBlFtWRz",
+      "contentType": "text/plain",
+      "conversationId": "U2AABEWNU6zq0kJqhlF1",
+      "dateAdded": "2025-07-19T21:34:29.000Z",
+      "source": "app",
+      "altId": "wamid.HBgLMTMwNTQ4NzA0NzUVAgARGBJDQUJBMDNEQ0FERDk4MUU2MTcA",
+      "messageType": "TYPE_WHATSAPP"
+    },
+    {
+      "id": "yJxZ4BK1cpVP6QDjV97r",
+      "direction": "inbound",
+      "status": "delivered",
+      "type": 19,
+      "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+      "body": "Jaime",
+      "contactId": "SKuSTzoQNRBFdBlFtWRz",
+      "contentType": "text/plain",
+      "conversationId": "U2AABEWNU6zq0kJqhlF1",
+      "dateAdded": "2025-07-19T21:34:20.865Z",
+      "altId": "wamid.HBgLMTMwNTQ4NzA0NzUVAgASGBQzQUIzNEJFMTM2RUM3RDQwNzM5MAA=",
+      "messageType": "TYPE_WHATSAPP"
+    },
+    {
+      "id": "wRIlrBSuqSJBAZpqzpkv",
+      "direction": "outbound",
+      "status": "delivered",
+      "type": 19,
+      "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+      "attachments": [],
+      "body": "\u00a1Hola! \ud83d\udc4b Ayudo a las empresas a automatizar WhatsApp para captar m\u00e1s clientes. \u00bfCu\u00e1l es tu nombre?",
+      "contactId": "SKuSTzoQNRBFdBlFtWRz",
+      "contentType": "text/plain",
+      "conversationId": "U2AABEWNU6zq0kJqhlF1",
+      "dateAdded": "2025-07-19T21:34:10.000Z",
+      "source": "app",
+      "altId": "wamid.HBgLMTMwNTQ4NzA0NzUVAgARGBJBOTc3OTQwMTNGRUMyNjE0MTEA",
+      "messageType": "TYPE_WHATSAPP"
+    },
+    {
+      "id": "PGfBofCyjkK1F45nkDou",
+      "direction": "outbound",
+      "type": 28,
+      "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+      "body": "Opportunity created",
+      "contactId": "SKuSTzoQNRBFdBlFtWRz",
+      "conversationId": "U2AABEWNU6zq0kJqhlF1",
+      "dateAdded": "2025-07-19T21:34:05.656Z",
+      "source": "app",
+      "messageType": "TYPE_ACTIVITY_OPPORTUNITY"
+    },
+    {
+      "id": "Jvt3qcsub93AfC3G6mQ9",
+      "direction": "inbound",
+      "status": "delivered",
+      "type": 19,
+      "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+      "body": "Hola",
+      "contactId": "SKuSTzoQNRBFdBlFtWRz",
+      "contentType": "text/plain",
+      "conversationId": "U2AABEWNU6zq0kJqhlF1",
+      "dateAdded": "2025-07-19T21:34:02.832Z",
+      "altId": "wamid.HBgLMTMwNTQ4NzA0NzUVAgASGBQzQUI4QzVCRTNDNzkxMjkwQzY0MwA=",
+      "messageType": "TYPE_WHATSAPP"
+    }
+  ],
+  "extracted_data": {
+    "name": "Jaime",
+    "business_type": "restaurante",
+    "budget": ""
+  },
+  "interaction_count": 1,
+  "next_agent": "maria",
+  "supervisor_complete": true,
+  "data_loaded": true,
+  "receptionist_complete": true,
+  "responder_status": "complete",
+  "messages_sent_count": 1,
+  "messages_failed_count": 0,
+  "failed_messages": []
+}
+
+============================================================
+ALL CHILD RUNS (in order):
+============================================================
+
+1. receptionist (chain)
+   Start: 2025-07-19 21:34:54.741265
+   Status: success
+   ⚠️  CONTACT ID FOUND: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}], 'contact_id': 'SKuSTzoQNRB...
+
+2. supervisor_brain (chain)
+   Start: 2025-07-19 21:34:56.121603
+   Status: success
+   ⚠️  CONTACT ID FOUND: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}, {'content': 'Restaurante', ...
+   Inputs Preview: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}, {'content': 'Restaurante', ...
+
+3. maria (chain)
+   Start: 2025-07-19 21:34:57.938470
+   Status: success
+   ⚠️  CONTACT ID FOUND: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}, {'content': 'Restaurante', ...
+   Inputs Preview: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}, {'content': 'Restaurante', ...
+
+4. responder (chain)
+   Start: 2025-07-19 21:34:59.044620
+   Status: success
+   ⚠️  CONTACT ID FOUND: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}, {'content': 'Restaurante', ...
+   Inputs Preview: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}, {'content': 'Restaurante', ...
+
+============================================================
+CONTACT ID USAGE:
+============================================================
+
+[21:34:54] in receptionist
+Inputs: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}], 'contact_id': 'SKuSTzoQNRBFdBlFtWRz', 'contact_name': 'Jaime Ortiz', 'contact_email': '', 'contact_phone': '(305) 487-0475'}
+
+[21:34:56] in supervisor_brain
+Inputs: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}, {'content': 'Restaurante', 'additional_kwargs': {'timestamp': '2025-07-19T21:34:50.697Z', 'message_id': 'tFzIfi7LIzQk3RVg1cNJ', 'source': 'ghl_history'}, 'response_metadata': {}, 'type': 'human', 'id': '93309b6d-48db-42cb-9e5c-c4b32eb8d0fc', 'example': False}, {'content': 'Mucho gusto, Jaime. ¿Qué tipo de negocio tienes?', 'a
+
+[21:34:57] in maria
+Inputs: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}, {'content': 'Restaurante', 'additional_kwargs': {'timestamp': '2025-07-19T21:34:50.697Z', 'message_id': 'tFzIfi7LIzQk3RVg1cNJ', 'source': 'ghl_history'}, 'response_metadata': {}, 'type': 'human', 'id': '93309b6d-48db-42cb-9e5c-c4b32eb8d0fc', 'example': False}, {'content': 'Mucho gusto, Jaime. ¿Qué tipo de negocio tienes?', 'a
+
+[21:34:59] in responder
+Inputs: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': '7ba58ab1-2fd1-448a-a3b6-35a667124f0e', 'example': False}, {'content': 'Restaurante', 'additional_kwargs': {'timestamp': '2025-07-19T21:34:50.697Z', 'message_id': 'tFzIfi7LIzQk3RVg1cNJ', 'source': 'ghl_history'}, 'response_metadata': {}, 'type': 'human', 'id': '93309b6d-48db-42cb-9e5c-c4b32eb8d0fc', 'example': False}, {'content': 'Mucho gusto, Jaime. ¿Qué tipo de negocio tienes?', 'a
+
+============================================================
+GET_CONVERSATIONS CALLS:
+============================================================
+No get_conversations calls found!
+
+============================================================
+CHALLENGE-RELATED EVENTS:
+============================================================
+
+============================================================
+SEARCHING FOR STATE UPDATES:
+============================================================

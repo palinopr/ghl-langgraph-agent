@@ -111,6 +111,8 @@ Current Stage: {current_stage}
 Next Action: {next_action}
 ALLOWED RESPONSE: "{allowed_response}"
 
+⚡ CRITICAL: You MUST use the EXACT allowed response above!
+⚡ The examples below are just for guidance - use ONLY the allowed response!
 ⚡ If response starts with "ESCALATE:", use escalate_to_supervisor tool
 ⚡ Otherwise, respond with the EXACT allowed response above!
 

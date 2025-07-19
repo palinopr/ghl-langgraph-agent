@@ -153,6 +153,8 @@ Current Stage: {current_stage}
 Next Action: {next_action}
 ALLOWED RESPONSE: "{allowed_response}"
 
+⚡ CRITICAL: You MUST use the EXACT allowed response above!
+⚡ The examples below are just for guidance - use ONLY the allowed response!
 ⚡ If response starts with "ESCALATE:", use escalate_to_supervisor tool
 ⚡ If allowed response is "USE_APPOINTMENT_TOOL", use book_appointment_simple tool with:
    - customer_confirmation: The time the customer just selected (from current message)
