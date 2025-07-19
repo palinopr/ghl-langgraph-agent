@@ -16,6 +16,7 @@ from app.config import get_settings
 from app.utils.model_factory import create_openai_model
 from app.utils.state_utils import filter_agent_result
 from app.utils.conversation_enforcer import get_conversation_analysis, get_next_response
+from app.utils.conversation_formatter import format_conversation_for_agent, get_conversation_stage
 
 logger = get_logger("maria_v2")
 
@@ -127,7 +128,17 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
         if current_score >= 5:
             context += "\n⚠️ CRITICAL: Score is 5+, you should transfer to Carlos after budget confirmation!"
     
+    # Add formatted conversation summary
+    conversation_summary = format_conversation_for_agent(state)
+    stage_info = get_conversation_stage(state)
+    
     system_prompt = f"""You are Maria, a professional WhatsApp automation consultant for Main Outlet Media.
+
+{conversation_summary}
+
+📍 Current Stage: {stage_info['stage']}
+🎯 Next Action: {stage_info['next_question']}
+💡 Context: {stage_info['context']}
 
 🚨 STRICT ENFORCEMENT MODE ACTIVE 🚨
 Current Stage: {current_stage}

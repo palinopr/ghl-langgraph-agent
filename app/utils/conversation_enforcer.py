@@ -60,6 +60,18 @@ class ConversationEnforcer:
         ConversationStage.WAITING_FOR_EMAIL: {
             "es": "¡Excelente! Te enviaré el enlace de Google Meet a {email}. ¿Qué día y hora te funciona mejor?",
             "en": "Excellent! I'll send the Google Meet link to {email}. What day and time works best for you?"
+        },
+        ConversationStage.OFFERING_TIMES: {
+            "es": "¡Excelente! Tengo estos horarios disponibles:\n\n📅 Mañana:\n• 10:00 AM\n• 2:00 PM\n• 4:00 PM\n\n¿Cuál prefieres?",
+            "en": "Excellent! I have these times available:\n\n📅 Tomorrow:\n• 10:00 AM\n• 2:00 PM\n• 4:00 PM\n\nWhich do you prefer?"
+        },
+        ConversationStage.WAITING_FOR_TIME_SELECTION: {
+            "es": "USE_APPOINTMENT_TOOL",  # Special marker to use tool instead of template
+            "en": "USE_APPOINTMENT_TOOL"
+        },
+        ConversationStage.CONFIRMING_APPOINTMENT: {
+            "es": "¡CONFIRMADO! Te veo el {date} a las {time}. Te enviaré el enlace de Google Meet a {email} con todos los detalles. ¡Nos vemos pronto!",
+            "en": "CONFIRMED! I'll see you on {date} at {time}. I'll send the Google Meet link to {email} with all the details. See you soon!"
         }
     }
     
@@ -71,6 +83,9 @@ class ConversationEnforcer:
         ConversationStage.WAITING_FOR_PROBLEM: ConversationStage.WAITING_FOR_BUDGET,
         ConversationStage.WAITING_FOR_BUDGET: ConversationStage.WAITING_FOR_EMAIL,
         ConversationStage.WAITING_FOR_EMAIL: ConversationStage.OFFERING_TIMES,
+        ConversationStage.OFFERING_TIMES: ConversationStage.WAITING_FOR_TIME_SELECTION,
+        ConversationStage.WAITING_FOR_TIME_SELECTION: ConversationStage.CONFIRMING_APPOINTMENT,
+        ConversationStage.CONFIRMING_APPOINTMENT: ConversationStage.COMPLETED,
     }
     
     def __init__(self):
@@ -109,6 +124,8 @@ class ConversationEnforcer:
         got_budget = False
         asked_for_email = False
         got_email = False
+        offered_times = False
+        selected_time = False
         
         # Analyze each message in order
         for i, msg in enumerate(messages):
@@ -136,6 +153,13 @@ class ConversationEnforcer:
                     asked_for_email = True
                     analysis["last_question_asked"] = "email"
                     analysis["expecting_answer_for"] = "email"
+                elif ("horarios disponibles" in content or 
+                      "10:00 am" in content or 
+                      "tengo estos horarios" in content or
+                      "¿cuál prefieres?" in content):
+                    offered_times = True
+                    analysis["last_question_asked"] = "appointment_time"
+                    analysis["expecting_answer_for"] = "appointment_time"
                     
             elif isinstance(msg, HumanMessage) or (hasattr(msg, 'type') and msg.type == "human"):
                 content = msg.content.strip() if hasattr(msg, 'content') else ""
@@ -177,6 +201,14 @@ class ConversationEnforcer:
                         analysis["collected_data"]["email"] = content
                         got_email = True
                         analysis["expecting_answer_for"] = None
+                        
+                elif analysis["expecting_answer_for"] == "appointment_time" and not selected_time:
+                    # Check for time selection patterns
+                    time_indicators = ["am", "pm", ":00", "primera", "segunda", "tercera", 
+                                     "10:", "2:", "4:", "mañana", "tarde"]
+                    if any(indicator in content.lower() for indicator in time_indicators):
+                        selected_time = True
+                        analysis["expecting_answer_for"] = None
         
         # Determine current stage based on what we have
         if not asked_for_name:
@@ -209,9 +241,15 @@ class ConversationEnforcer:
         elif asked_for_email and not got_email:
             analysis["current_stage"] = ConversationStage.WAITING_FOR_EMAIL
             analysis["next_action"] = "PROCESS_EMAIL"
-        elif got_email:
+        elif got_email and not offered_times:
             analysis["current_stage"] = ConversationStage.OFFERING_TIMES
             analysis["next_action"] = "OFFER_APPOINTMENT_TIMES"
+        elif offered_times and not selected_time:
+            analysis["current_stage"] = ConversationStage.WAITING_FOR_TIME_SELECTION
+            analysis["next_action"] = "PROCESS_TIME_SELECTION"
+        elif selected_time:
+            analysis["current_stage"] = ConversationStage.CONFIRMING_APPOINTMENT
+            analysis["next_action"] = "CONFIRM_APPOINTMENT"
         
         # Set allowed response based on stage
         self._set_allowed_response(analysis)
@@ -229,6 +267,11 @@ class ConversationEnforcer:
         
         if stage in self.STAGE_TEMPLATES:
             template = self.STAGE_TEMPLATES[stage][lang]
+            
+            # Special handling for appointment tool stage
+            if template == "USE_APPOINTMENT_TOOL":
+                analysis["allowed_response"] = "USE_APPOINTMENT_TOOL"
+                return
             
             # Fill in template with collected data
             if "{name}" in template and data["name"]:

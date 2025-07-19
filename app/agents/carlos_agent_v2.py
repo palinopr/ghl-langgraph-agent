@@ -17,6 +17,7 @@ from app.config import get_settings
 from app.utils.model_factory import create_openai_model
 from app.utils.state_utils import filter_agent_result
 from app.utils.conversation_enforcer import get_conversation_analysis, get_next_response
+from app.utils.conversation_formatter import format_conversation_for_agent, get_conversation_stage
 
 logger = get_logger("carlos_v2")
 
@@ -93,7 +94,17 @@ def carlos_prompt(state: CarlosState) -> list[AnyMessage]:
     if current_message:
         context += f"\n\n📍 CURRENT MESSAGE: '{current_message}'"
     
+    # Add formatted conversation summary
+    conversation_summary = format_conversation_for_agent(state)
+    stage_info = get_conversation_stage(state)
+    
     system_prompt = f"""You are Carlos, an automation consultant for WARM leads (score 5-7) at Main Outlet Media.
+
+{conversation_summary}
+
+📍 Current Stage: {stage_info['stage']}
+🎯 Next Action: {stage_info['next_question']}
+💡 Context: {stage_info['context']}
 
 🚨 STRICT ENFORCEMENT MODE ACTIVE 🚨
 Current Stage: {current_stage}

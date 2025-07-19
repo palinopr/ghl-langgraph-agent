@@ -22,20 +22,28 @@ async def supervisor_brain_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
     
     try:
         # 1. ANALYZE LEAD
-        # Get the latest user message (not the receptionist summary)
+        # Get the latest user message from webhook data (the actual incoming message)
         current_message = ""
-        messages = state.get("messages", [])
         
-        # Look for the latest human message
-        for msg in reversed(messages):
-            if hasattr(msg, '__class__') and msg.__class__.__name__ == 'HumanMessage':
-                current_message = msg.content
-                break
-                
-        # Fallback to first message if no human message found
-        if not current_message and messages and len(messages) > 0:
-            if hasattr(messages[0], 'content'):
-                current_message = messages[0].content
+        # First try to get from webhook data (the actual new message)
+        webhook_data = state.get("webhook_data", {})
+        if webhook_data and webhook_data.get("message"):
+            current_message = webhook_data["message"]
+            logger.info(f"Using message from webhook: {current_message}")
+        else:
+            # Fallback: look for the latest human message in messages
+            messages = state.get("messages", [])
+            # Since receptionist prepends history, the NEW message is near the end
+            # Look for human messages starting from the end
+            for msg in reversed(messages):
+                if hasattr(msg, '__class__') and msg.__class__.__name__ == 'HumanMessage':
+                    current_message = msg.content
+                    break
+                    
+            # Last fallback to first message if no human message found
+            if not current_message and messages and len(messages) > 0:
+                if hasattr(messages[0], 'content'):
+                    current_message = messages[0].content
         
         logger.info(f"Analyzing message: {current_message}")
                 
@@ -87,10 +95,23 @@ async def supervisor_brain_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
                     logger.info(f"Found and validated name: {extracted['name']}")
                     break
             
-        # Look for budget patterns
-        budget_match = re.search(r'\$?(\d+)\s*(?:al mes|mensuales|/mes|monthly|per month)?', current_message, re.IGNORECASE)
-        if budget_match:
-            extracted["budget"] = f"{budget_match.group(1)}/month"
+        # Look for budget patterns - exclude time patterns
+        # Don't extract numbers if they're part of time (e.g., "10:00 AM")
+        if not re.search(r'\d+:\d+\s*(?:am|pm|AM|PM)', current_message):
+            # Only extract if: has $ sign, OR has budget keywords, OR is a large number (200+)
+            budget_match = re.search(r'\$(\d+)\s*(?:al mes|mensuales|/mes|monthly|per month)?', current_message, re.IGNORECASE)
+            if not budget_match:
+                # Try without $ but with explicit budget keywords after number
+                budget_match = re.search(r'(\d+)\s*(?:al mes|mensuales|/mes|monthly|per month|dólares|dolares|pesos)', current_message, re.IGNORECASE)
+            if not budget_match:
+                # Try with budget context words before number
+                budget_match = re.search(r'(?:presupuesto|budget|inversion|inversión)\s*(?:es|de|:)?\s*(\d+)', current_message, re.IGNORECASE)
+            if not budget_match:
+                # Try large standalone numbers (200+) that might be budget
+                budget_match = re.search(r'\b([2-9]\d{2,}|1[5-9]\d{2,})\b', current_message)
+            
+            if budget_match:
+                extracted["budget"] = f"{budget_match.group(1)}/month"
         
         # Also check for budget confirmation responses
         if not extracted["budget"] and previous_score >= 5:  # Only check confirmations after initial qualification

@@ -21,6 +21,8 @@ from app.config import get_settings
 from app.utils.model_factory import create_openai_model
 from app.utils.state_utils import filter_agent_result
 from app.utils.conversation_enforcer import get_conversation_analysis, get_next_response
+from app.utils.conversation_formatter import format_conversation_for_agent, get_conversation_stage
+from app.utils.smart_responder import get_smart_response
 
 logger = get_logger("sofia_v2")
 
@@ -140,7 +142,17 @@ def sofia_prompt(state: SofiaState) -> list[AnyMessage]:
     if current_message:
         context += f"\n\n📍 CURRENT MESSAGE: '{current_message}'"
     
+    # Add formatted conversation summary
+    conversation_summary = format_conversation_for_agent(state)
+    stage_info = get_conversation_stage(state)
+    
     system_prompt = f"""You are Sofia, an expert closer who books appointments for HOT leads (score 8-10) at Main Outlet Media.
+
+{conversation_summary}
+
+📍 Current Stage: {stage_info['stage']}
+🎯 Next Action: {stage_info['next_question']}
+💡 Context: {stage_info['context']}
 
 🚨 STRICT ENFORCEMENT MODE ACTIVE 🚨
 Current Stage: {current_stage}
@@ -148,6 +160,7 @@ Next Action: {next_action}
 ALLOWED RESPONSE: "{allowed_response}"
 
 ⚡ If response starts with "ESCALATE:", use escalate_to_supervisor tool
+⚡ If allowed response is "USE_APPOINTMENT_TOOL", use book_appointment_from_confirmation tool
 ⚡ Otherwise, respond with the EXACT allowed response above!
 
 Role: Close naturally using advanced sales psychology.
@@ -297,6 +310,23 @@ async def sofia_node_v2(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]
     Returns Command for routing or state updates
     """
     try:
+        # Debug state
+        logger.info(f"Sofia node called with state keys: {list(state.keys())}")
+        logger.info(f"Sofia extracted_data: {state.get('extracted_data', {})}")
+        logger.info(f"Sofia webhook_data: {state.get('webhook_data', {})}")
+        
+        # Check if we should use smart response
+        smart_response = get_smart_response(state, "sofia")
+        logger.info(f"Smart response result: {smart_response}")
+        
+        if smart_response:
+            logger.info(f"Using smart response for Sofia: {smart_response[:50]}...")
+            # Add the smart response as a message
+            from langchain_core.messages import AIMessage
+            return {
+                "messages": [AIMessage(content=smart_response, name="sofia")]
+            }
+        
         # Create the agent
         agent = create_sofia_agent()
         

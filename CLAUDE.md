@@ -1,5 +1,64 @@
 # Claude Context: LangGraph GHL Agent - Complete Implementation Guide
 
+## 🔧 Testing Appointment Booking Fix (July 19, 2025)
+
+### How to Test Appointment Booking Locally
+
+1. **Install Dependencies**
+```bash
+python3 -m venv test_env
+source test_env/bin/activate
+pip install -r requirements.txt
+```
+
+2. **Create Test Script** (`test_appointment_live.py`)
+```python
+from app.workflow_runner import run_workflow_safe
+
+webhook_data = {
+    "id": "z49hFQn0DxOX5sInJg60",
+    "contactId": "z49hFQn0DxOX5sInJg60", 
+    "message": "10:00 AM",
+    "body": "10:00 AM",
+    "type": "SMS",
+    "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+    "direction": "inbound",
+    "dateAdded": datetime.now().isoformat()
+}
+
+result = await run_workflow_safe(webhook_data)
+```
+
+3. **What to Check**
+- Sofia should use `book_appointment_from_confirmation` tool
+- Budget field should NOT be corrupted (no "10/month" from "10:00 AM")
+- Response should confirm appointment, not ask questions
+
+### Fixes Applied
+
+1. **Conversation Enforcer** (`app/utils/conversation_enforcer.py`)
+   - Added `WAITING_FOR_TIME_SELECTION` stage
+   - Returns `"USE_APPOINTMENT_TOOL"` when time selected
+   
+2. **Sofia's Prompt** (`app/agents/sofia_agent_v2.py`)
+   - Added: `⚡ If allowed response is "USE_APPOINTMENT_TOOL", use book_appointment_from_confirmation tool`
+
+3. **Budget Extraction** (`app/agents/supervisor_brain_simple.py`)
+   - Excludes time patterns: `if not re.search(r'\d+:\d+\s*(?:am|pm|AM|PM)', current_message)`
+   - Only extracts with context or 3+ digits
+
+### Test Results Before Fix
+- ❌ Score: 163 (should be 1-10)
+- ❌ Budget: "10/month" (from "10:00 AM")
+- ❌ Sofia asks "¿Qué tipo de negocio tienes?"
+
+### Expected After Deployment
+- ✅ Sofia books appointment when customer says "10:00 AM"
+- ✅ Budget stays unchanged
+- ✅ Confirmation message sent
+
+# Claude Context: LangGraph GHL Agent - Complete Implementation Guide
+
 ## Project Overview
 This is a LangGraph-based GoHighLevel (GHL) messaging agent that handles intelligent lead routing and appointment booking. The system uses three AI agents (Maria, Carlos, Sofia) orchestrated by a supervisor using the latest LangGraph patterns with LINEAR FLOW (v3.0.0) - no agent-to-agent transfers, only escalations back to supervisor. This prevents expensive circular loops and matches the n8n workflow pattern.
 
