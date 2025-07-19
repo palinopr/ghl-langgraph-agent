@@ -8,11 +8,13 @@ from app.tools.ghl_client import GHLClient
 from app.constants import FIELD_MAPPINGS
 from app.utils.simple_logger import get_logger
 from app.utils.data_validation import validate_response, extract_valid_data, validate_budget_confirmation
+from app.utils.debug_logger import DebugLogger, TimingContext, debug_async
 import re
 
 logger = get_logger("supervisor_brain_simple")
 
 
+@debug_async("SUPERVISOR_BRAIN")
 async def supervisor_brain_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Simple supervisor that analyzes, scores, updates GHL, and routes

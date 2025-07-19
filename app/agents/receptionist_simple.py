@@ -6,10 +6,12 @@ from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
 from app.tools.ghl_client import GHLClient
 from app.constants import FIELD_MAPPINGS
 from app.utils.simple_logger import get_logger
+from app.utils.debug_logger import DebugLogger, debug_async
 
 logger = get_logger("receptionist_simple")
 
 
+@debug_async("RECEPTIONIST")
 async def receptionist_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Simple receptionist that directly loads data without agent complexity
