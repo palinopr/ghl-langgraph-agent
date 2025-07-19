@@ -75,10 +75,33 @@ class ConversationLoader:
         """Convert GHL message format to LangChain messages"""
         messages = []
         
+        # GHL system messages to ignore
+        system_messages = [
+            "Opportunity created",
+            "Appointment created", 
+            "Appointment scheduled",
+            "Tag added",
+            "Tag removed",
+            "Contact created",
+            "Task created",
+            "Note added"
+        ]
+        
         for msg in ghl_messages:
             content = msg.get("message", "")
             sender = msg.get("sender", "").lower()
             timestamp = msg.get("timestamp", "")
+            
+            # Skip GHL system messages
+            is_system_message = any(
+                content.strip().lower() == sys_msg.lower() or 
+                content.strip().startswith(sys_msg)
+                for sys_msg in system_messages
+            )
+            
+            if is_system_message:
+                logger.info(f"Skipping GHL system message: {content[:50]}...")
+                continue
             
             # Create appropriate message type
             if sender == "user":

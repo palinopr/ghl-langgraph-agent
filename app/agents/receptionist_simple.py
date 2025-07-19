@@ -66,6 +66,29 @@ async def receptionist_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
                         # Skip empty messages
                         if not content:
                             continue
+                            
+                        # Skip GHL system messages
+                        system_messages = [
+                            "Opportunity created",
+                            "Appointment created",
+                            "Appointment scheduled",
+                            "Tag added",
+                            "Tag removed",
+                            "Contact created",
+                            "Task created",
+                            "Note added"
+                        ]
+                        
+                        # Check if this is a system message
+                        is_system_message = any(
+                            content.strip().lower() == sys_msg.lower() or 
+                            content.strip().startswith(sys_msg) 
+                            for sys_msg in system_messages
+                        )
+                        
+                        if is_system_message:
+                            logger.info(f"Skipping GHL system message: {content[:50]}...")
+                            continue
                         
                         # Create appropriate message type
                         if direction == 'inbound' or msg.get('userId') == contact_id:
