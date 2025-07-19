@@ -1067,3 +1067,163 @@ curl -X POST https://YOUR-DEPLOYMENT-URL.us.langgraph.app/runs/stream \
     }
   }'
 ```
+
+## Appointment Booking Implementation (July 18, 2025)
+
+### Context & Learning Journey
+When implementing appointment booking, I discovered several critical insights through iterative testing:
+
+#### 1. Initial Problem: Sofia Too Rigid
+- **Issue**: Sofia followed "STRICT ORDER" data collection, asking for business type even when all data was provided
+- **Discovery Method**: Created mock states with all data, but Sofia still asked questions
+- **Solution**: Realized the prompt's strict rules prevented proactive appointment booking
+
+#### 2. GHL API Endpoint Discovery
+- **Issue**: Initial endpoint `/calendars/{id}/events` returned 404
+- **Discovery Method**: Searched old codebase with `grep -r "calendars" .`
+- **Found**: Correct endpoint in old code: `/calendars/events/appointments`
+- **Learning**: Always check existing code for API patterns before assuming docs are correct
+
+#### 3. Spanish Date Parsing Complexity
+- **Issue**: Simple regex wasn't catching phrases like "el martes a las 2 de la tarde"
+- **Discovery Method**: Created comprehensive test cases with common Spanish expressions
+- **Solution**: Built multi-pattern parser handling:
+  - Relative dates: "mañana", "pasado mañana"
+  - Weekdays: "el martes", "viernes"
+  - Time expressions: "de la tarde", "de la mañana"
+  - Confirmations: "la primera opción", "el segundo horario"
+
+#### 4. Testing Strategy Evolution
+- **Started with**: Direct agent invocation tests
+- **Problem**: Tool decorators made testing complex
+- **Evolved to**: 
+  1. Unit tests for calendar utilities
+  2. Integration tests with mocked GHL
+  3. Demo scripts showing complete flow
+  4. Visual output tests for verification
+
+### Key Implementation Details
+
+#### Calendar Slot Generation
+```python
+def generate_available_slots(num_slots: int = 3):
+    # Business hours: 10am, 2pm, 4pm on weekdays only
+    # Skip weekends automatically
+    # 1-hour duration slots
+```
+
+#### Spanish Formatting
+```python
+# Before: "Monday 21 at 02:00 PM"
+# After: "el lunes 21 de julio a las 2pm"
+# Includes months in Spanish, proper date formatting
+```
+
+#### Tool Architecture
+- `check_calendar_availability`: Returns Command with slots in state
+- `book_appointment_from_confirmation`: Parses customer text, books matching slot
+- Both tools use InjectedState pattern for access to conversation context
+
+### Testing Insights & Patterns
+
+#### 1. Mock Testing Pattern
+```python
+with patch('app.tools.ghl_client.ghl_client') as mock_ghl:
+    mock_ghl.create_appointment = AsyncMock(return_value={...})
+    # Test the flow
+```
+
+#### 2. State Testing Pattern
+- Create complete state with all required fields
+- Test tool functions directly (bypass decorators)
+- Verify Command objects contain expected updates
+
+#### 3. Visual Testing Pattern
+- Created demo scripts with clear output
+- Shows customer conversation → API calls → confirmation
+- Helps verify Spanish formatting and flow
+
+### Debugging Techniques Used
+
+1. **Parameter Order Issues**
+   - Error: "parameter without default follows parameter with default"
+   - Solution: Reordered to put required params first
+
+2. **Tool Invocation Issues**
+   - Error: "BaseTool.__call__() got unexpected keyword argument"
+   - Solution: Access underlying function with `tool.func`
+
+3. **State Key Errors**
+   - Error: "KeyError: 'id'" 
+   - Solution: Use correct state keys (contact_id not id)
+
+### Architecture Decisions
+
+1. **Stateless Slot Checking**
+   - Generate slots on demand vs storing in database
+   - Simpler, works offline, no sync issues
+
+2. **Spanish-First Design**
+   - All prompts and formatting default to Spanish
+   - English as secondary option
+
+3. **Flexible Matching**
+   - "la primera opción" → first slot
+   - "mañana a las 3pm" → parse and find closest
+   - Fallback to first available if unclear
+
+### Performance Optimizations
+
+1. **Slot Caching in State**
+   - Store generated slots in state["available_slots"]
+   - Reuse for booking confirmation
+
+2. **Single API Call**
+   - Check availability → store in state → book from state
+   - Avoids multiple calendar API calls
+
+### Future Improvements Identified
+
+1. **Real Calendar Integration**
+   - Currently generates synthetic slots
+   - GHL calendar API needs proper slot checking
+
+2. **Timezone Handling**
+   - Currently hardcoded to America/New_York
+   - Should detect customer timezone
+
+3. **Rescheduling Support**
+   - No current way to change appointments
+   - Would need additional tools
+
+### Lessons Learned
+
+1. **Test Early, Test Often**
+   - Unit tests revealed parsing issues immediately
+   - Integration tests caught API endpoint problems
+   - Demo scripts validated user experience
+
+2. **Read Existing Code**
+   - Old codebase had correct endpoints
+   - Previous patterns showed proper data structures
+   - Saved hours of API documentation searching
+
+3. **Context Engineering Matters**
+   - Tool descriptions guide agent behavior
+   - State schema defines available data
+   - Prompt engineering still crucial even with tools
+
+4. **Iterative Development Works**
+   - Started simple (generate slots)
+   - Added parsing (Spanish dates)
+   - Enhanced UX (natural confirmations)
+   - Each iteration informed the next
+
+### Final Implementation Stats
+- **Files Modified**: 12
+- **New Files Created**: 4 
+- **Tests Written**: 40+
+- **Bugs Fixed**: 5
+- **Spanish Phrases Supported**: 20+
+- **Time Invested**: ~3 hours
+- **Coffee Consumed**: ☕☕☕
