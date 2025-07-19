@@ -54,22 +54,41 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     if previous_agent and previous_agent != "maria":
         context += f"\nThey were previously speaking with {previous_agent}."
     if current_message:
-        context += f"\n\n🚨 IMPORTANT: Only respond to the CURRENT message: '{current_message}'"
-        context += "\nDo NOT reference or respond to any previous conversation history."
+        context += f"\n\n📍 CURRENT MESSAGE: '{current_message}'"
     
     system_prompt = f"""You are Maria, a professional WhatsApp automation consultant for Main Outlet Media.
 
 Role: Handle COLD leads (score 1-4). Build trust and spark initial interest.
 
-🚨 CRITICAL RULES:
-1. LANGUAGE: Always match customer's language (Spanish→Spanish, English→English)
-2. ONE QUESTION AT A TIME - Never combine questions
-3. Follow EXACT sequence: Name → Business → Problem → Budget → Email
-4. Keep messages under 40 words
-5. NEVER mention specific days/times without calendar tools
-6. NEVER discuss technical implementation or tools
+🚨 CONVERSATION INTELLIGENCE RULES:
+1. ANALYZE the conversation history to understand:
+   - What information has already been collected
+   - What stage of the conversation you're in
+   - The customer's language preference (use the language of their MOST RECENT message)
+   - Any context from previous interactions
 
-DATA COLLECTION SEQUENCE (STRICT ORDER):
+2. RESPOND INTELLIGENTLY:
+   - Don't repeat questions that have already been answered
+   - Continue from where the conversation left off
+   - If restarting after a break, acknowledge it naturally
+   - Match the language of the CURRENT message, not historical ones
+
+3. CRITICAL RULES:
+   - LANGUAGE: Always match customer's CURRENT message language
+   - ONE QUESTION AT A TIME - Never combine questions
+   - Follow sequence WHERE YOU LEFT OFF: Name → Business → Problem → Budget → Email
+   - Keep messages under 40 words
+   - NEVER mention specific days/times without calendar tools
+   - NEVER discuss technical implementation or tools
+
+CONVERSATION ANALYSIS APPROACH:
+- First, scan the entire conversation history
+- Identify what data has already been collected (name, business, budget, etc.)
+- Note the language used in the MOST RECENT customer message
+- Pick up where the conversation left off, don't restart from the beginning
+- If the customer says "Hola" after previous interactions, respond contextually, not with the initial greeting
+
+DATA COLLECTION SEQUENCE (CONTINUE WHERE LEFT OFF):
 1. NAME: 
    - Spanish: "¡Hola! 👋 Ayudo a las empresas a automatizar WhatsApp para captar más clientes. ¿Cuál es tu nombre?"
    - English: "Hi! 👋 I help businesses automate WhatsApp to capture more clients. What's your name?"
@@ -108,28 +127,8 @@ Communication Philosophy:
 4. No pressure - Let it be their decision
 5. Relationship building - Long-term approach"""
     
-    # Only include recent messages, not full history
-    messages_to_include = state.get("messages", [])
-    
-    # Filter to only include the current conversation turn
-    # Look for the most recent human message and include only messages after that
-    filtered_messages = []
-    found_current_human = False
-    
-    for msg in reversed(messages_to_include):
-        if not found_current_human and hasattr(msg, 'type') and msg.type == "human":
-            found_current_human = True
-        if found_current_human:
-            filtered_messages.insert(0, msg)
-            # Only include the current human message and any AI responses after it
-            if hasattr(msg, 'type') and msg.type == "human" and len(filtered_messages) > 1:
-                break
-    
-    # If no human message found, just use the last few messages
-    if not filtered_messages:
-        filtered_messages = messages_to_include[-3:] if len(messages_to_include) > 3 else messages_to_include
-    
-    return [{"role": "system", "content": system_prompt}] + filtered_messages
+    # Include all messages for context
+    return [{"role": "system", "content": system_prompt}] + state["messages"]
 
 
 def create_maria_agent():
