@@ -13,6 +13,7 @@ from app.tools.ghl_client import ghl_client
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
 from app.utils.performance_monitor import track_performance, get_performance_monitor, start_performance_monitoring
+from app.utils.webhook_deduplication import is_duplicate_webhook
 
 logger = get_logger("webhook")
 
@@ -85,6 +86,14 @@ async def receive_message_webhook(
             ):
                 logger.warning("Invalid webhook signature")
                 raise HTTPException(status_code=401, detail="Invalid signature")
+        
+        # Check for duplicate webhook
+        if is_duplicate_webhook(webhook_data):
+            logger.info("Duplicate webhook detected, skipping processing")
+            return JSONResponse(
+                status_code=200,
+                content={"status": "ok", "message": "Duplicate webhook ignored"}
+            )
         
         # Process webhook data
         message_data = webhook_processor.process_message_webhook(webhook_data)
