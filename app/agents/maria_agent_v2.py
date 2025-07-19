@@ -41,18 +41,36 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     messages = state.get("messages", [])
     current_message = ""
     
-    # Check if customer has provided their name in conversation
-    customer_provided_name = False
-    name_from_conversation = None
+    # Track conversation state by analyzing message history
+    asked_for_name = False
+    got_name = False
+    asked_for_business = False
+    got_business = False
+    asked_for_problem = False
+    got_problem = False
+    customer_name = None
+    business_type = None
     
-    for msg in messages:
-        if hasattr(msg, 'type') and msg.type == "human":
-            # Check if this message contains a name response
-            content = msg.content.lower()
-            # Simple check - if message is short and after name question
-            if len(content.split()) <= 3 and not any(word in content for word in ['hola', 'hi', 'hello', 'si', 'no', 'yes']):
-                customer_provided_name = True
-                name_from_conversation = msg.content.strip()
+    # Analyze conversation flow
+    for i, msg in enumerate(messages):
+        if hasattr(msg, 'role') and msg.role == "assistant":
+            content = msg.content.lower() if hasattr(msg, 'content') else ""
+            if "¿cuál es tu nombre?" in content or "what's your name?" in content:
+                asked_for_name = True
+            elif "¿qué tipo de negocio tienes?" in content or "what type of business" in content:
+                asked_for_business = True
+            elif "¿cuál es tu mayor desafío" in content or "what's your biggest challenge" in content:
+                asked_for_problem = True
+        elif hasattr(msg, 'type') and msg.type == "human" and i > 0:
+            # Check what question preceded this answer
+            if asked_for_name and not got_name and not asked_for_business:
+                customer_name = msg.content.strip()
+                got_name = True
+            elif asked_for_business and not got_business and got_name:
+                business_type = msg.content.strip()
+                got_business = True
+            elif asked_for_problem and not got_problem and got_business:
+                got_problem = True
     
     # Get most recent human message
     if messages:
@@ -63,16 +81,32 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     
     # Customize based on context
     context = ""
-    # ONLY use the name if customer provided it in conversation
-    if customer_provided_name and name_from_conversation:
-        context = f"\nThe customer told you their name is: {name_from_conversation}"
-        context += f"\n⚠️ USE THIS NAME, not any pre-populated data!"
-    else:
-        context = f"\n⚠️ CRITICAL: You do NOT know the customer's name yet! Ask for it!"
-        context += f"\n⚠️ IGNORE any pre-populated names. Wait for customer to tell you."
     
-    if previous_agent and previous_agent != "maria":
-        context += f"\nThey were previously speaking with {previous_agent}."
+    # Build conversation state context
+    context += "\n📊 CONVERSATION STATE:"
+    if not asked_for_name:
+        context += "\n- Haven't asked for name yet → ASK FOR NAME"
+    elif asked_for_name and not got_name:
+        context += "\n- Asked for name, waiting for response → CURRENT MESSAGE IS THEIR NAME"
+    elif got_name and not asked_for_business:
+        context += f"\n- Got name: '{customer_name}' → ASK FOR BUSINESS TYPE"
+    elif asked_for_business and not got_business:
+        context += f"\n- Asked for business, waiting for response → CURRENT MESSAGE IS BUSINESS TYPE"
+        context += f"\n⚠️ CRITICAL: '{current_message}' is the BUSINESS, not a name!"
+    elif got_business and not asked_for_problem:
+        context += f"\n- Got business: '{business_type}' → ASK FOR PROBLEM/CHALLENGE"
+    elif asked_for_problem and not got_problem:
+        context += "\n- Asked for problem, waiting for response → MOVE TO BUDGET"
+    elif got_problem:
+        context += "\n- Got problem → ASK ABOUT BUDGET"
+    
+    # Add warnings
+    if customer_name:
+        context += f"\n\n✅ Customer name is: {customer_name}"
+    if business_type:
+        context += f"\n✅ Business type is: {business_type}"
+        context += f"\n⚠️ NEVER say 'Mucho gusto, {business_type}' - that's the business, not the name!"
+    
     if current_message:
         context += f"\n\n📍 CURRENT MESSAGE: '{current_message}'"
     
@@ -127,25 +161,29 @@ UNDERSTANDING CUSTOMER RESPONSES:
 
 EXACT CONVERSATION FLOW (NEVER DEVIATE):
 
-When customer says "Hola" or greets you (FIRST INTERACTION):
-   → RESPOND: "¡Hola! 👋 Ayudo a las empresas a automatizar WhatsApp para captar más clientes. ¿Cuál es tu nombre?"
-   → NEVER use their name here even if you have it in the system!
+Step 1 - GREETING:
+Customer: "Hola" → You: "¡Hola! 👋 Ayudo a las empresas a automatizar WhatsApp para captar más clientes. ¿Cuál es tu nombre?"
 
-When customer provides their name (like "Jaime"):
-   → RESPOND: "Mucho gusto, [name]. ¿Qué tipo de negocio tienes?"
-   → Do NOT repeat the introduction!
-   → Do NOT say "¡Hola [name]! 👋 Ayudo..."
+Step 2 - NAME RESPONSE:
+Customer: "Jaime" → You: "Mucho gusto, Jaime. ¿Qué tipo de negocio tienes?"
+⚠️ NEVER say "Mucho gusto, [business]" - wait for the actual name!
 
-When customer provides business type:
-   → RESPOND: "Ya veo, [business]. ¿Cuál es tu mayor desafío con los mensajes de WhatsApp?"
+Step 3 - BUSINESS RESPONSE:
+Customer: "Restaurante" → You: "Ya veo, restaurante. ¿Cuál es tu mayor desafío con los mensajes de WhatsApp?"
+⚠️ Use lowercase for business type! Say "restaurante" not "Restaurante"
 
-When customer provides their challenge:
-   → RESPOND: "Definitivamente puedo ayudarte con eso. Mis soluciones empiezan en $300/mes. ¿Te funciona ese presupuesto?"
+Step 4 - PROBLEM RESPONSE:
+Customer: [any problem] → You: "Definitivamente puedo ayudarte con eso. Mis soluciones empiezan en $300/mes. ¿Te funciona ese presupuesto?"
+⚠️ Go DIRECTLY to budget! NO questions about "objetivo" or anything else!
 
-When customer confirms budget:
-   → USE transfer_to_carlos tool immediately!
+Step 5 - BUDGET CONFIRMATION:
+Customer: "Si" → USE transfer_to_carlos tool immediately!
 
-REMEMBER: This is the ONLY flow to follow. Ignore any other sequences or patterns.
+FORBIDDEN ACTIONS:
+❌ NEVER ask about "objetivo" or "goals" after problem
+❌ NEVER restart the conversation 
+❌ NEVER use business type as customer name
+❌ NEVER add questions not listed above
 
 AVAILABLE TOOLS:
 - transfer_to_carlos: Use IMMEDIATELY when:
