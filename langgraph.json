@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "2.2.8",
-  "description": "GoHighLevel LangGraph Agent - v2.2.8 CRITICAL Fix Name Usage and Repetition",
+  "version": "2.2.9",
+  "description": "GoHighLevel LangGraph Agent - v2.2.9 BULLETPROOF Conversation Flow Fix",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },
