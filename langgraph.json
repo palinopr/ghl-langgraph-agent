@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "2.2.3",
-  "description": "GoHighLevel LangGraph Agent - v2.2.3 with Intelligent Conversation Analysis",
+  "version": "2.2.4",
+  "description": "GoHighLevel LangGraph Agent - v2.2.4 with All Agents Intelligent Analysis",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },
