@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "2.2.9",
-  "description": "GoHighLevel LangGraph Agent - v2.2.9 BULLETPROOF Conversation Flow Fix",
+  "version": "2.3.0",
+  "description": "GoHighLevel LangGraph Agent - v2.3.0 ALL Agents Fixed + Proper Routing",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },
