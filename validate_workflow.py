@@ -22,14 +22,18 @@ def quick_check():
     
     # 2. Check for common edge errors
     try:
-        # For supervisor brain workflow (simpler, non-parallel)
-        from app.workflow_supervisor_brain import create_supervisor_brain_workflow
-        from langgraph.checkpoint.memory import MemorySaver
-        from langgraph.store.memory import InMemoryStore
-        
-        # The workflow is already compiled
-        compiled = create_supervisor_brain_workflow()
-        print("✅ Workflow compiles without errors")
+        # Check if workflow is already compiled
+        if hasattr(workflow, 'invoke'):
+            print("✅ Workflow compiles without errors")
+            compiled = workflow
+        else:
+            # Try to compile if it's not already
+            from langgraph.checkpoint.memory import MemorySaver
+            from langgraph.store.memory import InMemoryStore
+            memory = MemorySaver()
+            store = InMemoryStore()
+            compiled = workflow.compile(checkpointer=memory, store=store)
+            print("✅ Workflow compiles without errors")
         
         # Check graph structure
         if hasattr(compiled, '_edges'):

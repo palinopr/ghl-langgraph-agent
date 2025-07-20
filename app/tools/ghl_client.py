@@ -230,7 +230,8 @@ class GHLClient:
         self, 
         contact_id: str, 
         message: str,
-        message_type: str = "WhatsApp"
+        message_type: str = "WhatsApp",
+        is_typing: bool = False
     ) -> Optional[Dict]:
         """
         Send message via GoHighLevel
@@ -239,6 +240,7 @@ class GHLClient:
             contact_id: Contact ID
             message: Message content
             message_type: Type of message (WhatsApp, SMS, etc.)
+            is_typing: If true, sends typing indicator (if supported)
             
         Returns:
             Message response or None

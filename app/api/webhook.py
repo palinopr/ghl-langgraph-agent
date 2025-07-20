@@ -14,6 +14,8 @@ from app.utils.simple_logger import get_logger
 from app.config import get_settings
 from app.utils.performance_monitor import track_performance, get_performance_monitor, start_performance_monitoring
 from app.utils.webhook_deduplication import is_duplicate_webhook
+from app.debug.trace_middleware import TraceCollectorMiddleware
+from app.api.debug_endpoints import debug_router
 
 logger = get_logger("webhook")
 
@@ -23,6 +25,12 @@ app = FastAPI(
     description="Webhook endpoint for processing GoHighLevel messages with Python 3.13 optimizations",
     version="2.0.0"
 )
+
+# Add trace collection middleware
+app.add_middleware(TraceCollectorMiddleware)
+
+# Include debug endpoints
+app.include_router(debug_router)
 
 # Initialize performance monitoring on startup
 @app.on_event("startup")
