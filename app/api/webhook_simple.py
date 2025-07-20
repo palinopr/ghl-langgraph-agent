@@ -1,0 +1,143 @@
+"""
+Simple FastAPI webhook endpoint for GoHighLevel messages
+Works without Supabase dependency
+"""
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
+from fastapi.responses import JSONResponse
+from typing import Dict, Any
+import asyncio
+from app.workflow import run_workflow
+from app.tools.webhook_processor import webhook_processor
+from app.tools.ghl_client import ghl_client
+from app.utils.simple_logger import get_logger
+from app.config import get_settings
+from app.debug.trace_middleware import TraceCollectorMiddleware
+from app.api.debug_endpoints import debug_router
+
+logger = get_logger("webhook")
+
+# Create FastAPI app
+app = FastAPI(
+    title="GoHighLevel LangGraph Agent",
+    description="Webhook endpoint for processing GoHighLevel messages",
+    version="2.0.0"
+)
+
+# Add trace collection middleware
+app.add_middleware(TraceCollectorMiddleware)
+
+# Include debug endpoints
+app.include_router(debug_router)
+
+
+@app.get("/")
+async def root():
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "ghl-langgraph-agent"}
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "service": "ghl-langgraph-agent",
+        "debug_enabled": True,
+        "trace_collector": "active"
+    }
+
+
+@app.post("/webhook/message")
+async def message_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks
+):
+    """
+    Receive message webhook from GoHighLevel
+    
+    Args:
+        request: FastAPI request object
+        background_tasks: Background task manager
+        
+    Returns:
+        Acknowledgment response
+    """
+    try:
+        # Get webhook data
+        webhook_data = await request.json()
+        logger.info(f"Received webhook: {webhook_data}")
+        
+        # Validate webhook has required fields
+        if not webhook_data.get("contactId") and not webhook_data.get("id"):
+            logger.warning("Missing contact ID in webhook")
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Missing contact ID"}
+            )
+        
+        # Get trace ID from request if available
+        trace_id = getattr(request.state, "trace_id", None)
+        if trace_id:
+            webhook_data.__trace_id__ = trace_id
+        
+        # Process webhook in background for quick response
+        background_tasks.add_task(process_message_async, webhook_data)
+        
+        # Return immediate acknowledgment
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "accepted",
+                "message": "Webhook received and queued for processing",
+                "trace_id": trace_id
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Webhook error: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
+
+
+async def process_message_async(webhook_data: Dict[str, Any]):
+    """
+    Process message asynchronously
+    
+    Args:
+        webhook_data: Webhook data from GHL
+    """
+    try:
+        logger.info(f"Processing message for contact {webhook_data.get('contactId', 'unknown')}")
+        
+        # Run the workflow
+        result = await run_workflow(webhook_data)
+        
+        if result.get("success"):
+            logger.info(f"Successfully processed message: {result}")
+        else:
+            logger.error(f"Failed to process message: {result}")
+            
+    except Exception as e:
+        logger.error(f"Error processing message: {e}", exc_info=True)
+
+
+@app.post("/webhook/contact")
+async def contact_webhook(request: Request):
+    """Handle contact update webhooks"""
+    webhook_data = await request.json()
+    logger.info(f"Contact webhook received: {webhook_data.get('type', 'unknown')}")
+    return {"status": "ok"}
+
+
+@app.post("/webhook/appointment")  
+async def appointment_webhook(request: Request):
+    """Handle appointment webhooks"""
+    webhook_data = await request.json()
+    logger.info(f"Appointment webhook received: {webhook_data.get('type', 'unknown')}")
+    return {"status": "ok"}
+
+
+# Export app for uvicorn
+__all__ = ["app"]

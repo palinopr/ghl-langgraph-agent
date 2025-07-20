@@ -24,6 +24,48 @@ from app.tools.calendar_slots import (
 logger = get_logger("agent_tools_v2")
 
 
+# ============ SUPERVISOR HANDOFF TOOLS ============
+def create_handoff_tool_for_supervisor(agent_name: str):
+    """Create a handoff tool with context for the supervisor"""
+    
+    @tool(
+        name=f"handoff_to_{agent_name}",
+        description=f"Hand off conversation to {agent_name} with rich context"
+    )
+    def handoff_with_context(
+        context: Dict[str, Any],
+        state: Annotated[ConversationState, InjectedState],
+        tool_call_id: Annotated[str, InjectedToolCallId]
+    ) -> Command:
+        """
+        Hand off to agent with full context to prevent re-analysis.
+        
+        Context should include:
+        - customer_intent: What the customer wants
+        - conversation_stage: Where we are in the process
+        - key_points: Important information
+        - suggested_approach: How to respond
+        - do_not: Things to avoid
+        """
+        tool_message = ToolMessage(
+            content=f"Routing to {agent_name} with context",
+            tool_call_id=tool_call_id
+        )
+        
+        return Command(
+            goto=agent_name,
+            update={
+                "messages": state["messages"] + [tool_message],
+                "next_agent": agent_name,
+                "agent_context": context,
+                "routing_reason": f"AI Supervisor: {context.get('customer_intent', 'General routing')}"
+            },
+            graph=Command.PARENT
+        )
+    
+    return handoff_with_context
+
+
 # ============ LINEAR FLOW: ESCALATION ONLY ============
 @tool
 def escalate_to_supervisor(
@@ -632,6 +674,8 @@ supervisor_tools = [
 __all__ = [
     # LINEAR FLOW: Escalation tool
     "escalate_to_supervisor",
+    # Supervisor handoff creator
+    "create_handoff_tool_for_supervisor",
     # DEPRECATED: Legacy handoff tools (now escalate)
     "create_handoff_tool",
     "transfer_to_sofia",
