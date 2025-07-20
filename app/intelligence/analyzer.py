@@ -359,6 +359,9 @@ class IntelligenceAnalyzer:
         # Extract structured data
         extracted = self.extractor.extract_all(current_message, conversation_history)
         
+        # Initialize budget_confirmation
+        budget_confirmation = {}
+        
         # Check for budget confirmation
         if len(messages) >= 2:
             last_assistant_msg = ""

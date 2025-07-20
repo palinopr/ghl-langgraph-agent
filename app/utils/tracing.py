@@ -105,9 +105,14 @@ def trace_operation(
     # Add default tags
     tags.extend(["ghl-agent", os.getenv("APP_ENV", "production")])
     
+    # tracing_v2_enabled doesn't support metadata parameter
+    # We'll store metadata in tags as a workaround
+    if metadata:
+        for key, value in metadata.items():
+            tags.append(f"{key}:{value}")
+    
     return tracing_v2_enabled(
         project_name=os.getenv("LANGSMITH_PROJECT", "ghl-langgraph-agent"),
-        metadata=metadata,
         tags=tags
     )
 
