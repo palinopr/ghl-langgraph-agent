@@ -11,33 +11,33 @@ from datetime import datetime
 from typing import Optional
 
 # Default API URL
-API_URL = "http://localhost:8000"
+DEFAULT_API_URL = "http://localhost:8000"
 
 
-def fetch_trace(trace_id: str) -> dict:
+def fetch_trace(trace_id: str, api_url: str) -> dict:
     """Fetch a specific trace by ID"""
-    response = requests.get(f"{API_URL}/debug/trace/{trace_id}")
+    response = requests.get(f"{api_url}/debug/trace/{trace_id}")
     response.raise_for_status()
     return response.json()
 
 
-def fetch_last_trace() -> dict:
+def fetch_last_trace(api_url: str) -> dict:
     """Fetch the most recent trace"""
-    response = requests.get(f"{API_URL}/debug/last-trace")
+    response = requests.get(f"{api_url}/debug/last-trace")
     response.raise_for_status()
     return response.json()
 
 
-def fetch_last_error() -> dict:
+def fetch_last_error(api_url: str) -> dict:
     """Fetch the most recent error trace"""
-    response = requests.get(f"{API_URL}/debug/last-error")
+    response = requests.get(f"{api_url}/debug/last-error")
     response.raise_for_status()
     return response.json()
 
 
-def fetch_traces_for_contact(contact_id: str, limit: int = 10) -> dict:
+def fetch_traces_for_contact(contact_id: str, api_url: str, limit: int = 10) -> dict:
     """Fetch traces for a specific contact"""
-    response = requests.get(f"{API_URL}/debug/traces", params={
+    response = requests.get(f"{api_url}/debug/traces", params={
         "contact_id": contact_id,
         "limit": limit
     })
@@ -45,16 +45,16 @@ def fetch_traces_for_contact(contact_id: str, limit: int = 10) -> dict:
     return response.json()
 
 
-def fetch_active_traces() -> dict:
+def fetch_active_traces(api_url: str) -> dict:
     """Fetch currently active traces"""
-    response = requests.get(f"{API_URL}/debug/active")
+    response = requests.get(f"{api_url}/debug/active")
     response.raise_for_status()
     return response.json()
 
 
-def export_trace(trace_id: str) -> dict:
+def export_trace(trace_id: str, api_url: str) -> dict:
     """Export trace in debugging format"""
-    response = requests.get(f"{API_URL}/debug/trace/{trace_id}/export")
+    response = requests.get(f"{api_url}/debug/trace/{trace_id}/export")
     response.raise_for_status()
     return response.json()
 
@@ -129,42 +129,41 @@ def main():
     debug_parser.add_argument("contact_id", help="Contact ID to debug")
     
     # Global options
-    parser.add_argument("--api-url", default=API_URL, help="API URL")
+    parser.add_argument("--api-url", default=DEFAULT_API_URL, help="API URL")
     parser.add_argument("--raw", action="store_true", help="Output raw JSON")
     parser.add_argument("--pretty", action="store_true", help="Pretty print JSON")
     
     args = parser.parse_args()
     
-    # Update API URL if provided
-    global API_URL
-    API_URL = args.api_url
+    # Use the API URL from args
+    api_url = args.api_url
     
     try:
         # Execute command
         if args.command == "trace":
             if args.export:
-                result = export_trace(args.trace_id)
+                result = export_trace(args.trace_id, api_url)
             else:
-                result = fetch_trace(args.trace_id)
+                result = fetch_trace(args.trace_id, api_url)
         
         elif args.command == "last":
-            trace = fetch_last_trace()
+            trace = fetch_last_trace(api_url)
             if args.export:
-                result = export_trace(trace['trace_id'])
+                result = export_trace(trace['trace_id'], api_url)
             else:
                 result = trace
         
         elif args.command == "error":
-            result = fetch_last_error()
+            result = fetch_last_error(api_url)
         
         elif args.command == "contact":
-            result = fetch_traces_for_contact(args.contact_id, args.limit)
+            result = fetch_traces_for_contact(args.contact_id, api_url, args.limit)
         
         elif args.command == "active":
-            result = fetch_active_traces()
+            result = fetch_active_traces(api_url)
         
         elif args.command == "list":
-            response = requests.get(f"{API_URL}/debug/traces", params={
+            response = requests.get(f"{api_url}/debug/traces", params={
                 "limit": args.limit,
                 "status": args.status
             })
@@ -172,7 +171,7 @@ def main():
             result = response.json()
         
         elif args.command == "debug":
-            response = requests.get(f"{API_URL}/debug/quick-debug/{args.contact_id}")
+            response = requests.get(f"{api_url}/debug/quick-debug/{args.contact_id}")
             response.raise_for_status()
             result = response.json()
         
@@ -224,7 +223,7 @@ def main():
                 print(json.dumps(result, indent=2, ensure_ascii=False))
                 
     except requests.exceptions.RequestException as e:
-        print(f"Error: Failed to connect to API at {API_URL}")
+        print(f"Error: Failed to connect to API at {api_url}")
         print(f"Details: {e}")
         sys.exit(1)
     except Exception as e:
