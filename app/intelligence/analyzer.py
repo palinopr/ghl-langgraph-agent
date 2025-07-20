@@ -37,9 +37,10 @@ class SpanishPatternExtractor:
                 (re.compile(r'\b([A-Za-zÀ-ÿ]+)\s*@', re.IGNORECASE), 'email_prefix'),
             ],
             "business": [
-                (re.compile(r'\b(?:tengo un|tengo una|mi)\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})', re.IGNORECASE), 'possession'),
+                (re.compile(r'\b(?:tengo un|tengo una|tengo u\.)\s+([A-Za-zÀ-ÿ]+)(?:\s+(?:y|que|donde)|\s*[,.]|$)', re.IGNORECASE), 'possession'),
+                (re.compile(r'\bmi\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})(?:\s+(?:es|está|tiene)|\s*[,.]|$)', re.IGNORECASE), 'possession'),
                 (re.compile(r'\b(?:trabajo en|soy dueño de|manejo un)\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})', re.IGNORECASE), 'occupation'),
-                (re.compile(r'\b(restaurante|negocio|empresa|tienda|local|clínica|consultorio|agencia|estudio|taller)\b', re.IGNORECASE), 'business_type'),
+                (re.compile(r'\b(restaurante|restaurant|negocio|empresa|tienda|local|clínica|consultorio|agencia|estudio|taller)\b', re.IGNORECASE), 'business_type'),
             ],
             "budget": [
                 (re.compile(r'como unos?\s*\$?\s*(\d+)', re.IGNORECASE), '{0}', 'approximate'),
@@ -58,6 +59,8 @@ class SpanishPatternExtractor:
             "goal": [
                 (re.compile(r'(?:necesito|quiero|busco|requiero)\s+(.+?)(?:\.|,|$)', re.IGNORECASE), 'need'),
                 (re.compile(r'(?:mi problema es|tengo problemas con)\s+(.+?)(?:\.|,|$)', re.IGNORECASE), 'problem'),
+                (re.compile(r'(?:estoy perdiendo|perdiendo)\s+(.+?)(?:\.|,|$)', re.IGNORECASE), 'problem'),
+                (re.compile(r'no puedo\s+(.+?)(?:\.|,|$)', re.IGNORECASE), 'problem'),
                 (re.compile(r'(?:para|con el fin de)\s+(.+?)(?:\.|,|$)', re.IGNORECASE), 'purpose'),
                 (re.compile(r'(?:automatizar|mejorar|aumentar|crecer)\s+(.+?)(?:\.|,|$)', re.IGNORECASE), 'action'),
             ],
