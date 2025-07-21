@@ -1,30 +1,30 @@
 """
-OPTIMIZED WORKFLOW - AI Supervisor with Context-Aware Agents
-Flow: Webhook → Parallel Receptionist → Intelligence → AI Supervisor → Agent → Responder
+MEMORY-OPTIMIZED WORKFLOW - Intelligent Context Management
+Flow: Webhook → Memory-Aware Receptionist → Intelligence → Memory-Aware Supervisor → Agent → Responder
 
 Key Improvements:
-1. Parallel data loading (3x faster)
-2. AI Supervisor provides rich context to agents
-3. Agents don't re-analyze conversations
-4. Simplified state (15 fields instead of 50+)
-5. Parallel tool execution available
+1. Memory isolation per agent (no context confusion)
+2. Sliding window memory (last 6-10 messages only)
+3. Clean handoffs between agents
+4. Separation of historical vs current messages
+5. Agent-specific context filtering
 
-This implements the OPTIMIZED flow pattern where:
-- Receptionist loads data in parallel
-- AI Supervisor analyzes and provides context
-- Agents focus on responding, not analyzing
-- Clear, efficient flow with no redundancy
+This implements the MEMORY-OPTIMIZED flow pattern where:
+- Each agent has isolated memory space
+- Historical messages are summarized, not loaded fully
+- Handoffs include minimal context transfer
+- No agent sees irrelevant messages from others
 """
 from typing import Dict, Any
 from langchain_core.messages import HumanMessage
-from app.workflow_optimized import optimized_workflow
+from app.workflow_memory_optimized import memory_optimized_workflow
 from app.debug.trace_middleware import inject_trace_id
 from app.utils.simple_logger import get_logger
 
 logger = get_logger("workflow")
 
 # Export as main workflow
-workflow = optimized_workflow
+workflow = memory_optimized_workflow
 
 
 async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
