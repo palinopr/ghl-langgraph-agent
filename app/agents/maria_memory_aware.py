@@ -120,7 +120,7 @@ async def maria_memory_aware_node(state: Dict[str, Any]) -> Union[Command, Dict[
             model=model,
             tools=tools,
             state_schema=dict,
-            state_modifier=maria_memory_prompt,
+            messages_modifier=maria_memory_prompt,
             name="maria"
         )
         
