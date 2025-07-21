@@ -127,9 +127,28 @@ class ConversationAnalyzer:
                 # For historical messages, we still want to extract data!
                 # This fixes the context blindness issue
                 
-                # Detect language
-                if any(word in content for word in ["hello", "hi", "yes", "no", "what", "how"]):
-                    analysis["language"] = "en"
+                # Detect language ONLY from current customer message, not historical
+                # This prevents the system from switching to English when agents respond
+                if not is_historical:
+                    # Only detect language from the current human message
+                    # More sophisticated detection: check for Spanish patterns first
+                    spanish_indicators = ["hola", "gracias", "por favor", "buenas", "días", "tardes", 
+                                        "qué", "cómo", "cuál", "dónde", "cuándo", "quiero", "necesito",
+                                        "tengo", "estoy", "perdiendo", "restaurante", "negocio"]
+                    english_indicators = ["hello", "hi", "thanks", "please", "good morning", "good afternoon",
+                                        "what", "how", "which", "where", "when", "want", "need",
+                                        "have", "i'm", "losing", "restaurant", "business"]
+                    
+                    # Count indicators
+                    spanish_count = sum(1 for word in spanish_indicators if word in content)
+                    english_count = sum(1 for word in english_indicators if word in content)
+                    
+                    # Only change language if strong evidence (and default to Spanish)
+                    if english_count > spanish_count and english_count >= 2:
+                        analysis["language"] = "en"
+                    else:
+                        # Default to Spanish or keep existing language
+                        analysis["language"] = "es"
                 
                 # Process answers - include historical context
                 # We MUST process historical messages to understand what data we already have!

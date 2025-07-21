@@ -7,6 +7,8 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.messages.utils import trim_messages, count_tokens_approximately
 from app.utils.conversation_analyzer import ConversationAnalyzer
 from app.utils.simple_logger import get_logger
+from app.utils.humanizer import ConversationHumanizer
+from app.utils.natural_messages import NaturalMessageTemplates
 
 logger = get_logger("pre_model_hooks")
 
@@ -86,18 +88,45 @@ def conversation_context_hook(state: Dict[str, Any]) -> Dict[str, Any]:
 def maria_context_hook(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Specialized hook for Maria that emphasizes not repeating questions
+    and adds human-like conversation patterns
     """
     # Get base context
     result = conversation_context_hook(state)
     
-    # Add Maria-specific guidance
-    maria_guidance = """
-🚨 MARIA - CRITICAL RULES:
+    # Get conversation analysis
+    collected = result.get("collected_data", {})
+    stage = result.get("current_stage", "greeting")
+    language = "es"  # Default to Spanish
+    
+    # Check language from last message
+    messages = state.get("messages", [])
+    if messages:
+        last_msg = messages[-1]
+        if hasattr(last_msg, 'content'):
+            content = last_msg.content.lower()
+            if any(word in content for word in ["hello", "hi", "yes", "no", "what", "how"]):
+                language = "en"
+    
+    # Add Maria-specific guidance with natural templates
+    maria_guidance = f"""
+🚨 MARIA - NATURAL CONVERSATION RULES:
 1. Check the "INFORMATION ALREADY COLLECTED" section above
 2. NEVER ask for information that's already been collected
 3. If you see "✅ Business: restaurante", do NOT ask "¿Qué tipo de negocio tienes?"
 4. Continue the conversation from where it left off
 5. Use the information collected to personalize your responses
+
+💡 NATURAL RESPONSE TEMPLATES:
+Instead of robotic responses, use these natural variations:
+
+{_get_natural_templates_for_stage("maria", stage, language, collected)}
+
+🎯 PERSONALITY TRAITS:
+- Be warm and helpful
+- Use emojis sparingly (30% of messages)
+- Add thinking pauses occasionally ("Déjame ver...", "A ver...")
+- Vary your acknowledgments ("Ya veo", "Entiendo", "Claro")
+- Sound genuinely interested in their business
 """
     
     # Add guidance to the context message
@@ -109,20 +138,79 @@ def maria_context_hook(state: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+def _get_natural_templates_for_stage(agent: str, stage: str, language: str, collected: Dict) -> str:
+    """Get natural template examples for current stage"""
+    # Map conversation stages to template stages
+    stage_mapping = {
+        "greeting": "greeting",
+        "collecting_name": "greeting",
+        "collecting_business": "ask_business",
+        "collecting_challenge": "ask_challenge",
+        "collecting_budget": "present_budget",
+        "collecting_email": "ask_email",
+        "offering_appointment": "offer_appointment"
+    }
+    
+    template_stage = stage_mapping.get(stage, "greeting")
+    
+    # Get examples from NaturalMessageTemplates
+    examples = []
+    for i in range(3):  # Show 3 examples
+        example = NaturalMessageTemplates.get_natural_response(
+            agent=agent,
+            stage=template_stage,
+            language=language,
+            data=collected
+        )
+        if example:
+            examples.append(f"• {example}")
+    
+    if examples:
+        return "Examples of natural responses:\n" + "\n".join(examples)
+    else:
+        return "Use natural, conversational language"
+
+
 def carlos_context_hook(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Specialized hook for Carlos focusing on qualification
+    with professional yet engaging conversation style
     """
     # Get base context
     result = conversation_context_hook(state)
     
+    # Get conversation state
+    collected = result.get("collected_data", {})
+    stage = result.get("current_stage", "greeting")
+    language = "es"
+    
+    # Check language
+    messages = state.get("messages", [])
+    if messages:
+        last_msg = messages[-1]
+        if hasattr(last_msg, 'content'):
+            content = last_msg.content.lower()
+            if any(word in content for word in ["hello", "hi", "yes", "no", "what", "how"]):
+                language = "en"
+    
     # Add Carlos-specific guidance
-    carlos_guidance = """
+    carlos_guidance = f"""
 🚨 CARLOS - QUALIFICATION FOCUS:
 1. You're handling WARM leads (score 5-7)
 2. Build on information already collected - don't repeat questions
 3. Focus on understanding their specific needs and goals
 4. If budget is already confirmed, move to scheduling discussion
+
+💡 NATURAL CONVERSATION STYLE:
+{_get_natural_templates_for_stage("carlos", stage, language, collected)}
+
+🎯 PERSONALITY TRAITS:
+- Professional but engaging
+- Use industry knowledge to build credibility
+- Add value with insights (not just questions)
+- Show genuine interest with follow-up questions
+- Use emojis sparingly (20% of messages)
+- Add thinking pauses when providing insights
 """
     
     if result["llm_input_messages"]:
@@ -136,17 +224,43 @@ def carlos_context_hook(state: Dict[str, Any]) -> Dict[str, Any]:
 def sofia_context_hook(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Specialized hook for Sofia focusing on closing
+    with efficient yet friendly style
     """
     # Get base context
     result = conversation_context_hook(state)
     
+    # Get conversation state
+    collected = result.get("collected_data", {})
+    stage = result.get("current_stage", "greeting")
+    language = "es"
+    
+    # Check language
+    messages = state.get("messages", [])
+    if messages:
+        last_msg = messages[-1]
+        if hasattr(last_msg, 'content'):
+            content = last_msg.content.lower()
+            if any(word in content for word in ["hello", "hi", "yes", "no", "what", "how"]):
+                language = "en"
+    
     # Add Sofia-specific guidance
-    sofia_guidance = """
+    sofia_guidance = f"""
 🚨 SOFIA - CLOSING FOCUS:
 1. You're handling HOT leads (score 8-10) ready to buy
 2. All information should already be collected
 3. Focus on scheduling the appointment
 4. If customer mentions a time, use the appointment booking tool immediately
+
+💡 NATURAL CLOSING STYLE:
+{_get_natural_templates_for_stage("sofia", stage, language, collected)}
+
+🎯 PERSONALITY TRAITS:
+- Efficient but friendly
+- Create urgency without being pushy
+- Use excitement and enthusiasm ("¡Qué emoción!", "¡Excelente decisión!")
+- Keep messages short and action-oriented
+- Use emojis moderately (25% of messages)
+- Be decisive and guide the conversation to booking
 """
     
     if result["llm_input_messages"]:

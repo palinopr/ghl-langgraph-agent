@@ -63,20 +63,47 @@ async def supervisor_brain_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
         contact_info = state.get("contact_info", {})
         previous_fields = state.get("previous_custom_fields", {})
         
+        # ALSO check if we have extracted_data from previous iterations
+        existing_extracted = state.get("extracted_data", {})
+        
         logger.info(f"State keys: {list(state.keys())}")
         logger.info(f"Previous custom fields from state: {previous_fields}")
+        logger.info(f"Existing extracted data from state: {existing_extracted}")
         
-        # Previous values - score might be a string "1" not int
+        # Previous values - check multiple sources
+        # 1. First check existing extracted data
+        # 2. Then check previous custom fields
+        # 3. Finally check contact info
+        
+        # Score - maintain the highest score seen
         try:
-            previous_score = int(previous_fields.get("score", "0") or "0")
+            score_from_extracted = int(existing_extracted.get("score", 0))
+            score_from_fields = int(previous_fields.get("score", "0") or "0")
+            score_from_state = int(state.get("lead_score", 0))
+            previous_score = max(score_from_extracted, score_from_fields, score_from_state)
         except:
             previous_score = 0
-        # Name comes from contact_info, not custom fields
-        previous_name = contact_info.get("firstName", "") or previous_fields.get("name", "")
-        previous_business = previous_fields.get("business_type", "NO_MENCIONADO") 
+            
+        # Name - check multiple sources
+        previous_name = (
+            existing_extracted.get("name", "") or
+            contact_info.get("firstName", "") or 
+            previous_fields.get("name", "")
+        )
+        
+        # Business - check multiple sources
+        previous_business = (
+            existing_extracted.get("business_type", "") or
+            previous_fields.get("business_type", "")
+        )
         if not previous_business or previous_business == "":
             previous_business = "NO_MENCIONADO"
-        previous_budget = previous_fields.get("budget", "")
+            
+        # Budget - check multiple sources
+        previous_budget = (
+            existing_extracted.get("budget", "") or
+            previous_fields.get("budget", "")
+        )
         
         logger.info(f"Previous values - Score: {previous_score}, Name: {previous_name}, Business: {previous_business}, Budget: {previous_budget}")
         
@@ -162,37 +189,62 @@ async def supervisor_brain_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
                 extracted["budget"] = "300+/month"  # Confirmed minimum budget
                 logger.info("Detected budget confirmation")
         
-        # Calculate score
-        score = 1  # Base score for any message
+        # Check for email
+        email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+        email_match = re.search(email_pattern, current_message)
+        if email_match:
+            extracted["email"] = email_match.group(0)
+            logger.info(f"Found email: {extracted['email']}")
         
-        # Only add points for information mentioned in THIS message
-        if extracted["name"]:
-            score += 2  # Name mentioned in current message
-        elif previous_name:
-            # Already have name from before, no extra points
-            pass
-            
-        if extracted["business_type"]:
-            score += 1  # Business mentioned in current message
-        elif previous_business and previous_business != "NO_MENCIONADO":
-            # Already have business from before, no extra points
-            pass
-            
-        if extracted["budget"]:
-            score += 2  # Budget mentioned in current message
-            if "300" in str(extracted["budget"]) or "500" in str(extracted["budget"]):
-                score += 1  # High budget
-        elif previous_budget:
-            # Already have budget from before, no extra points
-            pass
-        
-        # Accumulate with previous score (never decrease)
-        final_score = previous_score + score
-        
-        # Final values for GHL update
+        # Final values for GHL update (calculate first)
         final_name = extracted["name"] or previous_name
         final_business = extracted["business_type"] or previous_business
         final_budget = extracted["budget"] or previous_budget
+        final_email = extracted.get("email") or existing_extracted.get("email", "")
+        
+        # Check for problems/goals
+        has_problem = False
+        problem_keywords = [
+            "perdiendo", "perder", "pierdo", "no puedo", "necesito", "quiero",
+            "busco", "ayuda", "problema", "dificultad", "automatizar", "mejorar"
+        ]
+        for keyword in problem_keywords:
+            if keyword in message_lower:
+                has_problem = True
+                extracted["goal"] = keyword
+                logger.info(f"Found problem/goal: {keyword}")
+                break
+        
+        final_goal = extracted.get("goal", "")
+        
+        # Calculate score based on what we have overall (not just new info)
+        score = 1  # Base score for any message
+        
+        # Consider all information (previous + new)
+        if final_name:
+            score += 1
+            
+        if final_business and final_business != "NO_MENCIONADO":
+            score += 2
+            
+        if has_problem:
+            score += 2  # Problem/goal adds significant value
+            
+        if final_budget:
+            score += 2
+            # Check for high budget - be more flexible with the check
+            budget_str = str(final_budget).lower()
+            if any(amt in budget_str for amt in ["300", "500", "800", "1000"]):
+                score += 1  # High budget
+                logger.info(f"High budget detected: {final_budget}")
+                
+        # Email adds another point for hot lead qualification
+        if final_email:
+            score += 1
+            logger.info(f"Email provided: {final_email}")
+        
+        # Use calculated score or previous score, whichever is higher
+        final_score = max(score, previous_score)
         
         logger.info(f"Lead analysis: Score {previous_score} -> {final_score}")
         logger.info(f"Extracted - Name: {extracted['name']}, Business: {extracted['business_type']}, Budget: {extracted['budget']}")
@@ -326,7 +378,9 @@ SUPERVISOR ANALYSIS COMPLETE:
             "extracted_data": {
                 "name": final_name,
                 "business_type": final_business,
-                "budget": final_budget
+                "budget": final_budget,
+                "email": final_email,
+                "score": final_score  # Add score to extracted data for persistence
             },
             "next_agent": next_agent,
             "supervisor_complete": True,
