@@ -1,0 +1,30 @@
+#!/bin/bash
+# Pre-push hook to validate workflow before pushing to remote
+# This prevents deployment failures that waste 15 minutes
+
+echo "🔍 Running pre-push validation..."
+
+# Activate virtual environment if it exists
+if [ -d "venv313" ]; then
+    source venv313/bin/activate
+elif [ -d "venv" ]; then
+    source venv/bin/activate
+fi
+
+# Run validation
+python validate_workflow.py
+
+# Check exit code
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ Pre-push validation FAILED!"
+    echo "❌ Push cancelled to prevent deployment failure."
+    echo ""
+    echo "Fix the errors above and try again."
+    exit 1
+fi
+
+echo ""
+echo "✅ Pre-push validation passed!"
+echo "✅ Proceeding with push..."
+echo ""

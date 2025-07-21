@@ -18,7 +18,7 @@ This implements the latest LangGraph patterns:
 from typing import Dict, Any
 from langchain_core.messages import HumanMessage
 from app.workflow_modernized import modernized_workflow
-# from app.debug.trace_middleware import inject_trace_id  # Removed debug dependencies
+from app.debug.trace_middleware import inject_trace_id
 from app.utils.simple_logger import get_logger
 
 logger = get_logger("workflow")
@@ -56,8 +56,8 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         }
         
         # Inject trace ID if available from request context
-        # if hasattr(webhook_data, "__trace_id__"):
-        #     initial_state = inject_trace_id(initial_state, webhook_data.__trace_id__)  # Removed debug dependencies
+        if hasattr(webhook_data, "__trace_id__"):
+            initial_state = inject_trace_id(initial_state, webhook_data.__trace_id__)
         
         # Run the workflow
         logger.info(f"Running workflow for contact {contact_id}")

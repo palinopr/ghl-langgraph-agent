@@ -54,7 +54,7 @@ def quick_check():
     try:
         from app.constants import FIELD_MAPPINGS
         from app.tools.webhook_enricher import WebhookEnricher
-        # from app.intelligence.ghl_updater import GHLUpdater  # Removed in cleanup
+        from app.intelligence.ghl_updater import GHLUpdater
         print("✅ No circular imports")
     except ImportError as e:
         print(f"❌ Circular import: {e}")

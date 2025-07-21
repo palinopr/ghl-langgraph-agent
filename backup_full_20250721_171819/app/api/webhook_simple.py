@@ -11,8 +11,8 @@ from app.tools.webhook_processor import webhook_processor
 from app.tools.ghl_client import ghl_client
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
-# from app.debug.trace_middleware import TraceCollectorMiddleware  # Removed debug dependencies
-# from app.api.debug_endpoints import debug_router  # Removed debug dependencies
+from app.debug.trace_middleware import TraceCollectorMiddleware
+from app.api.debug_endpoints import debug_router
 import time
 import psutil
 import platform
@@ -30,10 +30,10 @@ app = FastAPI(
 app.state.start_time = time.time()
 
 # Add trace collection middleware
-# app.add_middleware(TraceCollectorMiddleware)  # Removed debug dependencies
+app.add_middleware(TraceCollectorMiddleware)
 
 # Include debug endpoints
-# app.include_router(debug_router)  # Removed debug dependencies
+app.include_router(debug_router)
 
 
 @app.get("/")

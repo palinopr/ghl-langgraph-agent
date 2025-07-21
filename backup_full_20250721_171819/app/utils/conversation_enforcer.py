@@ -7,7 +7,8 @@ from enum import Enum
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 import re
 from app.utils.simple_logger import get_logger
-# Removed dependencies on deleted modules
+from app.utils.conversation_analyzer import ConversationAnalyzer
+from app.state.enhanced_conversation_state import ConversationStage as EnhancedStage
 
 logger = get_logger("conversation_enforcer")
 
@@ -98,12 +99,11 @@ class ConversationEnforcer:
         Now uses the enhanced ConversationAnalyzer to prevent repetition
         """
         # Use the enhanced analyzer that properly tracks what's been asked/answered
-        # enhanced_analysis = ConversationAnalyzer.analyze_conversation(messages)
-        enhanced_analysis = {"questions_asked": {}, "questions_answered": {}}
+        enhanced_analysis = ConversationAnalyzer.analyze_conversation(messages)
         
         # Convert to our format while keeping all the enhanced tracking
         analysis = {
-            "current_stage": ConversationStage.GREETING,  # Default stage
+            "current_stage": self._map_enhanced_stage(enhanced_analysis["current_stage"]),
             "collected_data": {
                 "name": enhanced_analysis["collected_data"]["name"],
                 "business": enhanced_analysis["collected_data"]["business_type"],

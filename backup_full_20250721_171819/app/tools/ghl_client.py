@@ -19,6 +19,7 @@ from tenacity import (
 )
 from app.config import get_settings, get_ghl_headers
 from app.utils.simple_logger import get_logger
+from app.utils.debug_logger import DebugLogger
 
 logger = get_logger("ghl_client")
 

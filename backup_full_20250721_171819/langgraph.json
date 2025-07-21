@@ -1,0 +1,13 @@
+{
+  "name": "ghl-langgraph-agent",
+  "version": "3.1.1",
+  "description": "GoHighLevel LangGraph Agent - v3.1.1 Modernization Complete and Active",
+  "graphs": {
+    "agent": "./app/workflow.py:workflow"
+  },
+  "dependencies": [
+    "."
+  ],
+  "env": ".env",
+  "python_version": "3.13"
+}

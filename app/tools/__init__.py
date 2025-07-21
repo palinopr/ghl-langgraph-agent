@@ -1,27 +1,44 @@
 """
 Tool modules for agents
-Using modernized v2 implementations with Command patterns
+Production tools with modernized patterns
 """
-from app.tools.agent_tools_v2 import (
-    appointment_tools_v2,
-    qualification_tools_v2,
-    support_tools_v2,
-    create_handoff_tool
+from app.tools.agent_tools_modernized import (
+    get_contact_details_with_task,
+    escalate_to_supervisor,
+    update_contact_with_context,
+    save_important_context,
+    book_appointment_with_instructions
 )
 from app.tools.ghl_client import GHLClient
-# from app.tools.supabase_client import SupabaseClient  # Optional - not needed for core workflow
 from app.tools.webhook_processor import WebhookProcessor
 from app.tools.webhook_enricher import WebhookEnricher
-# from app.tools.conversation_loader import ConversationLoader  # Removed - redundant with Receptionist
+from app.tools.conversation_loader import ConversationLoader
+from app.tools.calendar_slots import (
+    generate_available_slots,
+    format_slots_for_customer,
+    parse_spanish_datetime,
+    find_matching_slot
+)
+from app.tools.ghl_streaming import HumanLikeResponder, send_human_like_response
 
 __all__ = [
-    "appointment_tools_v2",
-    "qualification_tools_v2",
-    "support_tools_v2",
-    "create_handoff_tool",
+    # Core tools
+    "get_contact_details_with_task",
+    "escalate_to_supervisor",
+    "update_contact_with_context",
+    "save_important_context",
+    "book_appointment_with_instructions",
+    # Clients
     "GHLClient",
-    # "SupabaseClient",  # Optional - not needed for core workflow
+    "HumanLikeResponder",
+    "send_human_like_response",
+    # Processors
     "WebhookProcessor",
-    "WebhookEnricher"
-    # "ConversationLoader"  # Removed - redundant with Receptionist
+    "WebhookEnricher",
+    "ConversationLoader",
+    # Calendar utilities
+    "generate_available_slots",
+    "format_slots_for_customer",
+    "parse_spanish_datetime",
+    "find_matching_slot"
 ]
