@@ -17,7 +17,7 @@ from app.state.conversation_state import ConversationState
 
 # Import nodes
 from app.agents.receptionist_simple import receptionist_simple_node
-from app.agents.supervisor_ai import supervisor_ai_node
+from app.agents.supervisor_brain_with_ai import supervisor_brain_ai_node as supervisor_ai_node
 from app.agents.sofia_agent_v3 import sofia_node_v3
 from app.agents.carlos_agent_v3 import carlos_node_v3
 from app.agents.maria_agent_v3 import maria_node_v3
@@ -44,12 +44,21 @@ async def parallel_receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
         from app.tools.ghl_client import ghl_client
         
         # Load all data in parallel (3x faster!)
-        contact_info, messages, custom_fields = await asyncio.gather(
+        # First get conversations, then messages
+        contact_info, conversations, custom_fields = await asyncio.gather(
             ghl_client.get_contact(contact_id),
-            ghl_client.get_conversation_messages(contact_id, limit=50),
+            ghl_client.get_conversations(contact_id),
             ghl_client.get_contact_custom_fields(contact_id),
             return_exceptions=True
         )
+        
+        # Get messages from first conversation if exists
+        messages = []
+        if conversations and not isinstance(conversations, Exception) and len(conversations) > 0:
+            first_conv = conversations[0]
+            conv_messages = await ghl_client.get_conversation_messages(first_conv['id'])
+            if conv_messages:
+                messages = conv_messages[:50]  # Limit to 50
         
         # Handle results
         if isinstance(contact_info, Exception):
