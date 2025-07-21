@@ -1,7 +1,7 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "3.0.7",
-  "description": "GoHighLevel LangGraph Agent - v3.0.7 Enhanced State Tracking to Prevent Question Repetition",
+  "version": "3.1.0",
+  "description": "GoHighLevel LangGraph Agent - v3.1.0 Modernized Architecture with Official Patterns",
   "graphs": {
     "agent": "./app/workflow.py:workflow"
   },
