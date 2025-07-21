@@ -282,11 +282,22 @@ async def supervisor_brain_ai_node(state: Dict[str, Any]) -> Dict[str, Any]:
         except:
             previous_score = 0
             
-        # Boost score if we found historical context
-        if historical_business and historical_problem:
-            # This is a returning customer with a business problem - minimum score 6
-            previous_score = max(previous_score, 6)
-            logger.info("Returning customer with business problem detected - minimum score 6")
+        # Boost score if we found historical context AND current message is business-related
+        current_msg_lower = current_message.lower()
+        is_business_related = any(indicator in current_msg_lower for indicator in [
+            "negocio", "restaurante", "ayuda", "necesito", "problema", 
+            "reserva", "cliente", "perdiendo", "automatizar", "sistema",
+            "cita", "agendar", "horario", "disponible", "consulta"
+        ])
+        
+        if historical_business and historical_problem and is_business_related:
+            # Modest boost for returning customers discussing business
+            previous_score = min(previous_score + 2, 6)
+            logger.info(f"Business context detected in current message - boost applied (score: {previous_score})")
+        elif historical_business and historical_problem:
+            # Small recognition boost for returning customers
+            previous_score = min(previous_score + 1, previous_score + 1)
+            logger.info("Returning customer recognized - small boost applied")
         
         # STEP 1: Try pattern extraction
         pattern_result = extract_and_update_lead(
@@ -403,6 +414,20 @@ async def supervisor_brain_ai_node(state: Dict[str, Any]) -> Dict[str, Any]:
             if tags:
                 result = await ghl_client.update_contact(contact_id, {"tags": tags})
             logger.info(f"GHL updated successfully")
+            
+            # Track changes for note
+            changes = []
+            if final_name and final_name != previous_fields.get("name"):
+                changes.append(f"Name: {previous_fields.get('name', 'None')} → {final_name}")
+            if final_business != previous_fields.get("business_type", "NO_MENCIONADO"):
+                changes.append(f"Business: {previous_fields.get('business_type', 'None')} → {final_business}")
+            if final_budget and final_budget != previous_fields.get("budget"):
+                changes.append(f"Budget: {previous_fields.get('budget', 'None')} → {final_budget}")
+            if final_score != previous_score:
+                changes.append(f"Score: {previous_score} → {final_score}")
+            
+            # Determine analysis method
+            analysis_method = "AI-enhanced analysis" if pattern_result["needs_ai"] else "Pattern-based extraction"
             
             # Create analysis note
             note_content = f"""Lead Analysis - {datetime.now().strftime('%Y-%m-%d %H:%M')}
