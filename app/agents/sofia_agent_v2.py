@@ -58,21 +58,22 @@ def sofia_prompt(state: SofiaState) -> list[AnyMessage]:
     allowed_response = analysis['allowed_response']
     collected_data = analysis['collected_data']
     
-    # Map for compatibility
-    customer_name = collected_data['name']
-    business_type_from_conv = collected_data['business']
-    got_email = collected_data['email'] is not None
+    # CRITICAL: Get data from intelligence layer FIRST, then fall back to conversation analysis
+    extracted_data = state.get("extracted_data", {})
+    customer_name = extracted_data.get('name') or collected_data['name']
+    business_type_from_conv = extracted_data.get('business_type') or collected_data['business']
+    got_email = (extracted_data.get('email') or collected_data['email']) is not None
     
     # Get from state
     contact_name = state.get("contact_name", customer_name or "there")
     appointment_status = state.get("appointment_status")
     
-    # Use conversation enforcer data - no redundant analysis needed
-    got_name = collected_data['name'] is not None
-    got_business = collected_data['business'] is not None
-    got_problem = collected_data['problem'] is not None
-    got_budget = collected_data['budget_confirmed']
-    got_email = collected_data['email'] is not None
+    # Use conversation enforcer data - prioritizing extracted_data from intelligence layer
+    got_name = customer_name is not None
+    got_business = business_type_from_conv is not None
+    got_problem = collected_data['problem'] is not None or extracted_data.get('problem') is not None
+    got_budget = collected_data['budget_confirmed'] or extracted_data.get('budget_mentioned', False)
+    got_email = (extracted_data.get('email') or collected_data['email']) is not None
     
     # Get most recent human message
     if messages:

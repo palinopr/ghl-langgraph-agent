@@ -48,9 +48,10 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     allowed_response = analysis['allowed_response']
     collected_data = analysis['collected_data']
     
-    # Extract data from conversation analysis
-    customer_name = collected_data['name']
-    business_type = collected_data['business']
+    # CRITICAL: Get data from intelligence layer FIRST, then fall back to conversation analysis
+    extracted_data = state.get("extracted_data", {})
+    customer_name = extracted_data.get('name') or collected_data['name']
+    business_type = extracted_data.get('business_type') or collected_data['business']
     
     # Get most recent human message
     if messages:
@@ -68,17 +69,19 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     context += f"\n- Next Action: {next_action}"
     context += f"\n- Language: {analysis.get('language', 'es').upper()}"
     
-    # Show collected data
-    if collected_data['name']:
-        context += f"\n✅ Customer name: {collected_data['name']}"
-    if collected_data['business']:
-        context += f"\n✅ Business type: {collected_data['business']}"
-    if collected_data['problem']:
-        context += f"\n✅ Problem identified: {collected_data['problem'][:50]}..."
-    if collected_data['budget_confirmed']:
+    # Show collected data (prioritizing extracted_data from intelligence layer)
+    if customer_name:
+        context += f"\n✅ Customer name: {customer_name}"
+    if business_type:
+        context += f"\n✅ Business type: {business_type}"
+    if collected_data['problem'] or extracted_data.get('problem'):
+        problem = extracted_data.get('problem') or collected_data['problem']
+        context += f"\n✅ Problem identified: {problem[:50]}..."
+    if collected_data['budget_confirmed'] or extracted_data.get('budget_mentioned'):
         context += f"\n✅ Budget confirmed: YES"
-    if collected_data['email']:
-        context += f"\n✅ Email: {collected_data['email']}"
+    if collected_data['email'] or extracted_data.get('email'):
+        email = extracted_data.get('email') or collected_data['email']
+        context += f"\n✅ Email: {email}"
     
     # Show what we're expecting
     if analysis.get('expecting_answer_for'):

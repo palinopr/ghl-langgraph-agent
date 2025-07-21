@@ -36,6 +36,7 @@ tenacity>=8.0.0  # Added - for retry logic
 cloudpickle>=3.0.0  # Added - for serialization
 redis>=5.0.0  # Added - for message batching
 jsonschema-rs>=0.20.0  # Added - for schema validation performance
+rapidfuzz>=3.0.0  # Added - for fuzzy string matching and typo tolerance
 
 # Performance Monitoring
 psutil>=5.9.0

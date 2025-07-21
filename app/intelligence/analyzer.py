@@ -2,6 +2,7 @@
 Intelligence Analyzer - Pre-processing layer for structured extraction and scoring
 Combines rule-based extraction with LLM analysis for optimal lead qualification
 UPDATED: Optimized for Python 3.13 JIT compilation with cached regex patterns
+ENHANCED: Added fuzzy matching for typo tolerance
 """
 import re
 from typing import Dict, Any, List, Optional, Tuple
@@ -12,6 +13,15 @@ from langgraph.types import Command
 from app.state.conversation_state import ConversationState
 from app.utils.simple_logger import get_logger
 
+# Try to import fuzzy extractor, fallback if not available
+try:
+    from app.intelligence.fuzzy_extractor import FuzzyBusinessExtractor
+    FUZZY_ENABLED = True
+except ImportError:
+    FUZZY_ENABLED = False
+    logger = get_logger("intelligence_analyzer")
+    logger.warning("Fuzzy extractor not available, using exact matching only")
+
 logger = get_logger("intelligence_analyzer")
 
 
@@ -19,11 +29,17 @@ class SpanishPatternExtractor:
     """Extract structured information from Spanish messages using patterns
     
     Optimized for Python 3.13 JIT compilation with compiled regex patterns
+    Enhanced with fuzzy matching for typo tolerance
     """
     
     def __init__(self):
         # Pre-compile all regex patterns for JIT optimization
         self._compiled_patterns = self._compile_all_patterns()
+        
+        # Initialize fuzzy extractor if available
+        self.fuzzy_extractor = None
+        if FUZZY_ENABLED:
+            self.fuzzy_extractor = FuzzyBusinessExtractor()
     
     @staticmethod
     @lru_cache(maxsize=1)
@@ -201,7 +217,8 @@ class SpanishPatternExtractor:
     
     @lru_cache(maxsize=512)  # Cache results for JIT optimization
     def _extract_business(self, text: str) -> Optional[str]:
-        """Extract business type from text - JIT optimized"""
+        """Extract business type from text - JIT optimized with fuzzy fallback"""
+        # First try exact pattern matching (fastest)
         for pattern, confidence_type in self._compiled_patterns["business"]:
             match = pattern.search(text)
             if match:
@@ -212,7 +229,21 @@ class SpanishPatternExtractor:
                 # VALIDATE before returning
                 validated = self._validate_business_type(business)
                 if validated:
+                    logger.info(f"Exact match found: {validated}")
                     return validated.lower()
+        
+        # If no exact match and fuzzy extractor is available, try fuzzy matching
+        if self.fuzzy_extractor:
+            logger.info("No exact match, trying fuzzy extraction...")
+            fuzzy_result = self.fuzzy_extractor.extract_with_context(text)
+            if fuzzy_result:
+                business_type, confidence = fuzzy_result
+                if confidence >= 0.75:  # High confidence threshold
+                    logger.info(f"Fuzzy match found: {business_type} (confidence: {confidence:.2f})")
+                    return business_type
+                else:
+                    logger.info(f"Low confidence fuzzy match: {business_type} ({confidence:.2f})")
+        
         return None
     
     @lru_cache(maxsize=512)  # Cache results for JIT optimization
