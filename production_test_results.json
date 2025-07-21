@@ -1,0 +1,157 @@
+[
+  {
+    "scenario": "Restaurant 'u.' abbreviation",
+    "passed": true,
+    "result": {
+      "success": true,
+      "score": 5,
+      "extracted": {
+        "business_type": "restaurante",
+        "goal": "muchas reservas pq no puedo contestar todo Tengo u",
+        "extraction_confidence": {
+          "business_type": 0.8,
+          "goal": 0.5
+        }
+      },
+      "agent": "carlos",
+      "response": "Tengo u. Restaurante y estoy perdiendo muchas reservas pq no puedo contestar todo",
+      "events": [
+        {
+          "node": "receptionist",
+          "type": "start"
+        },
+        {
+          "node": "receptionist",
+          "type": "end"
+        },
+        {
+          "node": "intelligence",
+          "type": "start"
+        },
+        {
+          "node": "intelligence",
+          "type": "end"
+        },
+        {
+          "node": "carlos",
+          "type": "start"
+        },
+        {
+          "node": "carlos",
+          "type": "end"
+        },
+        {
+          "node": "responder",
+          "type": "start"
+        },
+        {
+          "node": "responder",
+          "type": "end"
+        }
+      ]
+    },
+    "validations": [
+      "\u2705 Score: 5 >= 5",
+      "\u2705 Business: restaurante",
+      "\u2705 Agent: carlos"
+    ]
+  },
+  {
+    "scenario": "Appointment confirmation",
+    "passed": false,
+    "result": {
+      "success": true,
+      "score": 1,
+      "extracted": {},
+      "agent": "maria",
+      "response": "El martes a las 2pm est\u00e1 perfecto",
+      "events": [
+        {
+          "node": "receptionist",
+          "type": "start"
+        },
+        {
+          "node": "receptionist",
+          "type": "end"
+        },
+        {
+          "node": "intelligence",
+          "type": "start"
+        },
+        {
+          "node": "intelligence",
+          "type": "end"
+        },
+        {
+          "node": "maria",
+          "type": "start"
+        },
+        {
+          "node": "maria",
+          "type": "end"
+        },
+        {
+          "node": "responder",
+          "type": "start"
+        },
+        {
+          "node": "responder",
+          "type": "end"
+        }
+      ]
+    },
+    "validations": [
+      "\u274c Score: 1 < 8",
+      "\u274c Agent: expected 'sofia', got 'maria'"
+    ]
+  },
+  {
+    "scenario": "Time selection '10:00 AM'",
+    "passed": true,
+    "result": {
+      "success": true,
+      "score": 1,
+      "extracted": {},
+      "agent": "maria",
+      "response": "It seems like you might be referencing a time, possibly for a meeting or an appointment. Could you please provide more details or clarify your needs so I can assist you better?",
+      "events": [
+        {
+          "node": "receptionist",
+          "type": "start"
+        },
+        {
+          "node": "receptionist",
+          "type": "end"
+        },
+        {
+          "node": "intelligence",
+          "type": "start"
+        },
+        {
+          "node": "intelligence",
+          "type": "end"
+        },
+        {
+          "node": "maria",
+          "type": "start"
+        },
+        {
+          "node": "maria",
+          "type": "end"
+        },
+        {
+          "node": "responder",
+          "type": "start"
+        },
+        {
+          "node": "responder",
+          "type": "end"
+        }
+      ]
+    },
+    "validations": [
+      "\u2705 Score: 1 >= 1",
+      "\u2705 Agent: maria"
+    ]
+  }
+]

@@ -28,10 +28,6 @@ logger = get_logger("agent_tools_v2")
 def create_handoff_tool_for_supervisor(agent_name: str):
     """Create a handoff tool with context for the supervisor"""
     
-    @tool(
-        name=f"handoff_to_{agent_name}",
-        description=f"Hand off conversation to {agent_name} with rich context"
-    )
     def handoff_with_context(
         context: Dict[str, Any],
         state: Annotated[ConversationState, InjectedState],
@@ -63,7 +59,11 @@ def create_handoff_tool_for_supervisor(agent_name: str):
             graph=Command.PARENT
         )
     
-    return handoff_with_context
+    # Apply tool decorator with proper parameters
+    handoff_with_context.__name__ = f"handoff_to_{agent_name}"
+    handoff_with_context.__doc__ = f"Hand off conversation to {agent_name} with rich context\n\n" + (handoff_with_context.__doc__ or "")
+    
+    return tool(handoff_with_context)
 
 
 # ============ LINEAR FLOW: ESCALATION ONLY ============
@@ -157,7 +157,6 @@ def create_handoff_tool(*, agent_name: str, description: Optional[str] = None):
     name = f"transfer_to_{agent_name}"
     description = description or f"Transfer to {agent_name}"
 
-    @tool(name, description=description)
     def handoff_tool(
         state: Annotated[ConversationState, InjectedState],
         tool_call_id: Annotated[str, InjectedToolCallId],
@@ -171,7 +170,11 @@ def create_handoff_tool(*, agent_name: str, description: Optional[str] = None):
             tool_call_id=tool_call_id
         )
     
-    return handoff_tool
+    # Apply tool decorator with proper parameters
+    handoff_tool.__name__ = name
+    handoff_tool.__doc__ = description
+    
+    return tool(handoff_tool)
 
 
 # Keep these for backward compatibility but they now escalate
@@ -638,6 +641,8 @@ Thank you for choosing Main Outlet Media. Have a great day!
 appointment_tools_v2 = [
     get_contact_details_v2,
     update_contact_with_state,
+    check_calendar_availability,
+    book_appointment_from_confirmation,
     create_appointment_v2,
     book_appointment_and_end,
     escalate_to_supervisor,  # Use escalation instead of direct transfers
@@ -692,5 +697,8 @@ __all__ = [
     "create_appointment_v2",
     "book_appointment_and_end",
     "save_conversation_context",
-    "search_conversation_history"
+    "search_conversation_history",
+    # Calendar and booking tools
+    "check_calendar_availability",
+    "book_appointment_from_confirmation"
 ]

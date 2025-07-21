@@ -118,7 +118,7 @@ def sofia_prompt(state: SofiaState) -> list[AnyMessage]:
     customer_selects_time = False
     
     if current_message:
-        if any(word in current_message.lower() for word in ["horarios", "disponibles", "horas", "cuándo", "qué días", "qué horas"]):
+        if any(word in current_message.lower() for word in ["horarios", "disponibles", "horas", "cuándo", "qué días", "qué horas", "appointment", "schedule", "available"]):
             customer_asks_times = True
             logger.info(f"🚨 CUSTOMER ASKING FOR APPOINTMENT TIMES: '{current_message}'")
         

@@ -73,6 +73,10 @@ class WebhookProcessor:
             logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
             return None
     
+    def extract_message_data(self, webhook_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Alias for process_message_webhook for compatibility"""
+        return self.process_message_webhook(webhook_data)
+    
     @staticmethod
     def validate_webhook_signature(
         body: bytes, 

@@ -33,17 +33,30 @@ async def receptionist_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
                 "error": "Contact not found"
             }
         
-        # 2. Extract custom fields
+        # 2. Extract custom fields - handle both dict and list formats
         custom_fields = {}
-        for field in contact.get('customFields', []):
-            field_id = field.get('id')
-            field_value = field.get('value', '')
-            
-            # Map to readable names
-            for name, mapped_id in FIELD_MAPPINGS.items():
-                if mapped_id == field_id:
-                    custom_fields[name] = field_value
-                    break
+        custom_fields_data = contact.get('customFields', {})
+        
+        # Handle dict format (field_id: value)
+        if isinstance(custom_fields_data, dict):
+            for field_id, field_value in custom_fields_data.items():
+                # Map to readable names
+                for name, mapped_id in FIELD_MAPPINGS.items():
+                    if mapped_id == field_id:
+                        custom_fields[name] = field_value
+                        break
+        # Handle list format [{id: field_id, value: field_value}]
+        elif isinstance(custom_fields_data, list):
+            for field in custom_fields_data:
+                if isinstance(field, dict):
+                    field_id = field.get('id')
+                    field_value = field.get('value', '')
+                    
+                    # Map to readable names
+                    for name, mapped_id in FIELD_MAPPINGS.items():
+                        if mapped_id == field_id:
+                            custom_fields[name] = field_value
+                            break
         
         logger.info(f"Loaded custom fields: {custom_fields}")
         

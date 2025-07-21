@@ -8,7 +8,6 @@ from typing import Dict, Any
 import asyncio
 from app.workflow import run_workflow
 from app.tools.webhook_processor import webhook_processor
-from app.tools.supabase_client import supabase_client
 from app.tools.ghl_client import ghl_client
 from app.utils.simple_logger import get_logger
 from app.config import get_settings

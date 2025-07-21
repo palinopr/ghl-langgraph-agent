@@ -18,8 +18,8 @@ from app.state.conversation_state import ConversationState
 
 # Import nodes
 from app.agents.receptionist_simple import receptionist_simple_node
-from app.agents.supervisor_brain_simple import supervisor_brain_simple_node
-from app.agents.sofia_agent_v2 import sofia_node_v2
+from app.agents.supervisor_brain_with_ai import supervisor_brain_ai_node as supervisor_brain_simple_node
+from app.agents.sofia_wrapper import sofia_node_smart
 from app.agents.carlos_agent_v2 import carlos_node_v2
 from app.agents.maria_agent_v2 import maria_node_v2
 from app.agents.responder_agent_fixed import responder_node_fixed as responder_node
@@ -91,7 +91,7 @@ def create_linear_workflow():
     # Add all nodes
     workflow.add_node("receptionist", receptionist_simple_node)  # Using production version with filtering
     workflow.add_node("supervisor_brain", supervisor_brain_simple_node)
-    workflow.add_node("sofia", sofia_node_v2)
+    workflow.add_node("sofia", sofia_node_smart)
     workflow.add_node("carlos", carlos_node_v2)
     workflow.add_node("maria", maria_node_v2)
     workflow.add_node("responder", responder_node)

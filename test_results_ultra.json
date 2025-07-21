@@ -1,0 +1,159 @@
+[
+  {
+    "scenario": "Restaurant with abbreviation",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  {
+    "scenario": "Restaurant with full word",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  {
+    "scenario": "Time confirmation Spanish",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      false
+    ]
+  },
+  {
+    "scenario": "Simple time selection",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      true
+    ]
+  },
+  {
+    "scenario": "Salon de belleza",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  {
+    "scenario": "Mi negocio pattern",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  {
+    "scenario": "Budget with approximation",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      false,
+      true
+    ]
+  },
+  {
+    "scenario": "High budget confirmation",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      false,
+      false
+    ]
+  },
+  {
+    "scenario": "Just greeting",
+    "passed": true,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      true,
+      true
+    ]
+  },
+  {
+    "scenario": "Name only",
+    "passed": true,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      true,
+      true
+    ]
+  },
+  {
+    "scenario": "Complete info with urgency",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  {
+    "scenario": "Estoy perdiendo pattern",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      false,
+      true
+    ]
+  },
+  {
+    "scenario": "No puedo pattern",
+    "passed": false,
+    "score": 0,
+    "extracted_data": {},
+    "agent": "maria",
+    "validations": [
+      false,
+      false,
+      true
+    ]
+  }
+]

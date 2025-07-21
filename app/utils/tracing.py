@@ -129,11 +129,12 @@ class TracedOperation:
         
     async def __aenter__(self):
         self.context = trace_operation(self.name, self.metadata, self.tags)
-        await self.context.__aenter__()
+        # tracing_v2_enabled returns a synchronous context manager
+        self.context.__enter__()
         return self
         
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.context.__aexit__(exc_type, exc_val, exc_tb)
+        self.context.__exit__(exc_type, exc_val, exc_tb)
 
 
 # Singleton client instance

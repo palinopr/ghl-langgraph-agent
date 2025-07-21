@@ -36,6 +36,11 @@ async def root():
     return {"status": "healthy", "service": "ghl-langgraph-agent"}
 
 
+@app.get("/test-debug")
+async def test_debug():
+    """Test endpoint"""
+    return {"test": "debug works"}
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
