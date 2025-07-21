@@ -164,9 +164,15 @@ class ConversationAnalyzer:
                             
                     elif currently_expecting == "business":
                         # The entire message is their business type
-                        analysis["collected_data"]["business_type"] = content.strip()
-                        currently_expecting = None
-                        logger.info(f"Collected business: {analysis['collected_data']['business_type']}")
+                        business_type = content.strip()
+                        # Don't accept generic terms as valid business types
+                        if business_type.lower() not in ["negocio", "business", "empresa", "local", "comercio"]:
+                            analysis["collected_data"]["business_type"] = business_type
+                            currently_expecting = None
+                            logger.info(f"Collected business: {analysis['collected_data']['business_type']}")
+                        else:
+                            logger.info(f"Rejected generic business term: {business_type}")
+                            # Keep expecting a specific business type
                         
                     elif currently_expecting == "challenge":
                         # Any response is their challenge

@@ -30,7 +30,9 @@ def format_conversation_for_agent(state: Dict[str, Any]) -> str:
     conversation_summary += "\n✅ DATA COLLECTED:\n"
     if extracted_data.get("name"):
         conversation_summary += f"• Name: {extracted_data['name']}\n"
-    if extracted_data.get("business_type") and extracted_data["business_type"] != "NO_MENCIONADO":
+    if (extracted_data.get("business_type") and 
+        extracted_data["business_type"] != "NO_MENCIONADO" and
+        extracted_data["business_type"].lower() not in ["negocio", "business", "empresa", "local", "comercio"]):
         conversation_summary += f"• Business Type: {extracted_data['business_type']}\n"
     if extracted_data.get("budget"):
         conversation_summary += f"• Budget: {extracted_data['budget']}\n"
@@ -62,7 +64,9 @@ def format_conversation_for_agent(state: Dict[str, Any]) -> str:
     conversation_summary += "\n🎯 NEXT STEPS:\n"
     if not extracted_data.get("name"):
         conversation_summary += "• Need to get customer's name\n"
-    elif not extracted_data.get("business_type") or extracted_data["business_type"] == "NO_MENCIONADO":
+    elif (not extracted_data.get("business_type") or 
+          extracted_data["business_type"] == "NO_MENCIONADO" or
+          extracted_data["business_type"].lower() in ["negocio", "business", "empresa", "local", "comercio"]):
         conversation_summary += "• Need to get business type\n"
     elif not extracted_data.get("budget"):
         conversation_summary += "• Need to get budget information\n"
@@ -109,7 +113,8 @@ def get_conversation_stage(state: Dict[str, Any]) -> Dict[str, Any]:
     
     has_name = bool(extracted_data.get("name"))
     has_business = bool(extracted_data.get("business_type") and 
-                       extracted_data["business_type"] != "NO_MENCIONADO")
+                       extracted_data["business_type"] != "NO_MENCIONADO" and
+                       extracted_data["business_type"].lower() not in ["negocio", "business", "empresa", "local", "comercio"])
     has_budget = bool(extracted_data.get("budget"))
     
     # Determine stage

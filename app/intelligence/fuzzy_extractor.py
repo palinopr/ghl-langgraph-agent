@@ -1,7 +1,23 @@
 """
 Fuzzy business extraction with typo tolerance using RapidFuzz
 """
-from rapidfuzz import fuzz, process
+try:
+    from rapidfuzz import fuzz, process
+    RAPIDFUZZ_AVAILABLE = True
+except ImportError:
+    RAPIDFUZZ_AVAILABLE = False
+    # Create dummy objects to prevent errors
+    class DummyFuzz:
+        @staticmethod
+        def WRatio(*args, **kwargs):
+            return 0
+    class DummyProcess:
+        @staticmethod
+        def extractOne(*args, **kwargs):
+            return None
+    fuzz = DummyFuzz()
+    process = DummyProcess()
+
 from typing import Dict, List, Tuple, Optional
 import re
 from app.utils.simple_logger import get_logger
@@ -26,7 +42,7 @@ class FuzzyBusinessExtractor:
         "pizzeria": ["pizzería", "pizzeria", "pizza"],
         "panaderia": ["panadería", "panaderia", "bakery", "pan"],
         "farmacia": ["farmacia", "pharmacy", "drogueria"],
-        "negocio": ["negocio", "business", "empresa", "comercio"],
+        # REMOVED "negocio" - too generic, not a specific business type
         "bar": ["bar", "cantina", "cerveceria", "cervecería"],
         "taller": ["taller", "mecanico", "mecánico", "garage"],
         "estetica": ["estética", "estetica", "belleza", "beauty"],
@@ -42,6 +58,9 @@ class FuzzyBusinessExtractor:
             for word in variations:
                 self.all_business_words.append(word)
                 self.word_to_type[word] = business_type
+        
+        if not RAPIDFUZZ_AVAILABLE:
+            logger.warning("RapidFuzz not available - fuzzy matching disabled")
     
     def extract_business_fuzzy(self, text: str, threshold: int = 80) -> Optional[Tuple[str, float]]:
         """
@@ -54,6 +73,9 @@ class FuzzyBusinessExtractor:
         Returns:
             Tuple of (business_type, confidence) or None
         """
+        if not RAPIDFUZZ_AVAILABLE:
+            return None
+            
         text_lower = text.lower()
         words = text_lower.split()
         

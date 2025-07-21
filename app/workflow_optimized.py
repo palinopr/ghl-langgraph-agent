@@ -20,7 +20,7 @@ from app.agents.receptionist_simple import receptionist_simple_node
 from app.agents.supervisor_brain_with_ai import supervisor_brain_ai_node as supervisor_ai_node
 from app.agents.sofia_agent_v2_fixed import sofia_node_v2_fixed as sofia_node_v3
 from app.agents.carlos_agent_v2_fixed import carlos_node_v2_fixed as carlos_node_v3
-from app.agents.maria_agent_v2_fixed import maria_node_v2_fixed as maria_node_v3
+from app.agents.maria_agent_v2_enhanced import maria_node_v2 as maria_node_v3
 from app.agents.responder_streaming import responder_streaming_node as responder_node
 from app.intelligence.analyzer import intelligence_node
 

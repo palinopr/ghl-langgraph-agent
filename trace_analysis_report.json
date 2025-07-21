@@ -1,0 +1,93 @@
+[
+  {
+    "trace_id": "1f066591-9d77-6367-9a7c-c8adf51eb60a",
+    "issues": [],
+    "warnings": [
+      "Responder did not send message"
+    ],
+    "successes": [
+      "Historical boost fix working correctly",
+      "Debug message filtering working",
+      "Conversation history filtering working",
+      "Data extraction quality good"
+    ],
+    "details": {
+      "input_message": "Hola",
+      "maria_response": [],
+      "supervisor_score": null,
+      "routed_to": null,
+      "intelligence_score": 1,
+      "extracted_data": {
+        "name": null,
+        "business_type": null,
+        "budget": null,
+        "goal": null,
+        "email": null,
+        "phone": "13054870475",
+        "extraction_confidence": {
+          "phone": 0.7999999999999999
+        }
+      }
+    }
+  },
+  {
+    "trace_id": "1f066592-8528-6c8d-8bb9-f3081fd6e993",
+    "issues": [],
+    "warnings": [
+      "Responder did not send message"
+    ],
+    "successes": [
+      "Debug message filtering working",
+      "Conversation history filtering working",
+      "Data extraction quality good"
+    ],
+    "details": {
+      "input_message": "jaime",
+      "maria_response": [],
+      "supervisor_score": null,
+      "routed_to": null,
+      "intelligence_score": 1,
+      "extracted_data": {
+        "name": null,
+        "business_type": null,
+        "budget": null,
+        "goal": null,
+        "email": null,
+        "phone": "13054870475",
+        "extraction_confidence": {
+          "phone": 0.7999999999999999
+        }
+      }
+    }
+  },
+  {
+    "trace_id": "1f066593-5ae3-6ff0-bfed-dc5c173583cf",
+    "issues": [],
+    "warnings": [
+      "Responder did not send message"
+    ],
+    "successes": [
+      "Debug message filtering working",
+      "Conversation history filtering working",
+      "Data extraction quality good"
+    ],
+    "details": {
+      "input_message": "un reaturante",
+      "maria_response": [],
+      "supervisor_score": null,
+      "routed_to": null,
+      "intelligence_score": 1,
+      "extracted_data": {
+        "name": null,
+        "business_type": null,
+        "budget": null,
+        "goal": null,
+        "email": null,
+        "phone": "13054870475",
+        "extraction_confidence": {
+          "phone": 0.7999999999999999
+        }
+      }
+    }
+  }
+]

@@ -1,7 +1,7 @@
 # Makefile for LangGraph GHL Agent
 # Run these commands before deploying to save time!
 
-.PHONY: validate test deploy clean help docker-test docker-up docker-down live-test
+.PHONY: validate test deploy clean help docker-test docker-up docker-down live-test test-local test-interactive test-scenarios test-specific pre-deploy
 
 # Default target
 help:
@@ -26,6 +26,13 @@ help:
 	@echo ""
 	@echo "Live Testing:"
 	@echo "  make live-test   - Run comprehensive live tests"
+	@echo ""
+	@echo "Local Testing (NEW!):"
+	@echo "  make test-local       - Test common scenarios locally"
+	@echo "  make test-interactive - Interactive chat testing"
+	@echo "  make test-scenarios   - Test all known production issues"
+	@echo "  make test-specific    - Test a specific message"
+	@echo "  make pre-deploy       - Run all tests before deploying"
 	@echo ""
 
 # Quick validation (run before every push)
@@ -109,3 +116,49 @@ docker-build:
 	@echo "🔨 Building Docker image..."
 	@docker build -t ghl-langgraph-agent:latest .
 	@echo "✅ Docker image built!"
+
+# Local testing commands
+test-local:
+	@echo "🧪 Testing common scenarios locally..."
+	@if [ -d "venv_langgraph" ]; then \
+		source venv_langgraph/bin/activate && python test_locally.py; \
+	elif [ -d "venv313" ]; then \
+		source venv313/bin/activate && python test_locally.py; \
+	else \
+		python test_locally.py; \
+	fi
+
+test-interactive:
+	@echo "🤖 Starting interactive test mode..."
+	@if [ -d "venv_langgraph" ]; then \
+		source venv_langgraph/bin/activate && python interactive_test.py; \
+	elif [ -d "venv313" ]; then \
+		source venv313/bin/activate && python interactive_test.py; \
+	else \
+		python interactive_test.py; \
+	fi
+
+test-scenarios:
+	@echo "🎯 Testing production scenarios..."
+	@if [ -d "venv_langgraph" ]; then \
+		source venv_langgraph/bin/activate && python test_production_scenarios.py; \
+	elif [ -d "venv313" ]; then \
+		source venv313/bin/activate && python test_production_scenarios.py; \
+	else \
+		python test_production_scenarios.py; \
+	fi
+
+test-specific:
+	@echo "Enter message to test:"
+	@read message; \
+	if [ -d "venv_langgraph" ]; then \
+		source venv_langgraph/bin/activate && python -c "import asyncio; from test_locally import test_specific_issue; asyncio.run(test_specific_issue('$$message'))"; \
+	elif [ -d "venv313" ]; then \
+		source venv313/bin/activate && python -c "import asyncio; from test_locally import test_specific_issue; asyncio.run(test_specific_issue('$$message'))"; \
+	else \
+		python -c "import asyncio; from test_locally import test_specific_issue; asyncio.run(test_specific_issue('$$message'))"; \
+	fi
+
+# Test before deploy
+pre-deploy: validate test-scenarios
+	@echo "✅ All tests passed, safe to deploy!"

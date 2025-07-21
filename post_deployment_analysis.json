@@ -1,0 +1,149 @@
+[
+  {
+    "trace_id": "1f0665dd-9068-66a3-84bb-26a8a0c201a5",
+    "status": "success",
+    "start_time": "2025-07-21 18:09:30.789098",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hola"
+      }
+    ],
+    "state_info": {
+      "extracted_data": {
+        "name": null,
+        "business_type": "negocio",
+        "budget": null,
+        "email": null,
+        "score": 3
+      },
+      "lead_score": 3,
+      "current_agent": "maria",
+      "response_sent": null,
+      "collected_data": null
+    },
+    "behavior": {
+      "asked_for_name": true,
+      "asked_for_business": false,
+      "used_extracted_data": true,
+      "repeated_question": false,
+      "agent_response": "\u00a1Hola! Soy de Main Outlet Media. Ayudamos a negocios como el tuyo a automatizar WhatsApp para nunca perder clientes. \u00bfCu\u00e1l es tu nombre?"
+    },
+    "fuzzy_info": {
+      "fuzzy_extractor_loaded": false,
+      "typo_detected": false,
+      "fuzzy_match_found": false,
+      "business_extracted": "Found in output"
+    },
+    "nodes_executed": [
+      "responder",
+      "maria",
+      "supervisor_ai",
+      "intelligence",
+      "receptionist"
+    ],
+    "intelligence_found": true,
+    "agents_executed": [
+      "maria"
+    ],
+    "errors": []
+  },
+  {
+    "trace_id": "1f0665de-65c0-649d-88fc-17a24f9ca734",
+    "status": "success",
+    "start_time": "2025-07-21 18:09:53.145880",
+    "messages": [
+      {
+        "role": "user",
+        "content": "jaime"
+      }
+    ],
+    "state_info": {
+      "extracted_data": {
+        "name": "Jaime",
+        "business_type": "negocio",
+        "budget": null,
+        "email": null,
+        "score": 4
+      },
+      "lead_score": 4,
+      "current_agent": "maria",
+      "response_sent": null,
+      "collected_data": null
+    },
+    "behavior": {
+      "asked_for_name": true,
+      "asked_for_business": true,
+      "used_extracted_data": true,
+      "repeated_question": false,
+      "agent_response": "Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?"
+    },
+    "fuzzy_info": {
+      "fuzzy_extractor_loaded": false,
+      "typo_detected": false,
+      "fuzzy_match_found": false,
+      "business_extracted": "Found in output"
+    },
+    "nodes_executed": [
+      "responder",
+      "maria",
+      "supervisor_ai",
+      "intelligence",
+      "receptionist"
+    ],
+    "intelligence_found": true,
+    "agents_executed": [
+      "maria"
+    ],
+    "errors": []
+  },
+  {
+    "trace_id": "1f0665df-46f9-6d57-889b-74d1726b4a41",
+    "status": "success",
+    "start_time": "2025-07-21 18:10:16.762032",
+    "messages": [
+      {
+        "role": "user",
+        "content": "tengo un restaurante"
+      }
+    ],
+    "state_info": {
+      "extracted_data": {
+        "name": null,
+        "business_type": "restaurante",
+        "budget": null,
+        "email": null,
+        "score": 3
+      },
+      "lead_score": 3,
+      "current_agent": "maria",
+      "response_sent": null,
+      "collected_data": null
+    },
+    "behavior": {
+      "asked_for_name": true,
+      "asked_for_business": true,
+      "used_extracted_data": true,
+      "repeated_question": false,
+      "agent_response": "Mucho gusto, Jaime. \u00bfQu\u00e9 tipo de negocio tienes?"
+    },
+    "fuzzy_info": {
+      "fuzzy_extractor_loaded": false,
+      "typo_detected": false,
+      "fuzzy_match_found": false,
+      "business_extracted": "Found in output"
+    },
+    "nodes_executed": [
+      "responder",
+      "maria",
+      "supervisor_ai",
+      "intelligence",
+      "receptionist"
+    ],
+    "intelligence_found": true,
+    "agents_executed": [
+      "maria"
+    ],
+    "errors": []
+  }
+]
