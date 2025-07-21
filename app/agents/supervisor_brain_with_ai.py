@@ -204,9 +204,9 @@ def calculate_pattern_score(
     if has_problem:
         score += 2
         
-    # Special case: business owner with problem should be at least 6
+    # Business owner with problem needs budget for high score
     if final_business and final_business != "NO_MENCIONADO" and has_problem:
-        score = max(score, 6)
+        score = max(score, 4)  # NOT 6! Need budget confirmation first
         
     if final_budget:
         score += 2
@@ -446,12 +446,8 @@ async def supervisor_brain_ai_node(state: Dict[str, Any]) -> Dict[str, Any]:
                 "email": final_email,
                 "score": final_score
             },
-            "messages": state["messages"] + [
-                AIMessage(
-                    content=f"Lead scored {final_score}/10, routing to {next_agent}",
-                    name="supervisor"
-                )
-            ]
+            # Don't add debug messages - they're visible to customers!
+            "messages": state["messages"]
         }
         
     except Exception as e:

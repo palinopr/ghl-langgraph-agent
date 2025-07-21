@@ -1766,3 +1766,140 @@ with patch('app.tools.ghl_client.ghl_client') as mock_ghl:
 - **Spanish Phrases Supported**: 20+
 - **Time Invested**: ~3 hours
 - **Coffee Consumed**: ☕☕☕
+
+## 🔍 Accessing LangSmith Traces for Debugging
+
+### Important: Two Different Projects
+The system uses two different LangSmith projects:
+- **Local/Dev**: `ghl-langgraph-migration` (in .env)
+- **Production**: `ghl-langgraph-agent` (in app/utils/tracing.py)
+
+### How to Access Traces Programmatically
+
+1. **Install LangSmith SDK** (if not already installed):
+```bash
+pip install langsmith
+```
+
+2. **Set Environment Variables**:
+```bash
+export LANGCHAIN_API_KEY="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"
+# or
+export LANGSMITH_API_KEY="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"
+```
+
+3. **Access Traces with Python**:
+```python
+from langsmith import Client
+from datetime import datetime, timezone, timedelta
+
+# Initialize client
+client = Client()
+
+# For production traces
+project_name = "ghl-langgraph-agent"
+# For dev traces  
+# project_name = "ghl-langgraph-migration"
+
+# List recent runs
+runs = list(client.list_runs(
+    project_name=project_name,
+    limit=20,
+    execution_order=1,  # Top-level runs only
+    error=False  # Set to None to see all runs including errors
+))
+
+# Analyze runs
+for run in runs:
+    print(f"ID: {run.id}")
+    print(f"Status: {run.status}")
+    print(f"Start Time: {run.start_time}")
+    
+    # Check inputs
+    if run.inputs and 'messages' in run.inputs:
+        messages = run.inputs['messages']
+        if messages and len(messages) > 0:
+            last_msg = messages[-1]
+            if isinstance(last_msg, dict) and 'content' in last_msg:
+                print(f"Message: {last_msg['content'][:50]}...")
+    
+    # Check for errors
+    if run.error:
+        print(f"ERROR: {run.error}")
+    
+    print("-" * 40)
+```
+
+### Quick Trace Analysis Script
+```python
+# Check for language switching issues
+from langsmith import Client
+
+client = Client()
+runs = list(client.list_runs(project_name="ghl-langgraph-agent", limit=50))
+
+spanish_in = 0
+english_out = 0
+
+for run in runs:
+    if run.inputs and 'messages' in run.inputs:
+        msgs = run.inputs.get('messages', [])
+        for msg in msgs:
+            if isinstance(msg, dict):
+                content = msg.get('content', '').lower()
+                # Spanish input detected
+                if any(word in content for word in ['hola', 'necesito', 'quiero', 'tengo']):
+                    spanish_in += 1
+                    # Check if output is in English (bad)
+                    if run.outputs:
+                        output_str = str(run.outputs).lower()
+                        if any(eng in output_str for eng in ['hello', 'thank', 'help you']):
+                            english_out += 1
+                            print(f"Language switch in: {run.id}")
+
+print(f"Spanish inputs: {spanish_in}")
+print(f"English outputs: {english_out}")
+if english_out == 0:
+    print("✅ No language switching detected!")
+```
+
+### Manual Access via LangSmith UI
+1. Go to https://smith.langchain.com
+2. Select project: `ghl-langgraph-agent` (production)
+3. Filter by date/time to see post-deployment traces
+4. Look for:
+   - Language consistency (Spanish in → Spanish out)
+   - Routing decisions (lead scores)
+   - Error patterns
+
+### Common Issues to Check in Traces
+1. **Language Switching**: Spanish input but English response
+2. **Context Blindness**: Returning customers not recognized
+3. **Wrong Routing**: Business owners (score 5+) sent to Maria
+4. **Missing Extraction**: Business type/budget not detected
+
+### Trace Metadata Fields
+- `source`: Where the trace originated (e.g., "appointment_test", "webhook")
+- `contact_id`: GHL contact identifier
+- `thread_id`: Conversation thread ID
+- `revision_id`: Code version/commit
+- `checkpoint_ns`: Namespace for state persistence
+
+### Deployment Verification
+To check if traces are post-deployment:
+```python
+from datetime import datetime, timezone
+
+# Your deployment time (July 21, 2025, 10:04 AM CDT)
+deployment_time = datetime(2025, 7, 21, 15, 4, 0, tzinfo=timezone.utc)
+
+for run in runs:
+    run_time = run.start_time
+    if isinstance(run_time, str):
+        run_time = datetime.fromisoformat(run_time.replace('Z', '+00:00'))
+    
+    if run_time > deployment_time:
+        print(f"✅ Post-deployment: {run.id}")
+    else:
+        print(f"⚠️  Pre-deployment: {run.id}")
+```

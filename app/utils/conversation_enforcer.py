@@ -40,8 +40,8 @@ class ConversationEnforcer:
     # EXACT templates for each stage - NO VARIATIONS ALLOWED
     STAGE_TEMPLATES = {
         ConversationStage.GREETING: {
-            "es": "¡Hola! 👋 Ayudo a las empresas a automatizar WhatsApp para captar más clientes. ¿Cuál es tu nombre?",
-            "en": "Hi! 👋 I help businesses automate WhatsApp to capture more clients. What's your name?"
+            "es": "¡Hola! Soy de Main Outlet Media. Ayudamos a negocios como el tuyo a automatizar WhatsApp para nunca perder clientes. ¿Cuál es tu nombre?",
+            "en": "Hi! I'm from Main Outlet Media. We help businesses like yours automate WhatsApp to never miss a customer. What's your name?"
         },
         ConversationStage.WAITING_FOR_NAME: {
             "es": "Mucho gusto, {name}. ¿Qué tipo de negocio tienes?",

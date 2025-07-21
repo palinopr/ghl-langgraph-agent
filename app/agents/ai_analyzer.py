@@ -142,29 +142,50 @@ Return as JSON.
 def calculate_smart_score(analysis: Dict[str, Any], current_score: int = 0) -> int:
     """
     Calculate score based on AI analysis, not pattern matching
+    IMPORTANT: High scores require ACTUAL DATA, not just intent
     """
     score = max(current_score, 1)  # Start with at least 1
     
-    # Business owner gets immediate boost
-    if analysis.get("business_type"):
-        score = max(score, 4)
+    # Extract key info
+    key_info = analysis.get("key_info") or {}
+    has_name = bool(key_info.get("name"))
+    has_budget = bool(key_info.get("budget"))
+    has_email = bool(key_info.get("email"))
+    
+    # Specific business type (not just "negocio")
+    business_type = analysis.get("business_type")
+    has_specific_business = bool(business_type and business_type.lower() not in ["none", "null", "negocio", "business"])
+    
+    # Base scoring on ACTUAL DATA collected
+    if has_name:
+        score = max(score, 2)
+    
+    if has_specific_business:
+        score = max(score, 3)
         
-        # Business + problem = qualified lead
+        # Business + problem needs more info
         if analysis.get("intent") == "HELP_BUSINESS":
-            score = max(score, 6)
+            score = max(score, 4)  # NOT 6! Need budget first
             
-        # Business + urgency = hot lead
+        # Business + urgency still needs qualification
         if analysis.get("urgency") == "HIGH":
+            score = max(score, 5)  # NOT 7! Need budget confirmation
+    
+    # Budget confirmation is key for high scores
+    if has_budget:
+        score = max(score, 6)
+        
+        # Budget + business + name = qualified
+        if has_specific_business and has_name:
             score = max(score, 7)
             
-    # Ready for appointment = hottest lead
-    if analysis.get("intent") == "APPOINTMENT":
-        score = max(score, 8)
-        
-    # Has key info like budget
-    key_info = analysis.get("key_info") or {}
-    if isinstance(key_info, dict) and key_info.get("budget"):
-        score = max(score, 7)
+        # All data + appointment intent = hot lead
+        if analysis.get("intent") == "APPOINTMENT" and has_email:
+            score = max(score, 8)
+    
+    # Generic "necesito automatizar mi negocio" without specifics = LOW SCORE
+    if not has_specific_business and not has_name and not has_budget:
+        score = min(score, 3)  # Cap at 3 for generic requests
         
     return min(score, 10)  # Cap at 10
 
