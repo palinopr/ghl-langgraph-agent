@@ -168,6 +168,21 @@ class GHLClient:
             return result["contact"]
         return result
     
+    # Alias for backward compatibility
+    async def get_contact(self, contact_id: str) -> Optional[Dict]:
+        """Alias for get_contact_details for backward compatibility"""
+        return await self.get_contact_details(contact_id)
+    
+    async def get_contact_custom_fields(self, contact_id: str) -> Optional[Dict]:
+        """
+        Get custom fields for a contact
+        Returns the custom fields from the contact details
+        """
+        contact = await self.get_contact_details(contact_id)
+        if contact:
+            return contact.get("customFields", {})
+        return {}
+    
     async def update_contact(
         self, 
         contact_id: str, 
@@ -185,6 +200,15 @@ class GHLClient:
         """
         endpoint = f"/contacts/{contact_id}"
         return await self._make_request("PUT", endpoint, data=updates)
+    
+    async def update_contact_field(self, contact_id: str, field_id: str, value: str) -> Dict[str, Any]:
+        """Update a single custom field for a contact"""
+        data = {
+            "customFields": {
+                field_id: value
+            }
+        }
+        return await self.update_contact(contact_id, data)
     
     async def update_custom_fields(
         self, 

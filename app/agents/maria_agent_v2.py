@@ -101,7 +101,16 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     conversation_summary = format_conversation_for_agent(state)
     stage_info = get_conversation_stage(state)
     
+    # Check if this is a returning customer with history
+    has_previous_conversation = any(
+        msg.additional_kwargs.get('source') == 'ghl_history' 
+        for msg in messages 
+        if hasattr(msg, 'additional_kwargs')
+    )
+    
     system_prompt = f"""You are Maria, a professional WhatsApp automation consultant for Main Outlet Media.
+
+{'🔄 RETURNING CUSTOMER DETECTED - Check conversation history below!' if has_previous_conversation else ''}
 
 {conversation_summary}
 
@@ -145,6 +154,8 @@ Role: Handle COLD leads (score 1-4). Build trust and spark initial interest.
    - NEVER say "¡Hola [name]! 👋 Ayudo..." if you already introduced yourself
    - RECOGNIZE ANSWERS: If customer says "no puedo contestar todos" or similar, that IS their challenge - move to budget!
    - Don't ask for clarification on problems - accept their answer and offer help
+   - FOR RETURNING CUSTOMERS: Reference previous conversations naturally (e.g., "Como hablamos antes sobre tu restaurante...")
+   - If customer says just their name and you have their business info, acknowledge both!
 
 3. CRITICAL RULES:
    - LANGUAGE: Always match customer's CURRENT message language

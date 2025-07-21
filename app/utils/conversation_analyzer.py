@@ -119,17 +119,21 @@ class ConversationAnalyzer:
             elif isinstance(msg, HumanMessage) or (hasattr(msg, 'type') and msg.type == "human"):
                 analysis["last_human_message"] = content
                 
-                # Skip historical messages (from GHL history)
+                # Check if this is a historical message
                 is_historical = False
                 if hasattr(msg, 'additional_kwargs'):
                     is_historical = msg.additional_kwargs.get('source') == 'ghl_history'
+                
+                # For historical messages, we still want to extract data!
+                # This fixes the context blindness issue
                 
                 # Detect language
                 if any(word in content for word in ["hello", "hi", "yes", "no", "what", "how"]):
                     analysis["language"] = "en"
                 
-                # Process answers based on what we're expecting
-                if currently_expecting and not is_historical:
+                # Process answers - include historical context
+                # We MUST process historical messages to understand what data we already have!
+                if currently_expecting:
                     logger.info(f"Processing answer for: {currently_expecting}, content: '{content}'")
                     
                     if currently_expecting == "name":

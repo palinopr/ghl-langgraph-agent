@@ -52,13 +52,14 @@ def carlos_prompt(state: CarlosState) -> list[AnyMessage]:
     collected_data = analysis['collected_data']
     
     # Map for compatibility with existing prompt
-    asked_for_name = 'name' in analysis.get('last_question_asked', '')
+    last_question = analysis.get('last_question_asked', '')
+    asked_for_name = 'name' in last_question if last_question else False
     got_name = collected_data['name'] is not None
-    asked_for_business = 'business' in analysis.get('last_question_asked', '')
+    asked_for_business = 'business' in last_question if last_question else False
     got_business = collected_data['business'] is not None
-    asked_for_problem = 'problem' in analysis.get('last_question_asked', '')
+    asked_for_problem = 'problem' in last_question if last_question else False
     got_problem = collected_data['problem'] is not None
-    asked_for_budget = 'budget' in analysis.get('last_question_asked', '')
+    asked_for_budget = 'budget' in last_question if last_question else False
     got_budget = collected_data['budget_confirmed']
     customer_name = collected_data['name']
     business_type_from_conv = collected_data['business']
