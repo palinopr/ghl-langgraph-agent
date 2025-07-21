@@ -9,9 +9,10 @@ from langgraph.types import Command
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
 from app.state.conversation_state import ConversationState
-from langchain_core.tools import tool
+from langchain_core.tools import tool, InjectedToolCallId
+from langchain_core.messages import ToolMessage
 from typing_extensions import Annotated
-from langgraph.prebuilt.chat_agent_executor import InjectedState
+from langgraph.prebuilt import InjectedState
 
 logger = get_logger("supervisor_official")
 
@@ -21,6 +22,7 @@ logger = get_logger("supervisor_official")
 def handoff_to_sofia(
     task_description: Annotated[str, "Description of what Sofia should do next"],
     state: Annotated[ConversationState, InjectedState],
+    tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """
     Handoff to Sofia - Appointment Setting Specialist.
@@ -30,9 +32,15 @@ def handoff_to_sofia(
     - Has name, email, and $300+ budget confirmed
     """
     logger.info(f"Handoff to Sofia with task: {task_description}")
+    # Create tool message for tracking
+    tool_message = ToolMessage(
+        content=f"Handing off to Sofia: {task_description}",
+        tool_call_id=tool_call_id
+    )
     return Command(
         goto="sofia",
         update={
+            "messages": [tool_message],
             "next_agent": "sofia",
             "agent_task": task_description,
             "routing_reason": f"Handoff to Sofia: {task_description}"
@@ -45,6 +53,7 @@ def handoff_to_sofia(
 def handoff_to_carlos(
     task_description: Annotated[str, "Description of what Carlos should do next"],
     state: Annotated[ConversationState, InjectedState],
+    tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """
     Handoff to Carlos - Lead Qualification Specialist.
@@ -54,9 +63,15 @@ def handoff_to_carlos(
     - Missing budget confirmation or details
     """
     logger.info(f"Handoff to Carlos with task: {task_description}")
+    # Create tool message for tracking
+    tool_message = ToolMessage(
+        content=f"Handing off to Carlos: {task_description}",
+        tool_call_id=tool_call_id
+    )
     return Command(
         goto="carlos",
         update={
+            "messages": [tool_message],
             "next_agent": "carlos",
             "agent_task": task_description,
             "routing_reason": f"Handoff to Carlos: {task_description}"
@@ -69,6 +84,7 @@ def handoff_to_carlos(
 def handoff_to_maria(
     task_description: Annotated[str, "Description of what Maria should do next"],
     state: Annotated[ConversationState, InjectedState],
+    tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """
     Handoff to Maria - Customer Support Representative.
@@ -78,9 +94,15 @@ def handoff_to_maria(
     - Technical issues or complaints
     """
     logger.info(f"Handoff to Maria with task: {task_description}")
+    # Create tool message for tracking
+    tool_message = ToolMessage(
+        content=f"Handing off to Maria: {task_description}",
+        tool_call_id=tool_call_id
+    )
     return Command(
         goto="maria",
         update={
+            "messages": [tool_message],
             "next_agent": "maria",
             "agent_task": task_description,
             "routing_reason": f"Handoff to Maria: {task_description}"
@@ -174,26 +196,32 @@ IMPORTANT: You MUST use one of the handoff tools. Do not just analyze - take act
 async def supervisor_official_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Supervisor node using official patterns
+    Returns state updates for routing
     """
     try:
-        # Create supervisor with tools (more flexible than basic supervisor)
+        # Create supervisor with tools
         supervisor = create_supervisor_with_tools()
         
-        # Run supervisor
+        # Run supervisor - it will use handoff tools that return Commands
         result = await supervisor.ainvoke(state)
         
-        # Extract routing decision from result
-        # The handoff tools will have set the next_agent
+        # The result contains all state updates from the agent
         updates = {}
         
-        # Check if any handoff was made
+        # Copy all relevant fields from result
         if "messages" in result:
             updates["messages"] = result["messages"]
+        if "next_agent" in result:
+            updates["next_agent"] = result["next_agent"]
+        if "agent_task" in result:
+            updates["agent_task"] = result["agent_task"]
+        if "routing_reason" in result:
+            updates["routing_reason"] = result["routing_reason"]
             
         # Mark supervisor as complete
         updates["supervisor_complete"] = True
         
-        logger.info(f"Supervisor official completed routing")
+        logger.info(f"Supervisor routing to: {updates.get('next_agent', 'none')} with task: {updates.get('agent_task', 'none')}")
         return updates
         
     except Exception as e:

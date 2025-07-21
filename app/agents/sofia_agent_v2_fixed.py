@@ -6,11 +6,10 @@ from typing import Dict, Any, List, Optional
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.prebuilt.chat_agent_executor import AgentState
-from app.tools.agent_tools_v2 import (
-    get_contact_details_v2,
-    update_contact_with_state,
-    check_calendar_availability,
-    book_appointment_from_confirmation,
+from app.tools.agent_tools_modernized import (
+    get_contact_details_with_task,
+    update_contact_with_context,
+    book_appointment_with_instructions,
     escalate_to_supervisor
 )
 from app.utils.simple_logger import get_logger
@@ -133,10 +132,9 @@ def create_sofia_agent_fixed():
     model = create_openai_model(temperature=0.3)
     
     tools = [
-        get_contact_details_v2,
-        update_contact_with_state,
-        check_calendar_availability,
-        book_appointment_from_confirmation,
+        get_contact_details_with_task,
+        update_contact_with_context,
+        book_appointment_with_instructions,
         escalate_to_supervisor
     ]
     

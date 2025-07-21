@@ -6,7 +6,12 @@ from typing import Dict, Any, List, Union
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.types import Command
-from app.tools.agent_tools_v2 import get_contact_details_v2, escalate_to_supervisor
+from app.tools.agent_tools_modernized import (
+    get_contact_details_with_task,
+    escalate_to_supervisor,
+    update_contact_with_context,
+    save_important_context
+)
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
 from app.utils.model_factory import create_openai_model
@@ -114,7 +119,12 @@ async def maria_memory_aware_node(state: Dict[str, Any]) -> Union[Command, Dict[
         
         # Create agent with memory-aware prompt
         model = create_openai_model(temperature=0.0)
-        tools = [get_contact_details_v2, escalate_to_supervisor]
+        tools = [
+            get_contact_details_with_task,
+            escalate_to_supervisor,
+            update_contact_with_context,
+            save_important_context
+        ]
         
         # Get memory-aware messages
         messages = maria_memory_prompt(state)

@@ -1,30 +1,30 @@
 """
-MEMORY-OPTIMIZED WORKFLOW - Intelligent Context Management
-Flow: Webhook → Memory-Aware Receptionist → Intelligence → Memory-Aware Supervisor → Agent → Responder
+MODERNIZED WORKFLOW - Official LangGraph Patterns
+Flow: Webhook → Receptionist → Intelligence → Supervisor (with handoff tools) → Agent → Responder
 
-Key Improvements:
-1. Memory isolation per agent (no context confusion)
-2. Sliding window memory (last 6-10 messages only)
-3. Clean handoffs between agents
-4. Separation of historical vs current messages
-5. Agent-specific context filtering
+Key Features:
+1. Official supervisor pattern with create_react_agent
+2. Command objects with task descriptions
+3. InjectedState and InjectedToolCallId annotations
+4. Health check endpoints (/health, /metrics, /ok)
+5. Simplified state management
 
-This implements the MEMORY-OPTIMIZED flow pattern where:
-- Each agent has isolated memory space
-- Historical messages are summarized, not loaded fully
-- Handoffs include minimal context transfer
-- No agent sees irrelevant messages from others
+This implements the latest LangGraph patterns:
+- Supervisor uses handoff tools with task descriptions
+- All tools return Command objects
+- Proper state injection patterns
+- Task context preserved across handoffs
 """
 from typing import Dict, Any
 from langchain_core.messages import HumanMessage
-from app.workflow_memory_optimized import memory_optimized_workflow
+from app.workflow_modernized import modernized_workflow
 from app.debug.trace_middleware import inject_trace_id
 from app.utils.simple_logger import get_logger
 
 logger = get_logger("workflow")
 
-# Export as main workflow
-workflow = memory_optimized_workflow
+# Export modernized workflow as main
+workflow = modernized_workflow
 
 
 async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
