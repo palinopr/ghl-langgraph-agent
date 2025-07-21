@@ -132,6 +132,9 @@ class ConversationState(TypedDict):
     escalation_from: Optional[str]  # Which agent escalated
     needs_rerouting: Optional[bool]  # Flag for supervisor to re-route
     routing_attempts: Optional[int]  # Track routing attempts to prevent loops
+    
+    # Task description for agent handoffs (Command pattern enhancement)
+    agent_task: Optional[str]  # Task description for the next agent
 
 
 def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
@@ -242,7 +245,10 @@ def create_initial_state(webhook_data: Dict[str, Any]) -> ConversationState:
         escalation_details=None,
         escalation_from=None,
         needs_rerouting=False,
-        routing_attempts=0
+        routing_attempts=0,
+        
+        # Task description
+        agent_task=None
     )
 
 

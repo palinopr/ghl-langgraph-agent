@@ -13,6 +13,9 @@ from app.utils.simple_logger import get_logger
 from app.config import get_settings
 from app.debug.trace_middleware import TraceCollectorMiddleware
 from app.api.debug_endpoints import debug_router
+import time
+import psutil
+import platform
 
 logger = get_logger("webhook")
 
@@ -20,8 +23,11 @@ logger = get_logger("webhook")
 app = FastAPI(
     title="GoHighLevel LangGraph Agent",
     description="Webhook endpoint for processing GoHighLevel messages",
-    version="2.0.0"
+    version="3.0.7"
 )
+
+# Store start time for uptime calculation
+app.state.start_time = time.time()
 
 # Add trace collection middleware
 app.add_middleware(TraceCollectorMiddleware)
@@ -48,8 +54,61 @@ async def health_check():
         "status": "healthy",
         "service": "ghl-langgraph-agent",
         "debug_enabled": True,
-        "trace_collector": "active"
+        "trace_collector": "active",
+        "version": "3.0.7",
+        "python_version": "3.13"
     }
+
+
+@app.get("/metrics")
+async def metrics():
+    """Metrics endpoint for monitoring"""
+    # Get process stats
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    
+    # Get system stats
+    cpu_percent = psutil.cpu_percent(interval=1)
+    memory_percent = psutil.virtual_memory().percent
+    
+    # Get workflow metrics from trace collector if available
+    workflow_metrics = {}
+    if hasattr(app.state, "trace_collector"):
+        recent_traces = app.state.trace_collector.get_recent_traces(minutes=5)
+        successful = sum(1 for t in recent_traces if not t.get("error"))
+        failed = sum(1 for t in recent_traces if t.get("error"))
+        
+        workflow_metrics = {
+            "workflows_last_5min": len(recent_traces),
+            "workflows_successful": successful,
+            "workflows_failed": failed,
+            "success_rate": successful / len(recent_traces) if recent_traces else 0
+        }
+    
+    return {
+        "service": "ghl-langgraph-agent",
+        "timestamp": int(time.time()),
+        "uptime_seconds": int(time.time() - app.state.start_time) if hasattr(app.state, "start_time") else 0,
+        "system": {
+            "platform": platform.platform(),
+            "python_version": platform.python_version(),
+            "cpu_count": psutil.cpu_count(),
+            "cpu_percent": cpu_percent,
+            "memory_percent": memory_percent
+        },
+        "process": {
+            "memory_mb": memory_info.rss / 1024 / 1024,
+            "cpu_percent": process.cpu_percent(),
+            "num_threads": process.num_threads()
+        },
+        "workflow": workflow_metrics
+    }
+
+
+@app.get("/ok")
+async def ok():
+    """Simple health check endpoint (LangGraph standard)"""
+    return {"ok": True}
 
 
 @app.post("/webhook/message")
