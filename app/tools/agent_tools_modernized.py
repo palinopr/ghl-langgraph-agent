@@ -5,9 +5,9 @@ Implements task descriptions and proper Command usage for all tools
 from typing import Dict, Any, List, Optional, Literal, Annotated
 from datetime import datetime, timedelta
 import pytz
-from langchain_core.tools import tool
+from langchain_core.tools import tool, InjectedToolCallId
 from langchain_core.messages import ToolMessage, AIMessage
-from langgraph.prebuilt import InjectedState, InjectedToolCallId
+from langgraph.prebuilt import InjectedState
 from langgraph.types import Command
 from app.tools.ghl_client import ghl_client
 from app.utils.simple_logger import get_logger
