@@ -27,23 +27,51 @@ async def responder_streaming_node(state: Dict[str, Any]) -> Dict[str, Any]:
             logger.warning("No messages to respond to")
             return state
         
-        # Find the last AI message to send (from actual agents only)
+        # Get current agent from state to help identify messages
+        current_agent = state.get("current_agent", "")
+        logger.info(f"Current agent in state: {current_agent}")
+        
+        # Find the last AI message to send
         last_ai_message = None
-        for msg in reversed(messages):
-            if isinstance(msg, AIMessage):
-                # Only send messages from actual agents, not system messages
-                msg_name = getattr(msg, 'name', '')
-                if msg_name in ['maria', 'carlos', 'sofia']:
+        logger.info(f"Looking for agent message in {len(messages)} total messages")
+        
+        # If we know the current agent, look for the most recent AI message
+        # regardless of name attribute (since fixed agents don't set it)
+        if current_agent in ['maria', 'carlos', 'sofia']:
+            # Just get the last AI message since we know an agent just responded
+            for msg in reversed(messages):
+                if isinstance(msg, AIMessage) and msg.content:
+                    logger.info(f"✅ Found AI message from current agent {current_agent}: '{msg.content[:50]}...'")
                     last_ai_message = msg
                     break
-                # Also check for agent messages without explicit name
-                elif not msg_name and msg.content and not msg.content.startswith('['):
-                    # Likely an agent message if it has content and doesn't start with system brackets
-                    last_ai_message = msg
-                    break
+        else:
+            # Fallback: Look for named messages or likely agent messages
+            for i, msg in enumerate(reversed(messages)):
+                if isinstance(msg, AIMessage):
+                    # Log every AI message we find for debugging
+                    msg_name = getattr(msg, 'name', '')
+                    msg_content_preview = msg.content[:50] if msg.content else "[empty]"
+                    logger.info(f"Found AI message {len(messages)-i}: name='{msg_name}', content='{msg_content_preview}...'")
+                    
+                    # Only send messages from actual agents, not system messages
+                    if msg_name in ['maria', 'carlos', 'sofia']:
+                        logger.info(f"✅ Selected agent message from {msg_name}")
+                        last_ai_message = msg
+                        break
+                    # Also check for agent messages without explicit name
+                    elif not msg_name and msg.content and not msg.content.startswith('['):
+                        # Likely an agent message if it has content and doesn't start with system brackets
+                        logger.info(f"✅ Selected unnamed agent message (likely from agent)")
+                        last_ai_message = msg
+                        break
+                    else:
+                        logger.info(f"❌ Skipping system/unknown message")
         
         if not last_ai_message:
-            logger.warning("No AI message found to send")
+            logger.warning("No AI message found to send - no agent responses in messages")
+            logger.warning(f"Total messages: {len(messages)}, Last 3 messages:")
+            for msg in messages[-3:]:
+                logger.warning(f"  - {type(msg).__name__}: {msg.content[:50] if hasattr(msg, 'content') else 'no content'}")
             return state
         
         # Check if we already sent this message
@@ -95,14 +123,31 @@ async def responder_streaming_node(state: Dict[str, Any]) -> Dict[str, Any]:
         # Fallback to regular sending
         try:
             from app.tools.ghl_client import ghl_client
-            await ghl_client.send_message(
+            fallback_message = last_ai_message.content if 'last_ai_message' in locals() else "Lo siento, ocurrió un error."
+            logger.info(f"Attempting fallback send: '{fallback_message[:50]}...'")
+            
+            result = await ghl_client.send_message(
                 contact_id,
-                last_ai_message.content if 'last_ai_message' in locals() else "Lo siento, ocurrió un error.",
+                fallback_message,
                 message_type
             )
-        except:
-            pass
-        return state
+            
+            if result:
+                logger.info("✅ Fallback send successful")
+                return {
+                    "last_sent_message": fallback_message,
+                    "message_sent": True
+                }
+            else:
+                logger.error("❌ Fallback send also failed")
+        except Exception as fallback_error:
+            logger.error(f"Fallback send error: {str(fallback_error)}", exc_info=True)
+        
+        return {
+            **state,
+            "message_sent": False,
+            "responder_error": str(e)
+        }
 
 
 # Demo function to show streaming effect
