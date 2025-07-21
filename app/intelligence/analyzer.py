@@ -13,16 +13,28 @@ from langgraph.types import Command
 from app.state.conversation_state import ConversationState
 from app.utils.simple_logger import get_logger
 
+logger = get_logger("intelligence_analyzer")
+
 # Try to import fuzzy extractor, fallback if not available
+FuzzyBusinessExtractor = None
+FUZZY_ENABLED = False
+
 try:
     from app.intelligence.fuzzy_extractor import FuzzyBusinessExtractor
     FUZZY_ENABLED = True
-except ImportError:
-    FUZZY_ENABLED = False
-    logger = get_logger("intelligence_analyzer")
-    logger.warning("Fuzzy extractor not available, using exact matching only")
-
-logger = get_logger("intelligence_analyzer")
+    logger.info("Fuzzy extractor loaded successfully")
+except ImportError as e:
+    logger.warning(f"Fuzzy extractor not available (likely rapidfuzz not installed): {str(e)}")
+    # Create a dummy class to prevent AttributeError
+    class FuzzyBusinessExtractor:
+        def extract_with_context(self, text: str):
+            return None
+except Exception as e:
+    logger.error(f"Unexpected error loading fuzzy extractor: {str(e)}")
+    # Create a dummy class to prevent AttributeError
+    class FuzzyBusinessExtractor:
+        def extract_with_context(self, text: str):
+            return None
 
 
 class SpanishPatternExtractor:
@@ -38,8 +50,13 @@ class SpanishPatternExtractor:
         
         # Initialize fuzzy extractor if available
         self.fuzzy_extractor = None
-        if FUZZY_ENABLED:
-            self.fuzzy_extractor = FuzzyBusinessExtractor()
+        if FUZZY_ENABLED and FuzzyBusinessExtractor:
+            try:
+                self.fuzzy_extractor = FuzzyBusinessExtractor()
+                logger.info("Fuzzy extractor initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize fuzzy extractor: {str(e)}")
+                self.fuzzy_extractor = None
     
     @staticmethod
     @lru_cache(maxsize=1)
@@ -51,12 +68,18 @@ class SpanishPatternExtractor:
                 (re.compile(r'\b([A-Za-zÀ-ÿ]+)\s+y\s+tengo', re.IGNORECASE), 'contextual'),
                 (re.compile(r'(?:hola|buenos días|buenas tardes),?\s*(?:soy|me llamo)\s+([A-Za-zÀ-ÿ]+)', re.IGNORECASE), 'greeting'),
                 (re.compile(r'\b([A-Za-zÀ-ÿ]+)\s*@', re.IGNORECASE), 'email_prefix'),
+                # Pattern for single word that looks like a name (3+ letters, capitalized)
+                (re.compile(r'^([A-Z][a-zÀ-ÿ]{2,})$'), 'single_name'),
             ],
             "business": [
-                (re.compile(r'\b(?:tengo un|tengo una|tengo u\.)\s+([A-Za-zÀ-ÿ]+)(?:\s+(?:y|que|donde)|\s*[,.]|$)', re.IGNORECASE), 'possession'),
-                (re.compile(r'\bmi\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})(?:\s+(?:es|está|tiene)|\s*[,.]|$)', re.IGNORECASE), 'possession'),
-                (re.compile(r'\b(?:trabajo en|soy dueño de|manejo un)\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})', re.IGNORECASE), 'occupation'),
-                (re.compile(r'\b(restaurante|restaurant|negocio|empresa|tienda|local|clínica|consultorio|agencia|estudio|taller)\b', re.IGNORECASE), 'business_type'),
+                # Pattern 1: "tengo un/una X" but exclude generic terms in capture
+                (re.compile(r'\b(?:tengo un|tengo una|tengo u\.)\s+(?!negocio|empresa|local|comercio)([A-Za-zÀ-ÿ]+)(?:\s+(?:y|que|donde)|\s*[,.]|$)', re.IGNORECASE), 'possession'),
+                # Pattern 2: "mi X" but exclude generic terms in capture
+                (re.compile(r'\bmi\s+(?!negocio|empresa|local|comercio)([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})(?:\s+(?:es|está|tiene)|\s*[,.]|$)', re.IGNORECASE), 'possession'),
+                # Pattern 3: occupation patterns
+                (re.compile(r'\b(?:trabajo en|soy dueño de|manejo un)\s+(?!negocio|empresa|local|comercio)([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})', re.IGNORECASE), 'occupation'),
+                # Pattern 4: Direct business type mentions (specific businesses only)
+                (re.compile(r'\b(restaurante|restaurant|tienda|clínica|consultorio|agencia|estudio|taller|barbería|barberia|salon|salón|cafetería|cafeteria|hotel|spa|gimnasio|gym|pizzeria|bar|club|panadería|farmacia|estética|dentista|peluquería|boutique|catering)\b', re.IGNORECASE), 'business_type'),
             ],
             "budget": [
                 (re.compile(r'como unos?\s*\$?\s*(\d+)', re.IGNORECASE), '{0}', 'approximate'),
@@ -104,6 +127,8 @@ class SpanishPatternExtractor:
         previous_data = previous_data or {}
         
         # Extract from CURRENT MESSAGE ONLY
+        # CRITICAL: This prevents agents from using old conversation history incorrectly
+        # We extract from the current message and merge with previous data to maintain state
         extracted = {
             "name": self._extract_name(message) or previous_data.get("name"),
             "business_type": self._extract_business(message) or previous_data.get("business_type"),
@@ -156,20 +181,29 @@ class SpanishPatternExtractor:
             if greeting in business.split():
                 return None
         
-        # Valid business types
+        # CRITICAL FIX: "negocio" alone is NOT a valid business type - it's too generic
+        # Also exclude other generic terms
+        generic_terms = ["negocio", "business", "empresa", "comercio", "local"]
+        if business in generic_terms:
+            logger.info(f"Rejecting generic business term: {business}")
+            return None
+        
+        # Valid SPECIFIC business types
         valid_businesses = [
             "restaurante", "restaurant", "tienda", "salon", "salón",
             "barbería", "barberia", "clinica", "clínica", "consultorio",
-            "agencia", "empresa", "negocio", "local", "oficina",
-            "cafetería", "cafeteria", "hotel", "spa", "gimnasio", "gym",
-            "boutique", "peluquería", "pizzeria", "bar", "club"
+            "agencia", "oficina", "cafetería", "cafeteria", "hotel", 
+            "spa", "gimnasio", "gym", "boutique", "peluquería", 
+            "pizzeria", "bar", "club", "panadería", "farmacia",
+            "catering",  # Added catering to valid businesses
+            "taller", "estética", "dentista"
         ]
         
-        # Check if it contains at least one valid business word
+        # Check if it contains at least one SPECIFIC business word
         has_valid = any(valid in business for valid in valid_businesses)
         
-        if not has_valid and len(business.split()) > 1:
-            # Multi-word but no valid business type
+        if not has_valid:
+            # Not a specific business type
             return None
         
         return business
@@ -502,6 +536,10 @@ class IntelligenceAnalyzer:
         previous_data = state.get("extracted_data", {})
         
         # Extract from CURRENT MESSAGE ONLY, merge with previous
+        # CRITICAL FIX: This ensures agents use the current state's extracted_data
+        # NOT old conversation history. The extract_all method only extracts from
+        # the current message and merges with previous_data to maintain state.
+        # This prevents agents from being confused by old conversation context.
         extracted = self.extractor.extract_all(current_message, previous_data)
         
         # Initialize budget_confirmation

@@ -124,11 +124,11 @@ ALLOWED RESPONSE: "{allowed_response}"
 Role: Build trust and desire through genuine, adaptive conversations.
 
 🚨 CONVERSATION INTELLIGENCE RULES:
-1. ANALYZE the conversation history to understand:
-   - What information has already been collected
-   - What stage of the conversation you're in
-   - The customer's language preference (use the language of their MOST RECENT message)
-   - Any context from previous interactions
+1. USE CURRENT STATE DATA, NOT OLD CONVERSATION:
+   - The extracted_data shows what was found in the CURRENT message
+   - Don't assume names/business from previous messages unless in extracted_data
+   - Customer name and business type come from extracted_data FIRST
+   - Only reference conversation history for context, not for data
    - What Maria or Sofia might have already discussed
 
 2. RESPOND INTELLIGENTLY:

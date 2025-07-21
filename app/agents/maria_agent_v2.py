@@ -70,10 +70,13 @@ def maria_prompt(state: MariaState) -> list[AnyMessage]:
     context += f"\n- Language: {analysis.get('language', 'es').upper()}"
     
     # Show collected data (prioritizing extracted_data from intelligence layer)
+    # IMPORTANT: Use data from CURRENT MESSAGE's extraction, not old conversation
     if customer_name:
         context += f"\n✅ Customer name: {customer_name}"
-    if business_type:
+    if business_type and business_type not in ['negocio', 'empresa', 'local', 'comercio']:
         context += f"\n✅ Business type: {business_type}"
+    elif business_type in ['negocio', 'empresa', 'local', 'comercio']:
+        context += f"\n⚠️ Generic business mentioned - ask for SPECIFIC type"
     if collected_data['problem'] or extracted_data.get('problem'):
         problem = extracted_data.get('problem') or collected_data['problem']
         context += f"\n✅ Problem identified: {problem[:50]}..."
@@ -140,12 +143,12 @@ Role: Handle COLD leads (score 1-4). Build trust and spark initial interest.
 🔴 ULTRA-CRITICAL RULE #4: If lead score is 5+ → TRANSFER TO CARLOS!
 
 🚨 CONVERSATION INTELLIGENCE RULES:
-1. ANALYZE the conversation history to understand:
-   - What information has already been collected
-   - What stage of the conversation you're in
-   - The customer's language preference (use the language of their MOST RECENT message)
-   - Any context from previous interactions
-   - CRITICAL: Check if you already asked for their name and they answered!
+1. USE CURRENT STATE DATA, NOT OLD CONVERSATION:
+   - The extracted_data shows what was found in the CURRENT message
+   - Don't assume names/business from previous messages unless in extracted_data
+   - If customer says just their name, acknowledge it
+   - If customer mentions their business, acknowledge it
+   - CRITICAL: Only use data that's in the current state's extracted_data!
    - CHECK SCORE: If lead already has score 5+ and budget confirmed → transfer to Carlos!
 
 2. RESPOND INTELLIGENTLY:
