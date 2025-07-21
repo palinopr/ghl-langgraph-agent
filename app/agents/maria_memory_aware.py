@@ -15,9 +15,9 @@ from app.tools.agent_tools_modernized import (
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
 from app.utils.model_factory import create_openai_model
-from app.utils.state_utils import filter_agent_result
-from app.utils.memory_manager import get_memory_manager
-from app.utils.context_filter import ContextFilter
+# from app.utils.state_utils import filter_agent_result  # Removed: unused utility
+# from app.utils.memory_manager import get_memory_manager  # Removed: unused utility
+# from app.utils.context_filter import ContextFilter  # Removed: unused utility
 
 logger = get_logger("maria_memory_aware")
 
@@ -27,17 +27,11 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
     Create Maria's prompt with ISOLATED memory context
     No more confusion from other agents or historical messages!
     """
-    # Get memory manager
-    memory_manager = get_memory_manager()
-    
-    # Get Maria's isolated context
-    maria_context = memory_manager.get_agent_context("maria", state)
-    
-    # Get only current message and recent context
-    messages = maria_context.get("messages", [])
-    extracted_data = maria_context.get("extracted_data", {})
-    handoff_info = maria_context.get("handoff_info")
-    current_message = maria_context.get("current_message", "")
+    # Get context directly from state (memory manager removed)
+    messages = state.get("messages", [])
+    extracted_data = state.get("extracted_data", {})
+    handoff_info = state.get("handoff_info")
+    current_message = messages[-1].content if messages else ""
     
     # Build Maria's view of the conversation
     context = "\\n📊 MARIA'S CONTEXT:\\n"
@@ -104,9 +98,6 @@ async def maria_memory_aware_node(state: Dict[str, Any]) -> Union[Command, Dict[
     try:
         logger.info("=== MARIA MEMORY-AWARE STARTING ===")
         
-        # Get memory manager
-        memory_manager = get_memory_manager()
-        
         # Check if Maria should handle this
         lead_score = state.get("lead_score", 0)
         if lead_score >= 5:
@@ -144,14 +135,11 @@ async def maria_memory_aware_node(state: Dict[str, Any]) -> Union[Command, Dict[
         # Invoke agent with proper state
         result = await agent.ainvoke(agent_state)
         
-        # Add Maria's response to her memory
-        if result.get("messages"):
-            last_message = result["messages"][-1]
-            memory_manager.add_agent_message("maria", last_message)
+        # Memory manager removed - responses handled by state
         
         logger.info("Maria completed successfully with isolated memory")
         
-        return filter_agent_result(result)
+        return result  # filter_agent_result removed
         
     except Exception as e:
         logger.error(f"Error in Maria memory-aware: {str(e)}", exc_info=True)

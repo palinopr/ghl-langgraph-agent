@@ -14,7 +14,6 @@ from app.tools.agent_tools_modernized import (
 )
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
-# from app.utils.conversation_enforcer import ConversationEnforcer  # Removed due to dependencies
 
 logger = get_logger("carlos_v2_fixed")
 
@@ -39,9 +38,6 @@ def carlos_prompt_fixed(state: CarlosState) -> list[AnyMessage]:
     # Get messages to analyze conversation stage
     messages = state.get("messages", [])
     
-    # Use conversation enforcer to get EXACT response
-    # enforcer = ConversationEnforcer()
-    # analysis = enforcer.analyze_conversation(messages)
     # Simplified analysis without enforcer
     analysis = {
         "allowed_response": "",

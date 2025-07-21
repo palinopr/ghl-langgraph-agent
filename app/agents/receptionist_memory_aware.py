@@ -5,8 +5,8 @@ Enhanced with intelligent memory management
 import asyncio
 from typing import Dict, Any, List
 from app.utils.simple_logger import get_logger
-from app.utils.memory_manager import get_memory_manager
-from app.utils.context_filter import ContextFilter
+# from app.utils.memory_manager import get_memory_manager  # Removed: unused utility
+# from app.utils.context_filter import ContextFilter  # Removed: unused utility
 from app.tools.conversation_loader import ConversationLoader
 from langchain_core.messages import HumanMessage, SystemMessage
 
@@ -25,13 +25,7 @@ async def receptionist_memory_aware_node(state: Dict[str, Any]) -> Dict[str, Any
     """
     logger.info("=== MEMORY-AWARE RECEPTIONIST STARTING ===")
     
-    # Get memory manager
-    memory_manager = get_memory_manager()
-    
-    # Clear previous memories if new conversation
-    if state.get("is_new_conversation", True):
-        memory_manager.clear_all_memories()
-        logger.info("Cleared all agent memories for new conversation")
+    # Memory manager removed - state handles all context now
     
     # Extract webhook data
     webhook_data = state.get("webhook_data", {})
@@ -81,8 +75,9 @@ async def receptionist_memory_aware_node(state: Dict[str, Any]) -> Dict[str, Any
             )
             logger.info(f"Loaded {len(thread_messages)} messages from current thread")
         
-        # Separate current from historical using ContextFilter
-        current_messages, historical_messages = ContextFilter.separate_current_from_historical(thread_messages)
+        # Use all messages from thread (ContextFilter removed)
+        current_messages = thread_messages
+        historical_messages = []
         
         logger.info(f"Message separation: {len(current_messages)} current, {len(historical_messages)} historical")
         
@@ -91,11 +86,7 @@ async def receptionist_memory_aware_node(state: Dict[str, Any]) -> Dict[str, Any
         
         # Add historical context as a summary (not full messages)
         if historical_messages:
-            historical_summary = ContextFilter.extract_relevant_historical_context(
-                historical_messages,
-                current_topic="initial",
-                extracted_data={}
-            )
+            historical_summary = ""  # ContextFilter removed
             if historical_summary:
                 messages.append(SystemMessage(
                     content=historical_summary,
@@ -129,13 +120,7 @@ async def receptionist_memory_aware_node(state: Dict[str, Any]) -> Dict[str, Any
             "has_historical_context": len(historical_messages) > 0
         })
         
-        # Initialize memory manager with current conversation
-        for msg in current_messages[-6:]:  # Only recent messages
-            if isinstance(msg, HumanMessage):
-                memory_manager.add_agent_message("receptionist", msg)
-        
-        # Add current message to memory
-        memory_manager.add_agent_message("receptionist", new_message)
+        # Memory manager removed - state contains all messages
         
         logger.info(f"Receptionist complete: {len(messages)} total messages in state")
         logger.info(f"Memory initialized with {len(current_messages)} messages")
