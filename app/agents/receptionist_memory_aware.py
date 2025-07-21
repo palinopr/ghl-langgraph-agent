@@ -7,7 +7,7 @@ from typing import Dict, Any, List
 from app.utils.simple_logger import get_logger
 from app.utils.memory_manager import get_memory_manager
 from app.utils.context_filter import ContextFilter
-from app.tools.conversation_loader import load_conversation_history_by_thread
+from app.tools.conversation_loader import ConversationLoader
 from langchain_core.messages import HumanMessage, SystemMessage
 
 logger = get_logger("receptionist_memory_aware")
@@ -73,10 +73,10 @@ async def receptionist_memory_aware_node(state: Dict[str, Any]) -> Dict[str, Any
         thread_messages = []
         if conversation_id:
             logger.info(f"Loading thread messages for conversation: {conversation_id}")
-            thread_messages = await load_conversation_history_by_thread(
+            loader = ConversationLoader()
+            thread_messages = await loader.load_conversation_history(
                 contact_id=contact_id,
-                location_id=location_id,
-                conversation_id=conversation_id,
+                thread_id=conversation_id,
                 limit=20  # Reasonable limit
             )
             logger.info(f"Loaded {len(thread_messages)} messages from current thread")
