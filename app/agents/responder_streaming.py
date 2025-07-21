@@ -27,12 +27,20 @@ async def responder_streaming_node(state: Dict[str, Any]) -> Dict[str, Any]:
             logger.warning("No messages to respond to")
             return state
         
-        # Find the last AI message to send
+        # Find the last AI message to send (from actual agents only)
         last_ai_message = None
         for msg in reversed(messages):
             if isinstance(msg, AIMessage):
-                last_ai_message = msg
-                break
+                # Only send messages from actual agents, not system messages
+                msg_name = getattr(msg, 'name', '')
+                if msg_name in ['maria', 'carlos', 'sofia']:
+                    last_ai_message = msg
+                    break
+                # Also check for agent messages without explicit name
+                elif not msg_name and msg.content and not msg.content.startswith('['):
+                    # Likely an agent message if it has content and doesn't start with system brackets
+                    last_ai_message = msg
+                    break
         
         if not last_ai_message:
             logger.warning("No AI message found to send")
