@@ -542,6 +542,13 @@ class IntelligenceAnalyzer:
         # This prevents agents from being confused by old conversation context.
         extracted = self.extractor.extract_all(current_message, previous_data)
         
+        # CRITICAL FIX: Never persist generic business terms
+        # Even if they were extracted before our fix, remove them from state
+        generic_terms = ["negocio", "empresa", "local", "comercio", "business"]
+        if extracted.get("business_type") in generic_terms:
+            logger.info(f"Removing generic business term from state: {extracted['business_type']}")
+            extracted["business_type"] = None
+        
         # Initialize budget_confirmation
         budget_confirmation = {}
         
