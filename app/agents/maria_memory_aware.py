@@ -116,16 +116,23 @@ async def maria_memory_aware_node(state: Dict[str, Any]) -> Union[Command, Dict[
         model = create_openai_model(temperature=0.0)
         tools = [get_contact_details_v2, escalate_to_supervisor]
         
+        # Get memory-aware messages
+        messages = maria_memory_prompt(state)
+        
+        # Create proper state for the agent
+        agent_state = {
+            "messages": messages,
+            "remaining_steps": 10  # Required by create_react_agent
+        }
+        
         agent = create_react_agent(
             model=model,
             tools=tools,
-            state_schema=dict,
-            messages_modifier=maria_memory_prompt,
             name="maria"
         )
         
-        # Invoke agent with clean context
-        result = await agent.ainvoke(state)
+        # Invoke agent with proper state
+        result = await agent.ainvoke(agent_state)
         
         # Add Maria's response to her memory
         if result.get("messages"):
