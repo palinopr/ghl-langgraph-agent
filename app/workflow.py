@@ -38,14 +38,16 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         Workflow result
     """
     try:
-        # Extract contact ID and message
+        # Extract contact ID, message, and thread ID
         contact_id = webhook_data.get("contactId", webhook_data.get("id", "unknown"))
         message_body = webhook_data.get("body", webhook_data.get("message", ""))
+        thread_id = webhook_data.get("conversationId") or webhook_data.get("threadId")
         
         # Create initial state
         initial_state = {
             "messages": [HumanMessage(content=message_body)],
             "contact_id": contact_id,
+            "thread_id": thread_id,  # Add thread ID for conversation filtering
             "webhook_data": webhook_data,
             "extracted_data": {},
             "lead_score": 0,

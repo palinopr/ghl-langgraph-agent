@@ -86,32 +86,32 @@ async def get_conversation_history(
     state: Annotated[ConversationState, InjectedState]
 ) -> str:
     """
-    Load conversation history from GHL
+    Load conversation history from CURRENT thread only
     """
-    # Get contact_id from state
+    # Get contact_id and thread_id from state
     contact_id = state.get("contact_id")
+    thread_id = state.get("thread_id")
+    
     if not contact_id:
         return "Error: No contact_id found in state"
+        
     try:
         ghl_client = GHLClient()
         
-        # Get conversations
-        conversations = await ghl_client.get_conversations(contact_id)
-        if not conversations:
-            return "No conversation history found"
-            
-        # Get messages from most recent conversation
-        conv_id = conversations[0].get('id')
-        messages = await ghl_client.get_conversation_messages(conv_id)
+        # Get messages for current thread only
+        messages = await ghl_client.get_conversation_messages_for_thread(
+            contact_id,
+            thread_id,
+            limit=10  # Only last 10 messages
+        )
         
         if not messages:
-            return "No messages in conversation"
+            return "No messages in current conversation"
             
         # Format recent messages
-        history = f"CONVERSATION HISTORY ({len(messages)} messages):\n"
-        history += "Last 10 messages:\n"
+        history = f"CURRENT CONVERSATION ({len(messages)} messages):\n"
         
-        for msg in messages[-10:]:
+        for msg in messages:
             sender = "Customer" if msg.get('direction') == 'inbound' else 'AI'
             timestamp = msg.get('dateAdded', '')
             body = msg.get('body', '')[:100]

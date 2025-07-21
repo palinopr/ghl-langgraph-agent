@@ -81,8 +81,27 @@ def sofia_prompt(state: SofiaState) -> list[AnyMessage]:
                 current_message = msg.content
                 break
     
+    # Check if current message mentions a problem that needs acknowledgment
+    problem_keywords = [
+        "perdiendo", "perder", "problema", "dificultad", "no puedo", 
+        "necesito", "ayuda", "frustra", "cuesta", "difícil",
+        "no llegan", "cancelan", "olvidan", "falta", "mal",
+        "preocupa", "complicado", "tardando", "demora"
+    ]
+    
+    mentions_problem = False
+    if current_message:
+        mentions_problem = any(keyword in current_message.lower() for keyword in problem_keywords)
+    
     # Build conversation state context
     context = "\n📊 CONVERSATION STATE:"
+    
+    # PRIORITY: If customer just mentioned a problem, acknowledge it first!
+    if mentions_problem:
+        context += "\n🚨 CUSTOMER JUST MENTIONED A PROBLEM - ACKNOWLEDGE IT FIRST BEFORE ASKING QUESTIONS! 🚨"
+        context += f"\nProblem mentioned: '{current_message}'"
+        context += "\n→ Show empathy, connect to solution, THEN ask for data"
+    
     if not got_name:
         context += "\n- Need to get name"
     elif got_name and not got_business:
@@ -195,6 +214,22 @@ Communication Style:
 - Short messages (max 200 chars)
 - Include natural pauses ("hmm...", "let me think...")
 - Mix Spanish/English if client does
+
+🚨 CRITICAL ACKNOWLEDGMENT RULE:
+If customer mentions a problem/pain in their CURRENT message:
+1. ALWAYS acknowledge it FIRST
+2. Show empathy and understanding
+3. Connect to your solution
+4. THEN ask for next data point
+
+Examples:
+Customer: "tengo un restaurante y estoy perdiendo reservas"
+GOOD: "Ugh, perder reservas es frustrante 😔 Te puedo automatizar recordatorios. ¿Cómo te llamas?"
+BAD: "¿Cuál es tu correo?"
+
+Customer: "mis clientes siempre llegan tarde"
+GOOD: "Los retrasos afectan todo el día, lo sé. Puedo ayudarte con eso. ¿Cuál es tu nombre?"
+BAD: "Para el Google Meet necesito tu email"
 
 DATA COLLECTION SEQUENCE (STRICT ORDER):
 1. NAME (if missing):

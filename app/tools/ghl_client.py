@@ -725,6 +725,37 @@ class GHLClient:
         }
         
         return await self._make_request("PUT", endpoint, data=data)
+    
+    async def get_conversation_messages_for_thread(
+        self, 
+        contact_id: str,
+        thread_id: str = None,
+        limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """
+        Get messages for current conversation thread only
+        
+        Args:
+            contact_id: Contact ID
+            thread_id: Optional thread/conversation ID to filter by
+            limit: Maximum messages to return
+            
+        Returns:
+            List of messages from current thread only
+        """
+        # If no thread_id, get the most recent conversation
+        if not thread_id:
+            conversations = await self.get_conversations(contact_id)
+            if not conversations:
+                return []
+            # Get most recent conversation ID
+            thread_id = conversations[0].get('id')
+        
+        # Get messages for specific conversation
+        messages = await self.get_conversation_messages(thread_id)
+        
+        # Return limited messages
+        return messages[-limit:] if messages else []
 
 
 # Create singleton instance

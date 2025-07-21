@@ -22,33 +22,50 @@ class ConversationLoader:
     async def load_conversation_history(
         self, 
         contact_id: str, 
+        thread_id: str = None,
         limit: int = 20
     ) -> List[BaseMessage]:
         """
-        Load conversation history from available sources
+        Load conversation history for CURRENT thread only
         
         Priority:
-        1. Try GHL API for real-time data
+        1. Try GHL API for real-time data from current thread
         2. Fallback to Supabase for stored history
         3. Return empty list if both fail
         
         Args:
             contact_id: Contact ID to load history for
+            thread_id: Optional thread/conversation ID to filter by
             limit: Maximum number of messages to retrieve
             
         Returns:
-            List of LangChain message objects
+            List of LangChain message objects from current thread only
         """
         messages = []
         
-        # Try GHL API first
+        # Try GHL API first - get current thread only
         try:
-            ghl_history = await self.ghl_client.get_conversation_history(contact_id)
+            ghl_history = await self.ghl_client.get_conversation_messages_for_thread(
+                contact_id,
+                thread_id,
+                limit
+            )
             if ghl_history:
-                logger.info(f"Loaded {len(ghl_history)} messages from GHL API")
+                logger.info(f"Loaded {len(ghl_history)} messages from current thread")
                 messages = self._convert_ghl_to_langchain(ghl_history)
         except Exception as e:
-            logger.warning(f"Failed to load from GHL API: {e}")
+            logger.warning(f"Failed to load thread history: {e}")
+            # Fallback to old method if new one fails
+            try:
+                ghl_history = await self.ghl_client.get_conversation_history(contact_id)
+                if ghl_history:
+                    logger.info(f"Loaded {len(ghl_history)} messages from GHL API (fallback)")
+                    messages = self._convert_ghl_to_langchain(ghl_history)
+                    # Limit to requested amount
+                    if len(messages) > limit:
+                        messages = messages[-limit:]
+            except Exception as e2:
+                logger.warning(f"Failed to load from GHL API fallback: {e2}")
         
         # If no messages from GHL, try Supabase (if configured)
         # Note: Supabase is optional - not required for core workflow
@@ -63,10 +80,6 @@ class ConversationLoader:
         #             messages = self._convert_supabase_to_langchain(supabase_history)
         #     except Exception as e:
         #         logger.warning(f"Failed to load from Supabase: {e}")
-        
-        # Limit messages to requested amount
-        if len(messages) > limit:
-            messages = messages[-limit:]  # Keep most recent
             
         logger.info(f"Total messages loaded for contact {contact_id}: {len(messages)}")
         return messages

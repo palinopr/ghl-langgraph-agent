@@ -403,6 +403,36 @@ async def supervisor_brain_ai_node(state: Dict[str, Any]) -> Dict[str, Any]:
             if tags:
                 result = await ghl_client.update_contact(contact_id, {"tags": tags})
             logger.info(f"GHL updated successfully")
+            
+            # Create analysis note
+            note_content = f"""Lead Analysis - {datetime.now().strftime('%Y-%m-%d %H:%M')}
+Score: {final_score}/10 (Previous: {previous_score})
+
+EXTRACTED DATA:
+- Name: {final_name or 'Not provided'}
+- Business: {final_business}
+- Budget: {final_budget or 'Not confirmed'}
+- Email: {final_email or contact_info.get('email', 'Not provided')}
+
+CHANGES DETECTED:
+{', '.join(changes) if changes else 'No changes detected'}
+
+ANALYSIS METHOD:
+{analysis_method}
+
+LEAD CATEGORY:
+{'HOT LEAD (8-10)' if final_score >= 8 else 'WARM LEAD (5-7)' if final_score >= 5 else 'COLD LEAD (1-4)'}
+
+TAGS APPLIED:
+{', '.join(tags) if tags else 'No tags applied'}
+"""
+            
+            try:
+                await ghl_client.create_note(contact_id, note_content)
+                logger.info("✅ Created analysis note in GHL")
+            except Exception as e:
+                logger.error(f"Failed to create note: {e}")
+                
         except Exception as e:
             logger.error(f"Failed to update GHL: {str(e)}")
         

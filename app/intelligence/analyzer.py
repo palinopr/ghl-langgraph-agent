@@ -74,27 +74,118 @@ class SpanishPatternExtractor:
             ]
         }
     
-    def extract_all(self, message: str, conversation_history: List[str] = None) -> Dict[str, Any]:
-        """Extract all structured information from message and history"""
-        conversation_history = conversation_history or []
-        full_text = " ".join([message] + conversation_history[-10:])  # Last 10 messages for context
+    def extract_all(self, message: str, previous_data: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Extract structured information from CURRENT message only
         
+        Args:
+            message: Current message to analyze
+            previous_data: Previously extracted data to merge with
+            
+        Returns:
+            Extracted data from current message merged with previous data
+        """
+        previous_data = previous_data or {}
+        
+        # Extract from CURRENT MESSAGE ONLY
         extracted = {
-            "name": self._extract_name(full_text),
-            "business_type": self._extract_business(full_text),
-            "budget": self._extract_budget(full_text),
-            "goal": self._extract_goal(full_text),
-            "email": self._extract_email(full_text),
-            "phone": self._extract_phone(full_text),
+            "name": self._extract_name(message) or previous_data.get("name"),
+            "business_type": self._extract_business(message) or previous_data.get("business_type"),
+            "budget": self._extract_budget(message) or previous_data.get("budget"),
+            "goal": self._extract_goal(message) or previous_data.get("goal"),
+            "email": self._extract_email(message) or previous_data.get("email"),
+            "phone": self._extract_phone(message) or previous_data.get("phone"),
             "extraction_confidence": {}
         }
         
-        # Add confidence scores
+        # Add confidence scores only for newly extracted data
+        MIN_CONFIDENCE = 0.7  # Confidence threshold
+        
         for field, value in extracted.items():
             if field != "extraction_confidence" and value:
-                extracted["extraction_confidence"][field] = self._calculate_confidence(value, full_text)
+                # Only add confidence if newly extracted (not from previous)
+                if value != previous_data.get(field):
+                    confidence = self._calculate_confidence(value, message)
+                    
+                    # Only keep extraction if confidence is high enough
+                    if confidence >= MIN_CONFIDENCE:
+                        extracted["extraction_confidence"][field] = confidence
+                    else:
+                        # Low confidence - revert to previous value
+                        extracted[field] = previous_data.get(field)
+                        logger.info(f"Rejected low confidence extraction: {field}={value} (conf={confidence:.2f})")
         
         return extracted
+    
+    def _validate_business_type(self, business: str) -> Optional[str]:
+        """Validate extracted business type"""
+        if not business:
+            return None
+            
+        # Remove common filler words
+        business = business.lower().strip()
+        
+        # List of invalid business types
+        invalid_patterns = [
+            "negocio hola", "business hello", "mi hola", "un hola",
+            "negocio si", "business yes", "negocio no", "hola"
+        ]
+        
+        if business in invalid_patterns:
+            return None
+        
+        # Check if it contains greeting words (invalid)
+        greeting_words = ["hola", "hello", "hi", "hey", "buenos", "dias", "tardes", "noches"]
+        for greeting in greeting_words:
+            if greeting in business.split():
+                return None
+        
+        # Valid business types
+        valid_businesses = [
+            "restaurante", "restaurant", "tienda", "salon", "salón",
+            "barbería", "barberia", "clinica", "clínica", "consultorio",
+            "agencia", "empresa", "negocio", "local", "oficina",
+            "cafetería", "cafeteria", "hotel", "spa", "gimnasio", "gym",
+            "boutique", "peluquería", "pizzeria", "bar", "club"
+        ]
+        
+        # Check if it contains at least one valid business word
+        has_valid = any(valid in business for valid in valid_businesses)
+        
+        if not has_valid and len(business.split()) > 1:
+            # Multi-word but no valid business type
+            return None
+        
+        return business
+    
+    def _validate_budget(self, budget: str, message: str) -> Optional[str]:
+        """Validate extracted budget"""
+        if not budget:
+            return None
+        
+        # Don't extract from time patterns
+        time_pattern = r'\d{1,2}:\d{2}\s*(?:am|pm|AM|PM)'
+        if re.search(time_pattern, message):
+            # Check if the number is part of a time
+            if re.search(rf'{budget}:\d{{2}}', message):
+                return None
+        
+        # Don't extract single/double digit numbers unless with currency
+        if budget.isdigit() and len(budget) < 3:
+            # Check if it has currency symbol nearby
+            if not re.search(rf'\$\s*{budget}', message):
+                return None
+        
+        # Don't extract from dates
+        date_patterns = [
+            rf'{budget}\s*de\s*(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)',
+            rf'{budget}/(0?[1-9]|1[0-2])',  # 10/5 (October 5th)
+        ]
+        for pattern in date_patterns:
+            if re.search(pattern, message, re.IGNORECASE):
+                return None
+        
+        return budget
     
     @lru_cache(maxsize=512)  # Cache results for JIT optimization
     def _extract_name(self, text: str) -> Optional[str]:
@@ -117,8 +208,11 @@ class SpanishPatternExtractor:
                 business = match.group(1).strip()
                 # Clean common words
                 business = re.sub(r'\b(un|una|el|la|mi)\b', '', business).strip()
-                if business:
-                    return business.lower()
+                
+                # VALIDATE before returning
+                validated = self._validate_business_type(business)
+                if validated:
+                    return validated.lower()
         return None
     
     @lru_cache(maxsize=512)  # Cache results for JIT optimization
@@ -138,7 +232,11 @@ class SpanishPatternExtractor:
                 budget = format_str
                 for i, group in enumerate(groups):
                     budget = budget.replace(f'{{{i}}}', group)
-                return budget
+                
+                # VALIDATE before returning
+                validated = self._validate_budget(budget, text)
+                if validated:
+                    return validated
         return None
     
     @lru_cache(maxsize=512)  # Cache results for JIT optimization
@@ -175,14 +273,32 @@ class SpanishPatternExtractor:
     
     def _calculate_confidence(self, value: str, full_text: str) -> float:
         """Calculate extraction confidence (0-1)"""
-        # Higher confidence if value appears multiple times
-        occurrences = len(re.findall(re.escape(value), full_text, re.IGNORECASE))
-        base_confidence = 0.6
+        # Start with base confidence
+        base_confidence = 0.7
         
-        if occurrences > 1:
-            base_confidence += 0.2
-        if len(value) > 20:  # Longer extractions might be less accurate
-            base_confidence -= 0.1
+        # Higher confidence if exact match (not substring)
+        if re.search(rf'\b{re.escape(value)}\b', full_text, re.IGNORECASE):
+            base_confidence += 0.1
+        
+        # Lower confidence for very short values
+        if len(value) < 3:
+            base_confidence -= 0.2
+            
+        # Higher confidence for values with clear context
+        context_patterns = [
+            rf'(?:soy|me llamo|mi nombre es)\s+{re.escape(value)}',  # Name
+            rf'(?:tengo un|tengo una)\s+{re.escape(value)}',  # Business
+            rf'\$\s*{re.escape(value)}',  # Budget with currency
+        ]
+        
+        for pattern in context_patterns:
+            if re.search(pattern, full_text, re.IGNORECASE):
+                base_confidence += 0.15
+                break
+                
+        # Lower confidence for values that might be misextracted
+        if value.lower() in ['si', 'no', 'hola', 'ok', 'bien']:
+            base_confidence -= 0.3
             
         return min(1.0, max(0.0, base_confidence))
 
@@ -215,46 +331,45 @@ class LeadScorer:
         
         reasoning_parts = []
         
-        # Name: 1-2 points
+        # Name: 1 point (more conservative)
         if extracted_data.get("name"):
-            score_breakdown["name"] = 2
+            score_breakdown["name"] = 1
             reasoning_parts.append("has name")
         
-        # Business: 1-2 points
+        # Business: 2 points
         if extracted_data.get("business_type"):
             score_breakdown["business"] = 2
             reasoning_parts.append(f"has business ({extracted_data['business_type']})")
         
-        # Goal/Problem: 1-2 points
+        # Goal/Problem: 1 point (reduced)
         if extracted_data.get("goal"):
-            score_breakdown["goal"] = 2
-            reasoning_parts.append("has clear goal/problem")
+            score_breakdown["goal"] = 1
+            reasoning_parts.append("has goal/problem")
         
-        # Budget: 2-3 points
+        # Budget: 1-3 points
         if extracted_data.get("budget"):
             budget_str = str(extracted_data["budget"])
-            # Check if budget is substantial
+            # Check if budget is substantial ($300+)
             if any(x in budget_str for x in ["300", "400", "500"]) or \
                re.search(r'\d{3,}', budget_str):  # 3+ digit number
                 score_breakdown["budget"] = 3
-                reasoning_parts.append(f"has substantial budget ({budget_str})")
+                reasoning_parts.append(f"budget confirmed ({budget_str})")
             else:
-                score_breakdown["budget"] = 2
-                reasoning_parts.append(f"has budget ({budget_str})")
+                score_breakdown["budget"] = 1  # Reduced for unconfirmed budgets
+                reasoning_parts.append(f"budget mentioned ({budget_str})")
         
-        # Contact info: 1 point each
-        if extracted_data.get("email"):
+        # Email: 1 point (only if not "none")
+        if extracted_data.get("email") and extracted_data["email"] != "none":
             score_breakdown["email"] = 1
-            reasoning_parts.append("provided email")
+            reasoning_parts.append("has email")
             
-        if extracted_data.get("phone"):
-            score_breakdown["phone"] = 1
-            reasoning_parts.append("provided phone")
+        # Phone: 0 points (removed - phone comes from GHL automatically)
+        # Not scoring phone anymore as it's not customer-provided
         
-        # Engagement bonus: up to 1 point
-        if conversation_length > 5:
+        # Engagement bonus: 1 point only for long conversations
+        if conversation_length > 10:  # Increased threshold
             score_breakdown["engagement"] = 1
-            reasoning_parts.append("engaged conversation")
+            reasoning_parts.append("highly engaged")
         
         # Calculate total
         total_score = sum(score_breakdown.values())
@@ -350,14 +465,13 @@ class IntelligenceAnalyzer:
         messages = get_trimmed_messages(messages, config_name="extended")
             
         current_message = messages[-1].content if messages else ""
-        # Extract ALL conversation history for better context
-        conversation_history = [m.content for m in messages if hasattr(m, 'content')]
         
-        # Get previous score
+        # Get previous score and data
         previous_score = state.get("lead_score", 0)
+        previous_data = state.get("extracted_data", {})
         
-        # Extract structured data
-        extracted = self.extractor.extract_all(current_message, conversation_history)
+        # Extract from CURRENT MESSAGE ONLY, merge with previous
+        extracted = self.extractor.extract_all(current_message, previous_data)
         
         # Initialize budget_confirmation
         budget_confirmation = {}
@@ -377,15 +491,9 @@ class IntelligenceAnalyzer:
             if budget_confirmation.get("budget_confirmed"):
                 extracted["budget"] = budget_confirmation["amount"]
                 
-        # Merge with existing data
-        existing_data = state.get("extracted_data", {})
-        for key, value in extracted.items():
-            if value and not existing_data.get(key):
-                existing_data[key] = value
-                
-        # Calculate score
+        # Calculate score based on all accumulated data
         score, reasoning, breakdown = self.scorer.calculate_score(
-            existing_data, 
+            extracted,  # All data collected so far (current + previous)
             previous_score,
             len(messages)
         )
@@ -428,7 +536,7 @@ class IntelligenceAnalyzer:
         # Return enriched state
         return {
             **state,
-            "extracted_data": existing_data,
+            "extracted_data": extracted,  # Use the merged extracted data
             "lead_score": score,
             "lead_category": route,
             "suggested_agent": suggested_agent,

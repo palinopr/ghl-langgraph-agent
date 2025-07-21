@@ -51,7 +51,26 @@ async def responder_node(state: ConversationState) -> Dict[str, Any]:
             if isinstance(msg, AIMessage) and msg.content:
                 # Skip system messages from receptionist and supervisor
                 msg_name = getattr(msg, 'name', '')
-                if msg_name in ['receptionist', 'supervisor', 'supervisor_brain']:
+                if msg_name in ['receptionist', 'supervisor', 'supervisor_brain', 'intelligence']:
+                    continue
+                
+                # Skip debug-like messages
+                content_lower = msg.content.lower()
+                if any(pattern in content_lower for pattern in [
+                    'lead scored',
+                    'routing to',
+                    'data loaded',
+                    'analysis complete',
+                    'ghl updated',
+                    'debug:',
+                    'error:',
+                    'loading',
+                    'system:',
+                    'info:',
+                    '✅',  # Skip checkmark messages
+                    '❌'   # Skip X messages
+                ]):
+                    logger.info(f"Filtering out debug message: {msg.content[:50]}...")
                     continue
                     
                 # Check for duplicates using deduplication system

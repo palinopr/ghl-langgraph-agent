@@ -21,6 +21,7 @@ class ConversationState(TypedDict):
     # Using operator.add for contact_id to handle parallel updates
     # This allows multiple nodes to update contact_id without conflicts
     contact_id: Annotated[str, lambda x, y: y if y else x]  # Keep latest non-empty value
+    thread_id: Optional[str]  # Current conversation thread ID for history filtering
     contact_name: Optional[str]
     contact_email: Optional[str]
     contact_phone: Optional[str]
