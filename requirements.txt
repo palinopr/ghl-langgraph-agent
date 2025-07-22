@@ -2,6 +2,7 @@
 langgraph>=0.5.3  # Latest version from Context7 docs
 langgraph-sdk>=0.1.66  # Required for LangGraph Platform
 langgraph-checkpoint>=2.0.23  # Required for persistence
+langgraph-checkpoint-sqlite>=2.0.10  # SQLite persistent checkpointing
 langchain>=0.3.8  # Latest stable from Context7 docs
 langchain-core>=0.3.42  # Latest from Context7 JS/TS SDK ref
 langchain-openai>=0.2.0  # Latest stable
@@ -24,6 +25,7 @@ realtime>=2.0.0
 storage3>=0.7.0
 sqlalchemy>=2.0.0
 alembic>=1.13.0
+aiosqlite>=0.19.0  # Added for persistent checkpointing
 
 # Utilities
 python-dotenv>=1.0.0

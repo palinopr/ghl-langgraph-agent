@@ -9,9 +9,10 @@ Implements all the latest patterns from LangGraph documentation:
 """
 from typing import Dict, Any, Literal, Union
 from langgraph.graph import StateGraph, END, START
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.store.memory import InMemoryStore
 from langchain_core.messages import AIMessage, HumanMessage
+import os
 
 # Import enhanced state
 from app.state.minimal_state import MinimalState
@@ -178,16 +179,19 @@ def create_modernized_workflow():
     # Responder ends
     workflow.add_edge("responder", END)
     
-    # Compile with persistent memory
-    memory = MemorySaver()
+    # Compile with SQLite persistent memory
+    checkpoint_db = os.path.join(os.path.dirname(__file__), "checkpoints.db")
+    memory = AsyncSqliteSaver.from_conn_string(checkpoint_db)
     store = InMemoryStore()
+    
+    logger.info(f"Using SQLite checkpoint database: {checkpoint_db}")
     
     compiled = workflow.compile(
         checkpointer=memory,
         store=store
     )
     
-    logger.info("Modernized workflow compiled successfully")
+    logger.info("Modernized workflow compiled with SQLite persistence")
     
     return compiled, memory  # Return both workflow and checkpointer
 
@@ -210,7 +214,7 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         
         # CRITICAL: Use consistent thread_id based on contact
         thread_id = f"contact-{contact_id}"  # Always based on contact for consistency
-        logger.info(f"Using thread_id: {thread_id} for checkpoint")
+        logger.info(f"Thread ID: {thread_id} for contact: {contact_id}")
         
         # Configuration for checkpointer
         config = {"configurable": {"thread_id": thread_id}}
@@ -220,16 +224,21 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         try:
             # Get the latest checkpoint
             checkpoint_tuple = await checkpointer.aget(config)
+            
             if checkpoint_tuple and checkpoint_tuple.checkpoint:
                 existing_state = checkpoint_tuple.checkpoint.get("channel_values", {})
-                logger.info(f"Loaded checkpoint with {len(existing_state.get('messages', []))} messages")
+                existing_messages = existing_state.get("messages", [])
+                logger.info(f"✅ Loaded {len(existing_messages)} messages from SQLite for thread {thread_id}")
                 
-                # Debug: Show what's in the checkpoint
-                if existing_state.get("messages"):
+                # Debug: Show last message for context
+                if existing_messages:
+                    logger.info(f"Last message: '{existing_messages[-1].content}'")
                     logger.info("=== CHECKPOINT MESSAGES ===")
-                    for i, msg in enumerate(existing_state["messages"][-3:]):
+                    for i, msg in enumerate(existing_messages[-3:]):
                         logger.info(f"  [{i}] {type(msg).__name__}: {str(msg.content)[:50]}...")
                     logger.info("=== END CHECKPOINT ===")
+            else:
+                logger.info(f"🆕 No checkpoint in SQLite for thread {thread_id} - new conversation")
         except Exception as e:
             logger.warning(f"Could not load checkpoint: {e}")
         
