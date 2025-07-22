@@ -51,3 +51,6 @@ class MinimalState(TypedDict):
     # Optional contact info (loaded by receptionist)
     contact_info: Optional[Dict[str, Any]]  # Full GHL contact
     previous_custom_fields: Optional[Dict[str, Any]]  # GHL custom fields
+    
+    # Required by supervisor
+    remaining_steps: int  # For create_react_agent
