@@ -235,23 +235,7 @@ sofia_node = create_agent_node(
 )
 
 
-def responder_node(state: ProductionState) -> Dict[str, Any]:
-    """Final responder that sends the message"""
-    messages = state.get("messages", [])
-    
-    # Get last AI message
-    last_ai_message = ""
-    for msg in reversed(messages):
-        if isinstance(msg, AIMessage) or (isinstance(msg, dict) and msg.get("type") == "ai"):
-            last_ai_message = msg.content if hasattr(msg, "content") else msg.get("content", "")
-            break
-    
-    logger.info("Responder preparing final message")
-    
-    return {
-        "final_response": last_ai_message,
-        "responder_complete": True
-    }
+# Responder node removed - using responder_streaming_node from imports
 
 
 def route_from_supervisor(state: ProductionState) -> Literal["maria", "carlos", "sofia", "responder", "end"]:
@@ -281,6 +265,9 @@ def route_from_agent(state: ProductionState) -> Literal["responder", "supervisor
     return "responder"
 
 
+# Import the actual responder that sends to GHL
+from app.agents.responder_streaming import responder_streaming_node
+
 # Create the workflow
 workflow_graph = StateGraph(ProductionState)
 
@@ -292,7 +279,7 @@ workflow_graph.add_node("supervisor", supervisor_node)
 workflow_graph.add_node("maria", maria_node)
 workflow_graph.add_node("carlos", carlos_node)
 workflow_graph.add_node("sofia", sofia_node)
-workflow_graph.add_node("responder", responder_node)
+workflow_graph.add_node("responder", responder_streaming_node)  # Use the real responder that sends to GHL
 
 # Set entry point
 workflow_graph.set_entry_point("thread_mapper")

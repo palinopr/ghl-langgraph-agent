@@ -23,7 +23,7 @@ echo -e "${YELLOW}📋 Checking prerequisites...${NC}"
 
 if ! command_exists langgraph; then
     echo -e "${RED}❌ LangGraph CLI not found. Installing...${NC}"
-    pip install -U langgraph-cli
+    python3 -m pip install -U langgraph-cli
 fi
 
 if [ -z "$LANGSMITH_API_KEY" ]; then
@@ -67,7 +67,7 @@ EOF
 
 # Step 5: Validate workflow
 echo -e "${YELLOW}✅ Validating workflow...${NC}"
-python -c "
+python3 -c "
 try:
     from app.workflow_production_ready import workflow
     print('✅ Workflow imports successfully')
