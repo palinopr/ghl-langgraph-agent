@@ -51,18 +51,32 @@ async def thread_id_mapper_node(state: Dict[str, Any]) -> Dict[str, Any]:
         new_thread_id = state.get("thread_id", "unknown")
         logger.warning(f"No identifiers found, using fallback: {new_thread_id}")
     
-    # CRITICAL: Update the thread_id in state
-    state["thread_id"] = new_thread_id
-    state["mapped_thread_id"] = new_thread_id  # Keep track that we mapped it
-    state["original_thread_id"] = state.get("thread_id")  # Preserve original
+    # Safety check: Ensure we have valid identifiers
+    if not contact_id and not conversation_id:
+        logger.error("❌ CRITICAL: No contact_id or conversation_id found in state!")
+        logger.error(f"State keys: {list(state.keys())}")
+        # Use a fallback but log the issue prominently
+        new_thread_id = state.get("thread_id", f"fallback-{state.get('original_thread_id', 'unknown')}")
+        logger.warning(f"Using fallback thread_id: {new_thread_id}")
+    
+    # Preserve original thread_id BEFORE updating
+    original_thread_id = state.get("thread_id", "no-original-thread-id")
+    
+    # CRITICAL: Update the thread_id in state while preserving everything else
+    updated_state = {
+        **state,  # Preserve ALL existing state
+        "thread_id": new_thread_id,
+        "mapped_thread_id": new_thread_id,  # Keep track that we mapped it
+        "original_thread_id": original_thread_id  # Preserve original
+    }
     
     # Also ensure contact_id is in state for downstream nodes
     if contact_id:
-        state["contact_id"] = contact_id
+        updated_state["contact_id"] = contact_id
     if conversation_id:
-        state["conversation_id"] = conversation_id
+        updated_state["conversation_id"] = conversation_id
     
-    logger.info(f"✅ Thread ID mapped: {state.get('original_thread_id')} → {new_thread_id}")
+    logger.info(f"✅ Thread ID mapped: {original_thread_id} → {new_thread_id}")
     
     # Try to load checkpoint with our thread_id
     try:
@@ -84,14 +98,14 @@ async def thread_id_mapper_node(state: Dict[str, Any]) -> Dict[str, Any]:
                     channel_values = checkpoint.checkpoint["channel_values"]
                     # Preserve messages and other data from checkpoint
                     if "messages" in channel_values:
-                        state["messages"] = channel_values["messages"]
+                        updated_state["messages"] = channel_values["messages"]
                         logger.info(f"Loaded {len(channel_values['messages'])} messages from checkpoint")
                     if "extracted_data" in channel_values:
-                        state["extracted_data"] = channel_values["extracted_data"]
+                        updated_state["extracted_data"] = channel_values["extracted_data"]
                         logger.info(f"Loaded extracted data: {channel_values['extracted_data']}")
             else:
                 logger.info(f"No checkpoint found for thread: {new_thread_id}")
     except Exception as e:
         logger.warning(f"Could not access checkpointer: {e}")
     
-    return state
+    return updated_state
