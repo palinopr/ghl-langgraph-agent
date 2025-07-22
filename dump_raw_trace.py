@@ -18,61 +18,68 @@ client = Client(
 )
 
 # Trace to dump
-TRACE_ID = "1f066a2d-302a-6ee9-88b8-db984174a418"
+TRACE_ID = "1f067063-cb0e-6fcb-afd5-c1ccbd774d31"
 
 def dump_raw(run_id: str):
     """Dump everything raw"""
-    print(f"\n{'='*80}")
-    print(f"RAW TRACE DUMP: {run_id}")
-    print(f"{'='*80}\n")
+    output_file = f"trace_dump_{run_id[:8]}.txt"
     
-    try:
-        # Get the run
-        run = client.read_run(run_id)
+    with open(output_file, 'w') as f:
+        f.write(f"\n{'='*80}\n")
+        f.write(f"RAW TRACE DUMP: {run_id}\n")
+        f.write(f"{'='*80}\n\n")
         
-        # Print every attribute
-        print("=== RUN ATTRIBUTES ===")
-        for attr in dir(run):
-            if not attr.startswith('_'):
-                try:
-                    value = getattr(run, attr)
-                    if not callable(value):
-                        print(f"\n{attr}:")
-                        print(value)
-                        print("-" * 40)
-                except Exception as e:
-                    print(f"\n{attr}: ERROR - {str(e)}")
-        
-        print("\n\n=== CHILD RUNS ===")
-        # Get ALL child runs
-        child_runs = list(client.list_runs(
-            project_name="ghl-langgraph-agent",
-            filter=f'eq(parent_run_id, "{run_id}")',
-            limit=100
-        ))
-        
-        print(f"TOTAL CHILD RUNS: {len(child_runs)}\n")
-        
-        for i, child in enumerate(child_runs, 1):
-            print(f"\n{'='*60}")
-            print(f"CHILD {i}: {child.name}")
-            print(f"{'='*60}")
+        try:
+            # Get the run
+            run = client.read_run(run_id)
             
-            # Dump all child attributes
-            for attr in dir(child):
+            # Print every attribute
+            f.write("=== RUN ATTRIBUTES ===\n")
+            for attr in dir(run):
                 if not attr.startswith('_'):
                     try:
-                        value = getattr(child, attr)
+                        value = getattr(run, attr)
                         if not callable(value):
-                            print(f"\n{attr}:")
-                            print(value)
-                    except:
-                        pass
-        
-    except Exception as e:
-        print(f"ERROR: {str(e)}")
-        import traceback
-        traceback.print_exc()
+                            f.write(f"\n{attr}:\n")
+                            f.write(str(value))
+                            f.write("\n" + "-" * 40 + "\n")
+                    except Exception as e:
+                        f.write(f"\n{attr}: ERROR - {str(e)}\n")
+            
+            f.write("\n\n=== CHILD RUNS ===\n")
+            # Get ALL child runs
+            child_runs = list(client.list_runs(
+                project_name="ghl-langgraph-agent",
+                filter=f'eq(parent_run_id, "{run_id}")',
+                limit=100
+            ))
+            
+            f.write(f"TOTAL CHILD RUNS: {len(child_runs)}\n\n")
+            
+            for i, child in enumerate(child_runs, 1):
+                f.write(f"\n{'='*60}\n")
+                f.write(f"CHILD {i}: {child.name}\n")
+                f.write(f"{'='*60}\n")
+                
+                # Dump all child attributes
+                for attr in dir(child):
+                    if not attr.startswith('_'):
+                        try:
+                            value = getattr(child, attr)
+                            if not callable(value):
+                                f.write(f"\n{attr}:\n")
+                                f.write(str(value))
+                                f.write("\n")
+                        except:
+                            pass
+            
+            print(f"✅ Raw trace dumped to {output_file}")
+            
+        except Exception as e:
+            f.write(f"ERROR: {str(e)}\n")
+            import traceback
+            f.write(traceback.format_exc())
+            print(f"❌ Error dumping trace: {str(e)}")
 
 if __name__ == "__main__":
     dump_raw(TRACE_ID)

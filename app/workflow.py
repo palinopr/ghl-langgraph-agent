@@ -132,12 +132,16 @@ async def create_modernized_workflow():
     # Create workflow with standard state
     workflow_graph = StateGraph(MinimalState)
     
+    # Import thread mapper
+    from app.agents.thread_id_mapper import thread_id_mapper_node
+    
     # Enhance agents with task awareness
     maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)
     carlos_enhanced = enhance_agent_with_task(carlos_node)
     sofia_enhanced = enhance_agent_with_task(sofia_node)
     
-    # Add all nodes - using checkpoint-aware receptionist
+    # Add all nodes - thread mapper FIRST
+    workflow_graph.add_node("thread_mapper", thread_id_mapper_node)
     workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)
     workflow_graph.add_node("intelligence", intelligence_node)
     workflow_graph.add_node("supervisor", supervisor_node)
@@ -146,10 +150,11 @@ async def create_modernized_workflow():
     workflow_graph.add_node("sofia", sofia_enhanced)
     workflow_graph.add_node("responder", responder_node)
     
-    # Set entry point
-    workflow_graph.set_entry_point("receptionist")
+    # Set entry point to thread mapper
+    workflow_graph.set_entry_point("thread_mapper")
     
     # Define edges
+    workflow_graph.add_edge("thread_mapper", "receptionist")  # Thread mapper runs first
     workflow_graph.add_edge("receptionist", "intelligence")
     workflow_graph.add_edge("intelligence", "supervisor")
     
@@ -208,12 +213,16 @@ def create_sync_workflow():
     # Create workflow with standard state
     workflow_graph = StateGraph(MinimalState)
     
+    # Import thread mapper
+    from app.agents.thread_id_mapper import thread_id_mapper_node
+    
     # Enhance agents with task awareness
     maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)
     carlos_enhanced = enhance_agent_with_task(carlos_node)
     sofia_enhanced = enhance_agent_with_task(sofia_node)
     
-    # Add all nodes - using checkpoint-aware receptionist
+    # Add all nodes - thread mapper FIRST
+    workflow_graph.add_node("thread_mapper", thread_id_mapper_node)
     workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)
     workflow_graph.add_node("intelligence", intelligence_node)
     workflow_graph.add_node("supervisor", supervisor_node)
@@ -222,10 +231,11 @@ def create_sync_workflow():
     workflow_graph.add_node("sofia", sofia_enhanced)
     workflow_graph.add_node("responder", responder_node)
     
-    # Set entry point
-    workflow_graph.set_entry_point("receptionist")
+    # Set entry point to thread mapper
+    workflow_graph.set_entry_point("thread_mapper")
     
     # Define edges
+    workflow_graph.add_edge("thread_mapper", "receptionist")  # Thread mapper runs first
     workflow_graph.add_edge("receptionist", "intelligence")
     workflow_graph.add_edge("intelligence", "supervisor")
     
@@ -369,10 +379,13 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
             workflow_graph = StateGraph(MinimalState)
             
             # Quick rebuild (same structure as create_modernized_workflow)
+            from app.agents.thread_id_mapper import thread_id_mapper_node
+            
             maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)
             carlos_enhanced = enhance_agent_with_task(carlos_node)
             sofia_enhanced = enhance_agent_with_task(sofia_node)
             
+            workflow_graph.add_node("thread_mapper", thread_id_mapper_node)
             workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)
             workflow_graph.add_node("intelligence", intelligence_node)
             workflow_graph.add_node("supervisor", supervisor_node)
@@ -381,7 +394,8 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
             workflow_graph.add_node("sofia", sofia_enhanced)
             workflow_graph.add_node("responder", responder_node)
             
-            workflow_graph.set_entry_point("receptionist")
+            workflow_graph.set_entry_point("thread_mapper")
+            workflow_graph.add_edge("thread_mapper", "receptionist")
             workflow_graph.add_edge("receptionist", "intelligence")
             workflow_graph.add_edge("intelligence", "supervisor")
             
