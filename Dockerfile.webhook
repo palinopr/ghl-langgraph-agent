@@ -1,0 +1,19 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install minimal requirements
+COPY requirements_webhook.txt .
+RUN pip install --no-cache-dir -r requirements_webhook.txt
+
+# Copy only the webhook handler
+COPY app/api/webhook_standalone.py app/api/
+
+# Set environment variables
+ENV LANGGRAPH_API_URL=https://ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app
+ENV ASSISTANT_ID=agent
+ENV PORT=8000
+EXPOSE 8000
+
+# Run the webhook handler
+CMD ["uvicorn", "app.api.webhook_standalone:app", "--host", "0.0.0.0", "--port", "8000"]
