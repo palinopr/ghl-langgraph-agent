@@ -36,6 +36,7 @@ class ProductionState(TypedDict):
     urgency_level: str
     budget: str
     thread_id: str
+    webhook_data: Dict[str, Any]  # For passing webhook data to receptionist
 
 
 def thread_mapper_node(state: ProductionState) -> Dict[str, Any]:
@@ -50,28 +51,7 @@ def thread_mapper_node(state: ProductionState) -> Dict[str, Any]:
     return {"thread_id": thread_id}
 
 
-def receptionist_node(state: ProductionState) -> Dict[str, Any]:
-    """Process incoming messages and prepare for routing"""
-    messages = state.get("messages", [])
-    
-    # Extract message info
-    last_message = ""
-    for msg in reversed(messages):
-        if isinstance(msg, HumanMessage) or (isinstance(msg, dict) and msg.get("role") == "human"):
-            last_message = msg.content if hasattr(msg, "content") else msg.get("content", "")
-            break
-    
-    logger.info(f"Receptionist processing: {last_message[:50]}...")
-    
-    # Check if this is first message
-    is_first_message = len([m for m in messages if isinstance(m, (HumanMessage, dict)) and 
-                           (hasattr(m, "type") and m.type == "human" or m.get("role") == "human")]) == 1
-    
-    return {
-        "last_message": last_message,
-        "is_first_contact": is_first_message,
-        "receptionist_complete": True
-    }
+# Receptionist node removed - using receptionist_checkpoint_aware_node from imports
 
 
 def intelligence_analyzer_node(state: ProductionState) -> Dict[str, Any]:
@@ -267,13 +247,15 @@ def route_from_agent(state: ProductionState) -> Literal["responder", "supervisor
 
 # Import the actual responder that sends to GHL
 from app.agents.responder_streaming import responder_streaming_node
+# Import the checkpoint-aware receptionist for conversation context
+from app.agents.receptionist_checkpoint_aware import receptionist_checkpoint_aware_node
 
 # Create the workflow
 workflow_graph = StateGraph(ProductionState)
 
 # Add all nodes
 workflow_graph.add_node("thread_mapper", thread_mapper_node)
-workflow_graph.add_node("receptionist", receptionist_node)
+workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)  # Use checkpoint-aware receptionist
 workflow_graph.add_node("intelligence", intelligence_analyzer_node)
 workflow_graph.add_node("supervisor", supervisor_node)
 workflow_graph.add_node("maria", maria_node)
@@ -316,10 +298,13 @@ for agent in ["maria", "carlos", "sofia"]:
 # Responder ends
 workflow_graph.add_edge("responder", END)
 
-# Compile without checkpointer for cloud deployment
-workflow = workflow_graph.compile()
+# Compile with memory checkpointer for conversation persistence
+from langgraph.checkpoint.memory import MemorySaver
 
-logger.info("Production workflow compiled successfully")
+checkpointer = MemorySaver()
+workflow = workflow_graph.compile(checkpointer=checkpointer)
+
+logger.info("Production workflow compiled with memory checkpointer for conversation persistence")
 
 # Export
 __all__ = ["workflow"]
