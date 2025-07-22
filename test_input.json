@@ -1,0 +1,10 @@
+{
+  "webhook_data": {
+    "contactId": "test-contact-123",
+    "conversationId": "test-conv-123",
+    "locationId": "sHFG9Rw6BdGh6d6bfMqG",
+    "body": "Hola, tengo un restaurante y necesito ayuda con marketing digital",
+    "type": "SMS",
+    "direction": "inbound"
+  }
+}
