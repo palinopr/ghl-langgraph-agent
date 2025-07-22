@@ -6,6 +6,22 @@ All notable changes, fixes, and improvements to the LangGraph GHL Agent.
 
 ## [Unreleased]
 
+### 🔧 State Persistence Hardening
+- **Fixed conversation state loss** by implementing Redis-backed persistence
+  - Added `RedisCheckpointSaver` for distributed state storage
+  - Automatic fallback to SQLite for local development
+  - Configurable TTL for state cleanup (7 days default)
+  - State operations traced with `state.read` and `state.write` spans
+- **Enhanced observability** for state operations
+  - Added manual spans around checkpoint save/load operations
+  - State size tracking with `conversation_state_size_bytes` metric
+  - Improved logging for state persistence debugging
+- **Infrastructure updates**
+  - Added Redis service to CI/CD pipeline
+  - Updated `docker-compose.yml` with Redis container
+  - New `make dev` command auto-starts Redis for local development
+  - Added comprehensive state persistence tests
+
 ### 🔍 Observability & Debugging
 - Added OpenTelemetry instrumentation for distributed tracing
   - Auto-instrumentation for FastAPI and HTTPX

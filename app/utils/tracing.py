@@ -2,13 +2,17 @@
 LangSmith tracing configuration for monitoring and debugging
 """
 import os
-from typing import Dict, Any, Optional
+import time
+import functools
+from typing import Dict, Any, Optional, TypeVar, Callable
 from langsmith import Client
 from langchain_core.tracers.context import tracing_v2_enabled
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
 
 logger = get_logger("tracing")
+
+T = TypeVar('T')
 
 
 def setup_langsmith_tracing():
@@ -89,12 +93,87 @@ def trace_operation(
     tags: Optional[list] = None
 ):
     """
-    Context manager for tracing specific operations
+    Decorator/Context manager for tracing specific operations
     
-    Usage:
+    Usage as decorator:
+        @trace_operation("state.read")
+        async def my_function():
+            pass
+            
+    Usage as context manager:
         async with trace_operation("intelligence_analysis", metadata={"contact_id": "123"}):
             # Your operation here
             pass
+    """
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        @functools.wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            start_time = time.time()
+            metadata_with_timing = {
+                **(metadata or {}),
+                "function": func.__name__,
+                "start_time": start_time
+            }
+            
+            async with TracedOperation(operation_name, metadata=metadata_with_timing, tags=tags or []):
+                try:
+                    result = await func(*args, **kwargs)
+                    # Log success metrics
+                    duration = time.time() - start_time
+                    logger.debug(f"{operation_name} completed in {duration:.3f}s")
+                    return result
+                except Exception as e:
+                    # Log error metrics
+                    duration = time.time() - start_time
+                    logger.error(f"{operation_name} failed after {duration:.3f}s: {str(e)}")
+                    raise
+        
+        @functools.wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            start_time = time.time()
+            metadata_with_timing = {
+                **(metadata or {}),
+                "function": func.__name__,
+                "start_time": start_time
+            }
+            
+            with trace_operation_context(operation_name, metadata=metadata_with_timing, tags=tags or []):
+                try:
+                    result = func(*args, **kwargs)
+                    duration = time.time() - start_time
+                    logger.debug(f"{operation_name} completed in {duration:.3f}s")
+                    return result
+                except Exception as e:
+                    duration = time.time() - start_time
+                    logger.error(f"{operation_name} failed after {duration:.3f}s: {str(e)}")
+                    raise
+        
+        # Return appropriate wrapper based on function type
+        import asyncio
+        if asyncio.iscoroutinefunction(func):
+            return async_wrapper
+        else:
+            return sync_wrapper
+    
+    # If called with arguments, return decorator
+    # If called as function, check if first arg is callable
+    if operation_name and callable(operation_name):
+        # Called as @trace_operation without parentheses
+        func = operation_name
+        operation_name = func.__name__
+        return decorator(func)
+    
+    # Called with parentheses, return decorator
+    return decorator
+
+
+def trace_operation_context(
+    operation_name: str,
+    metadata: Optional[Dict[str, Any]] = None,
+    tags: Optional[list] = None
+):
+    """
+    Context manager version of trace_operation
     """
     if metadata is None:
         metadata = {}

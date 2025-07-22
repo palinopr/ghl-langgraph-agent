@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ghl-langgraph-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - APP_ENV=development
+    env_file:
+      - .env
+    volumes:
+      # Mount source code for hot-reload
+      - ./app:/app/app
+      - ./tests:/app/tests
+      - ./logs:/app/logs
+      # Prevent overwriting installed packages
+      - /app/.venv
+      - /app/__pycache__
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    stdin_open: true
+    tty: true
+
+  # Redis for message batching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: ghl-redis-dev
+    ports:
+      - "6379:6379"
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  dev-network:
+    driver: bridge

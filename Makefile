@@ -15,6 +15,7 @@ help:
 	@echo ""
 	@echo "Development:"
 	@echo "  make run         - Run locally with Python 3.13"
+	@echo "  make dev         - Start Redis and run locally"
 	@echo "  make monitor     - Watch deployment logs"
 	@echo ""
 	@echo "Docker Commands:"
@@ -48,11 +49,30 @@ test:
 # Run locally
 run:
 	@echo "🚀 Starting local server..."
+	@if ! nc -z localhost 6379 2>/dev/null; then \
+		echo "🔴 Redis not running. Starting Redis..."; \
+		docker run -d --name redis-local -p 6379:6379 redis:7-alpine || true; \
+		sleep 2; \
+	fi
 	@if [ -d "venv313" ]; then \
 		source venv313/bin/activate && python app.py; \
 	else \
 		python app.py; \
 	fi
+
+# Start Redis and run locally
+dev:
+	@echo "🚀 Starting development environment..."
+	@if command -v docker >/dev/null 2>&1; then \
+		if ! docker ps | grep -q redis-local; then \
+			echo "🔴 Starting Redis container..."; \
+			docker run -d --name redis-local -p 6379:6379 --rm redis:7-alpine; \
+			sleep 2; \
+		else \
+			echo "✅ Redis already running"; \
+		fi; \
+	fi
+	@$(MAKE) run
 
 # Deploy (validates first)
 deploy: validate
