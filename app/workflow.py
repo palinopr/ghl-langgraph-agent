@@ -10,6 +10,7 @@ Implements all the latest patterns from LangGraph documentation:
 from typing import Dict, Any, Literal, Union
 from langgraph.graph import StateGraph, END, START
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.store.memory import InMemoryStore
 from langchain_core.messages import AIMessage, HumanMessage
 import os
@@ -197,6 +198,81 @@ async def create_modernized_workflow():
         return compiled, memory, checkpoint_db
 
 
+def create_sync_workflow():
+    """
+    Create a synchronous workflow for module-level compilation.
+    This is what LangGraph will import and use.
+    """
+    logger.info("Creating sync workflow for module export")
+    
+    # Create workflow with standard state
+    workflow_graph = StateGraph(MinimalState)
+    
+    # Enhance agents with task awareness
+    maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)
+    carlos_enhanced = enhance_agent_with_task(carlos_node)
+    sofia_enhanced = enhance_agent_with_task(sofia_node)
+    
+    # Add all nodes - using checkpoint-aware receptionist
+    workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)
+    workflow_graph.add_node("intelligence", intelligence_node)
+    workflow_graph.add_node("supervisor", supervisor_node)
+    workflow_graph.add_node("maria", maria_enhanced)
+    workflow_graph.add_node("carlos", carlos_enhanced)
+    workflow_graph.add_node("sofia", sofia_enhanced)
+    workflow_graph.add_node("responder", responder_node)
+    
+    # Set entry point
+    workflow_graph.set_entry_point("receptionist")
+    
+    # Define edges
+    workflow_graph.add_edge("receptionist", "intelligence")
+    workflow_graph.add_edge("intelligence", "supervisor")
+    
+    # Supervisor routing with official pattern
+    workflow_graph.add_conditional_edges(
+        "supervisor",
+        route_from_supervisor,
+        {
+            "maria": "maria",
+            "carlos": "carlos",
+            "sofia": "sofia",
+            "responder": "responder",
+            "end": END
+        }
+    )
+    
+    # Agent routing with escalation support
+    for agent in ["maria", "carlos", "sofia"]:
+        workflow_graph.add_conditional_edges(
+            agent,
+            route_from_agent,
+            {
+                "responder": "responder",
+                "supervisor": "supervisor"
+            }
+        )
+    
+    # Responder ends
+    workflow_graph.add_edge("responder", END)
+    
+    # Compile with synchronous SQLite checkpointer for module export
+    checkpoint_db = os.path.join(os.path.dirname(__file__), "checkpoints.db")
+    
+    # Use context manager for sync SQLite
+    with SqliteSaver.from_conn_string(checkpoint_db) as checkpointer:
+        store = InMemoryStore()
+        
+        compiled = workflow_graph.compile(
+            checkpointer=checkpointer,
+            store=store
+        )
+        
+        logger.info(f"Sync workflow compiled with SQLite at {checkpoint_db}")
+        
+        return compiled
+
+
 # Global workflow and checkpointer will be created on first use
 _workflow = None
 _checkpointer = None
@@ -359,8 +435,9 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         }
 
 
-# Create a simple workflow export for compatibility
-workflow = None  # Will be created on first run
+# Create the compiled workflow at module level for LangGraph
+# This is what langgraph.json expects to find
+workflow = create_sync_workflow()
 
 # Export for langgraph.json and imports
 __all__ = ["workflow", "run_workflow"]
