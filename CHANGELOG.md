@@ -4,6 +4,19 @@
 
 All notable changes, fixes, and improvements to the LangGraph GHL Agent.
 
+## [Unreleased]
+
+### 🔍 Observability & Debugging
+- Added OpenTelemetry instrumentation for distributed tracing
+  - Auto-instrumentation for FastAPI and HTTPX
+  - Configurable OTLP exporter via `OTEL_EXPORTER_OTLP_ENDPOINT`
+  - Trace context propagation with `traceparent` headers
+  - Request state includes `trace_id` and `span_id`
+- Implemented structured logging with `structlog`
+  - JSON-formatted logs with contextual fields
+  - Consistent logging across all modules
+  - Enhanced debugging for context loss issues
+
 ## [2.0.0] - 2025-07-21
 
 ### 🚀 Major Simplification & Optimization

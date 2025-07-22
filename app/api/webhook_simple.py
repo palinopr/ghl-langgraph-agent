@@ -122,11 +122,17 @@ async def message_webhook(
     try:
         # Get webhook data
         webhook_data = await request.json()
-        logger.info(f"Received webhook: {webhook_data}")
+        logger.info(
+            "Webhook received",
+            contact_id=webhook_data.get("contactId"),
+            conversation_id=webhook_data.get("conversationId"),
+            webhook_type=webhook_data.get("type", "message"),
+            has_body=bool(webhook_data.get("body"))
+        )
         
         # Validate webhook has required fields
         if not webhook_data.get("contactId") and not webhook_data.get("id"):
-            logger.warning("Missing contact ID in webhook")
+            logger.warning("Invalid webhook - missing contact ID", webhook_data=webhook_data)
             return JSONResponse(
                 status_code=400,
                 content={"error": "Missing contact ID"}
@@ -135,7 +141,7 @@ async def message_webhook(
         # Get trace ID from request if available
         trace_id = getattr(request.state, "trace_id", None)
         if trace_id:
-            webhook_data.__trace_id__ = trace_id
+            webhook_data["__trace_id__"] = trace_id
         
         # Process webhook in background for quick response
         background_tasks.add_task(process_message_async, webhook_data)
@@ -151,7 +157,7 @@ async def message_webhook(
         )
         
     except Exception as e:
-        logger.error(f"Webhook error: {e}", exc_info=True)
+        logger.error("Webhook processing error", error=str(e), exc_info=True)
         return JSONResponse(
             status_code=500,
             content={"error": str(e)}
@@ -166,25 +172,45 @@ async def process_message_async(webhook_data: Dict[str, Any]):
         webhook_data: Webhook data from GHL
     """
     try:
-        logger.info(f"Processing message for contact {webhook_data.get('contactId', 'unknown')}")
+        logger.info(
+            "Processing message async",
+            contact_id=webhook_data.get('contactId', 'unknown'),
+            conversation_id=webhook_data.get('conversationId'),
+            trace_id=webhook_data.get('__trace_id__')
+        )
         
         # Run the workflow
         result = await run_workflow(webhook_data)
         
         if result.get("success"):
-            logger.info(f"Successfully processed message: {result}")
+            logger.info(
+                "Message processed successfully",
+                contact_id=webhook_data.get('contactId'),
+                success=True,
+                result=result
+            )
         else:
-            logger.error(f"Failed to process message: {result}")
+            logger.error(
+                "Message processing failed",
+                contact_id=webhook_data.get('contactId'),
+                success=False,
+                result=result
+            )
             
     except Exception as e:
-        logger.error(f"Error processing message: {e}", exc_info=True)
+        logger.error(
+            "Async processing error",
+            contact_id=webhook_data.get('contactId'),
+            error=str(e),
+            exc_info=True
+        )
 
 
 @app.post("/webhook/contact")
 async def contact_webhook(request: Request):
     """Handle contact update webhooks"""
     webhook_data = await request.json()
-    logger.info(f"Contact webhook received: {webhook_data.get('type', 'unknown')}")
+    logger.info("Contact webhook received", webhook_type=webhook_data.get('type', 'unknown'), contact_id=webhook_data.get('contactId'))
     return {"status": "ok"}
 
 
@@ -192,7 +218,7 @@ async def contact_webhook(request: Request):
 async def appointment_webhook(request: Request):
     """Handle appointment webhooks"""
     webhook_data = await request.json()
-    logger.info(f"Appointment webhook received: {webhook_data.get('type', 'unknown')}")
+    logger.info("Appointment webhook received", webhook_type=webhook_data.get('type', 'unknown'), appointment_id=webhook_data.get('id'))
     return {"status": "ok"}
 
 

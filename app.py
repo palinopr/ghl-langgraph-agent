@@ -17,6 +17,10 @@ if __name__ == "__main__":
     from app.api.webhook_simple import app
     import uvicorn
     
+    # Configure observability BEFORE starting the server
+    from src.observability import configure
+    configure(app)
+    
     port = int(os.environ.get("PORT", 8000))
     print(f"Starting server on port {port}...")
     print(f"Debug endpoints available at http://localhost:{port}/debug")

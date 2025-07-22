@@ -309,7 +309,7 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
             webhook_data.get("threadId") or        # Fallback to threadId
             f"contact-{contact_id}"                # Last resort: contact-based
         )
-        logger.info(f"Using thread_id: {thread_id} for contact: {contact_id} (conversationId: {conversation_id})")
+        logger.info("Using thread configuration", thread_id=thread_id, contact_id=contact_id, conversation_id=conversation_id)
         
         # Configuration for checkpointer
         config = {"configurable": {"thread_id": thread_id}}
@@ -331,10 +331,14 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
                 if checkpoint_tuple and checkpoint_tuple.checkpoint:
                     existing_state = checkpoint_tuple.checkpoint.get("channel_values", {})
                     existing_messages = existing_state.get("messages", [])
-                    logger.info(f"✅ Loaded checkpoint for thread {thread_id}")
-                    logger.info(f"   - Messages: {len(existing_messages)}")
-                    logger.info(f"   - Extracted data: {existing_state.get('extracted_data', {})}")
-                    logger.info(f"   - Lead score: {existing_state.get('lead_score', 0)}")
+                    logger.info(
+                        "Loaded checkpoint from SQLite",
+                        thread_id=thread_id,
+                        message_count=len(existing_messages),
+                        extracted_data=existing_state.get('extracted_data', {}),
+                        lead_score=existing_state.get('lead_score', 0),
+                        checkpoint_status="loaded"
+                    )
                     
                     # Debug: Show last few messages for context
                     if existing_messages:
@@ -344,9 +348,9 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
                             logger.info(f"  [{i}] {type(msg).__name__}: {msg_preview}...")
                         logger.info("=== END HISTORY ===")
                 else:
-                    logger.info(f"🆕 No checkpoint in SQLite for thread {thread_id} - new conversation")
+                    logger.info("No checkpoint found", thread_id=thread_id, checkpoint_status="new_conversation")
         except Exception as e:
-            logger.warning(f"Could not load checkpoint: {e}")
+            logger.warning("Failed to load checkpoint", error=str(e), thread_id=thread_id)
         
         # Create initial state
         if existing_state and "messages" in existing_state:
@@ -357,7 +361,7 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
                 "thread_id": thread_id,
                 # Don't add new message here - receptionist will handle it
             }
-            logger.info(f"Using checkpoint state with {len(initial_state.get('messages', []))} existing messages")
+            logger.info("Using checkpoint state", message_count=len(initial_state.get('messages', [])), thread_id=thread_id)
         else:
             # Fresh state if no checkpoint
             initial_state = {
@@ -370,10 +374,10 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
                 "should_end": False,
                 "routing_attempts": 0
             }
-            logger.info("Starting with fresh state (no checkpoint)")
+            logger.info("Starting fresh state", thread_id=thread_id, checkpoint_status="fresh")
         
         # Run the workflow within SQLite context
-        logger.info(f"Running workflow for contact {contact_id}")
+        logger.info("Running workflow", contact_id=contact_id, thread_id=thread_id, workflow_status="started")
         async with AsyncSqliteSaver.from_conn_string(checkpoint_db) as runtime_checkpointer:
             # Re-compile workflow with runtime checkpointer
             workflow_graph = StateGraph(MinimalState)
