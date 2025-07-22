@@ -210,7 +210,13 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         # Extract contact ID, message, and thread ID
         contact_id = webhook_data.get("contactId", webhook_data.get("id", "unknown"))
         message_body = webhook_data.get("body", webhook_data.get("message", ""))
-        thread_id = webhook_data.get("conversationId") or webhook_data.get("threadId")
+        # Use GHL conversationId as thread_id for consistency
+        thread_id = (
+            webhook_data.get("conversationId") or  # GHL conversation ID
+            webhook_data.get("threadId") or        # Fallback to threadId
+            f"contact-{contact_id}"                # Last resort: contact-based
+        )
+        logger.info(f"Using thread_id: {thread_id} for contact: {contact_id}")
         
         # Create initial state
         initial_state = {
@@ -229,7 +235,7 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"Running workflow for contact {contact_id}")
         result = await workflow.ainvoke(
             initial_state,
-            config={"configurable": {"thread_id": contact_id}}
+            config={"configurable": {"thread_id": thread_id}}  # Use consistent thread_id
         )
         
         logger.info(f"Workflow completed for contact {contact_id}")

@@ -1,0 +1,2315 @@
+/Users/jaimeortiz/open-agent-platform/langgraph-ghl-agent/venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+FULL RAW DEBUG OUTPUT
+Analyzing 4 traces
+Timestamp: 2025-07-21 20:50:30.764821
+
+================================================================================
+TRACE 1: 1f0669c6-a989-67ec-a016-8f63b91f79c2
+================================================================================
+
+1. BASIC INFO:
+Name: agent
+Status: success
+Type: chain
+Start: 2025-07-22 01:37:23.833817
+End: 2025-07-22 01:37:28.615866
+Parent: None
+Error: None
+
+2. FULL METADATA:
+{                                                                               
+  "graph_id": "agent",                                                          
+  "created_by": "system",                                                       
+  "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca",                       
+  "run_attempt": 1,                                                             
+  "langgraph_version": "0.5.3",                                                 
+  "langgraph_api_version": "0.2.98",                                            
+  "langgraph_plan": "enterprise",                                               
+  "langgraph_host": "saas",                                                     
+  "langgraph_api_url": null,                                                    
+  "run_id": "1f0669c6-a989-67ec-a016-8f63b91f79c2",                             
+  "user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",                            
+  "x-scheme": "https",                                                          
+  "thread_id": "d779d1e2-ee2c-458d-8ce6-8828d106ad7f",                          
+  "x-real-ip": "10.0.127.1",                                                    
+  "user-agent": "axios/0.21.4",                                                 
+  "x-request-id": "d1ce71369c2f664218784333e2301167",                           
+  "x-forwarded-for": "10.0.127.1",                                              
+  "x-forwarded-host": "ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.l
+  "x-forwarded-port": "443",                                                    
+  "x-forwarded-proto": "https",                                                 
+  "x-forwarded-scheme": "https",                                                
+  "langgraph_request_id": "d1ce71369c2f664218784333e2301167",                   
+  "langgraph_auth_user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",             
+  "LANGSMITH_LANGGRAPH_API_REVISION": "e375385",                                
+  "LANGSMITH_LANGGRAPH_API_VARIANT": "cloud",                                   
+  "LANGSMITH_AUTH_ENDPOINT": "https://api.smith.langchain.com",                 
+  "LANGSMITH_HOST_PROJECT_ID": "b91140bf-d8b2-4d1f-b36a-53f18f2db65d",          
+  "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",                      
+  "LANGSMITH_LANGGRAPH_GIT_REF": "main",                                        
+  "LANGCHAIN_CALLBACKS_BACKGROUND": "true",                                     
+  "LANGSMITH_TRACING": "true",                                                  
+  "LANGSMITH_LANGGRAPH_GIT_REF_SHA": "caf536db87d928ec31e9b26de82fbb27cf347ca2",
+  "LANGSMITH_HOST_PROJECT_NAME": "ghl-langgraph-agent",                         
+  "LANGSMITH_LANGGRAPH_GIT_REPO": "https://github.com/palinopr/ghl-langgraph-age
+  "LANGSMITH_HOST_REVISION_ID": "eb96fabf-a9aa-4a98-9056-6174ea48876f",         
+  "LANGSMITH_AUTH_VERIFY_TENANT_ID": "False",                                   
+  "LANGSMITH_PROJECT": "ghl-langgraph-agent",                                   
+  "LANGSMITH_TENANT_ID": "d46348af-8871-4fc1-bb27-5d17f0589bd5",                
+  "revision_id": "caf536db87d928ec31e9b26de82fbb27cf347ca2",                    
+  "ls_run_depth": 0                                                             
+}                                                                               
+
+3. FULL INPUTS:
+{                                                                               
+  "messages": [                                                                 
+    {                                                                           
+      "role": "user",                                                           
+      "content": "Hola"                                                         
+    }                                                                           
+  ],                                                                            
+  "contact_id": "L850LitpO3RGj0l504Vu",                                         
+  "contact_name": "Jaime Ortiz",                                                
+  "contact_email": "",                                                          
+  "contact_phone": "(305) 487-0475"                                             
+}                                                                               
+
+4. FULL OUTPUTS:
+{                                                                               
+  "messages": [                                                                 
+    {                                                                           
+      "content": "Hola",                                                        
+      "additional_kwargs": {},                                                  
+      "response_metadata": {},                                                  
+      "type": "human",                                                          
+      "id": "e031d64d-0b08-4ed8-9272-0e1c013e794e",                             
+      "example": false                                                          
+    },                                                                          
+    {                                                                           
+      "content": "You are Maria, a professional WhatsApp automation consultant f
+      "additional_kwargs": {},                                                  
+      "response_metadata": {},                                                  
+      "type": "system",                                                         
+      "id": "3f3c7738-4798-4574-aad1-246360126b04"                              
+    },                                                                          
+    {                                                                           
+      "content": "\u00a1Hola! \u00bfC\u00f3mo te llamas?",                      
+      "additional_kwargs": {                                                    
+        "refusal": null                                                         
+      },                                                                        
+      "response_metadata": {                                                    
+        "token_usage": {                                                        
+          "completion_tokens": 10,                                              
+          "prompt_tokens": 806,                                                 
+          "total_tokens": 816,                                                  
+          "completion_tokens_details": {                                        
+            "accepted_prediction_tokens": 0,                                    
+            "audio_tokens": 0,                                                  
+            "reasoning_tokens": 0,                                              
+            "rejected_prediction_tokens": 0                                     
+          },                                                                    
+          "prompt_tokens_details": {                                            
+            "audio_tokens": 0,                                                  
+            "cached_tokens": 0                                                  
+          }                                                                     
+        },                                                                      
+        "model_name": "gpt-4-turbo-2024-04-09",                                 
+        "system_fingerprint": "fp_de235176ee",                                  
+        "id": "chatcmpl-BvwEXctgwMiq03wGSpTLtYk2aPCSb",                         
+        "service_tier": "default",                                              
+        "finish_reason": "stop",                                                
+        "logprobs": null                                                        
+      },                                                                        
+      "type": "ai",                                                             
+      "name": "maria",                                                          
+      "id": "run--bface0ef-5562-47fd-87c2-6c21e1524460-0",                      
+      "example": false,                                                         
+      "tool_calls": [],                                                         
+      "invalid_tool_calls": [],                                                 
+      "usage_metadata": {                                                       
+        "input_tokens": 806,                                                    
+        "output_tokens": 10,                                                    
+        "total_tokens": 816,                                                    
+        "input_token_details": {                                                
+          "audio": 0,                                                           
+          "cache_read": 0                                                       
+        },                                                                      
+        "output_token_details": {                                               
+          "audio": 0,                                                           
+          "reasoning": 0                                                        
+        }                                                                       
+      }                                                                         
+    }                                                                           
+  ],                                                                            
+  "contact_id": "L850LitpO3RGj0l504Vu",                                         
+  "lead_score": 1,                                                              
+  "lead_category": "cold",                                                      
+  "extracted_data": {                                                           
+    "name": null,                                                               
+    "business_type": null,                                                      
+    "budget": null,                                                             
+    "goal": null,                                                               
+    "email": null,                                                              
+    "phone": null,                                                              
+    "extraction_confidence": {}                                                 
+  },                                                                            
+  "score_reasoning": "minimal information",                                     
+  "score_history": [                                                            
+    {                                                                           
+      "score": 1,                                                               
+      "previous_score": 0,                                                      
+      "timestamp": "2025-07-22T01:37:23.865554",                                
+      "reasoning": "minimal information",                                       
+      "trigger": "message_analysis"                                             
+    }                                                                           
+  ],                                                                            
+  "next_agent": "maria",                                                        
+  "suggested_agent": "maria",                                                   
+  "supervisor_complete": true,                                                  
+  "last_sent_message": "\u00a1Hola! \u00bfC\u00f3mo te llamas?"                 
+}                                                                               
+
+5. EXTRA DATA:
+{                                                                               
+  "metadata": {                                                                 
+    "graph_id": "agent",                                                        
+    "created_by": "system",                                                     
+    "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca",                     
+    "run_attempt": 1,                                                           
+    "langgraph_version": "0.5.3",                                               
+    "langgraph_api_version": "0.2.98",                                          
+    "langgraph_plan": "enterprise",                                             
+    "langgraph_host": "saas",                                                   
+    "langgraph_api_url": null,                                                  
+    "run_id": "1f0669c6-a989-67ec-a016-8f63b91f79c2",                           
+    "user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",                          
+    "x-scheme": "https",                                                        
+    "thread_id": "d779d1e2-ee2c-458d-8ce6-8828d106ad7f",                        
+    "x-real-ip": "10.0.127.1",                                                  
+    "user-agent": "axios/0.21.4",                                               
+    "x-request-id": "d1ce71369c2f664218784333e2301167",                         
+    "x-forwarded-for": "10.0.127.1",                                            
+    "x-forwarded-host": "ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us
+    "x-forwarded-port": "443",                                                  
+    "x-forwarded-proto": "https",                                               
+    "x-forwarded-scheme": "https",                                              
+    "langgraph_request_id": "d1ce71369c2f664218784333e2301167",                 
+    "langgraph_auth_user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",           
+    "LANGSMITH_LANGGRAPH_API_REVISION": "e375385",                              
+    "LANGSMITH_LANGGRAPH_API_VARIANT": "cloud",                                 
+    "LANGSMITH_AUTH_ENDPOINT": "https://api.smith.langchain.com",               
+    "LANGSMITH_HOST_PROJECT_ID": "b91140bf-d8b2-4d1f-b36a-53f18f2db65d",        
+    "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",                    
+    "LANGSMITH_LANGGRAPH_GIT_REF": "main",                                      
+    "LANGCHAIN_CALLBACKS_BACKGROUND": "true",                                   
+    "LANGSMITH_TRACING": "true",                                                
+    "LANGSMITH_LANGGRAPH_GIT_REF_SHA": "caf536db87d928ec31e9b26de82fbb27cf347ca2
+    "LANGSMITH_HOST_PROJECT_NAME": "ghl-langgraph-agent",                       
+    "LANGSMITH_LANGGRAPH_GIT_REPO": "https://github.com/palinopr/ghl-langgraph-a
+    "LANGSMITH_HOST_REVISION_ID": "eb96fabf-a9aa-4a98-9056-6174ea48876f",       
+    "LANGSMITH_AUTH_VERIFY_TENANT_ID": "False",                                 
+    "LANGSMITH_PROJECT": "ghl-langgraph-agent",                                 
+    "LANGSMITH_TENANT_ID": "d46348af-8871-4fc1-bb27-5d17f0589bd5",              
+    "revision_id": "caf536db87d928ec31e9b26de82fbb27cf347ca2",                  
+    "ls_run_depth": 0                                                           
+  },                                                                            
+  "runtime": {                                                                  
+    "sdk": "langsmith-py",                                                      
+    "sdk_version": "0.4.8",                                                     
+    "library": "langchain-core",                                                
+    "platform": "Linux-6.6.87+-x86_64-with-glibc2.36",                          
+    "runtime": "python",                                                        
+    "py_implementation": "CPython",                                             
+    "runtime_version": "3.13.5",                                                
+    "langchain_version": "0.3.26",                                              
+    "langchain_core_version": "0.3.69",                                         
+    "library_version": "0.3.69"                                                 
+  }                                                                             
+}                                                                               
+
+6. TOKEN USAGE:
+Total Tokens: 816
+Prompt Tokens: 806
+Completion Tokens: 10
+Total Cost: $0.00836
+Prompt Cost: $0.00806
+Completion Cost: $0.0003
+
+7. EVENTS:
+Event 1: {'name': 'start', 'time': '2025-07-22T01:37:23.833817+00:00'}
+Event 2: {'name': 'end', 'time': '2025-07-22T01:37:28.615866+00:00'}
+
+8. TAGS:
+No tags
+
+9. ALL CHILD RUNS:
+Total child runs: 5
+
+Child 1: responder
+  ID: b82723e9-cf31-4682-a099-e92f1bb645a2
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:37:25.771941
+  End: 2025-07-22 01:37:28.612788
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Hola",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "e031d64d-0b08-4ed8-9272-0e1c013e794e",
+                "example": false
+            },
+    ...
+  Outputs:
+    {
+        "last_sent_message": "\u00a1Hola! \u00bfC\u00f3mo te llamas?",
+        "message_sent": true
+    }
+
+Child 2: maria
+  ID: 778588d7-11c4-43df-afb0-22500a40e209
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:37:24.625037
+  End: 2025-07-22 01:37:25.768783
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Hola",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "e031d64d-0b08-4ed8-9272-0e1c013e794e",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "You are Maria, a professional WhatsApp automation 
+consultant for Main Outlet Media.\n\n\ud83e\udde0 MEMORY-AWARE MODE ACTIVE 
+\ud83e\udde0\nYou now have ISOLATED memory - you only see messages relevant to 
+YOU.\nNo confusion from other agents or old conversations!\n\n\\n\ud83d\udcca 
+MARIA'S CONTEXT:\\n\\n\ud83d\udccb CUSTOMER DATA:\\n- Name: None\\n- Business: 
+None\\n- Problem: None\\n- Budget: NOT CONFIRMED\\n\\n\ud83c\udfaf LEAD SCORE: 
+1/10\\n\\n\ud83d\udcac CUSTOMER JUST SAID: 'Hola'\\n\\n\ud83d\udcca Context 
+size: 1 messages\n\nYour Role: Handle COLD leads (score 0-4), build trust, 
+qualify initially.\n\nCONVERSATION FLOW:\n1. If no name \u2192 Ask for name\n2. 
+If no business \u2192 Ask for business type  \n3. If no problem \u2192 Ask about
+WhatsApp challenges\n4. If score < 5 \u2192 Present value and ask budget\n5. If 
+budget confirmed & score >= 5 \u2192 Escalate to Carlos\n\n\u26a1 CRITICAL 
+RULES:\n- You handle scores 0-4 ONLY\n- Score 5+ \u2192 Use 
+escalate_to_supervisor tool immediately\n- Speak Spanish (Mexican friendly 
+style)\n- One question at a time\n- If customer provides info, acknowledge it 
+and move forward\n\nRemember: You have CLEAN context now - no more confusion!",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "system",
+                "id": "3f3c7738-4798-4574-aad1-246360126b04"
+            },
+            {
+    ...
+
+Child 3: supervisor
+  ID: 583b5847-7818-4bad-a5ac-e1ba8ce5b060
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:37:23.868694
+  End: 2025-07-22 01:37:24.621473
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Hola",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "e031d64d-0b08-4ed8-9272-0e1c013e794e",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "next_agent": "maria",
+        "supervisor_complete": true,
+        "error": "Missing required key(s) {'remaining_steps'} in state_schema"
+    }
+
+Child 4: intelligence
+  ID: 1ff5b29d-113f-43a0-99d3-5444df38548b
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:37:23.849733
+  End: 2025-07-22 01:37:23.865972
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Hola",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "e031d64d-0b08-4ed8-9272-0e1c013e794e",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "Hola",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "e031d64d-0b08-4ed8-9272-0e1c013e794e",
+                "example": false
+            }
+    ...
+
+Child 5: receptionist
+  ID: c6edae57-5540-4565-bee8-cf07015e01da
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:37:23.842648
+  End: 2025-07-22 01:37:23.845392
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Hola",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "e031d64d-0b08-4ed8-9272-0e1c013e794e",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "Hola",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "e031d64d-0b08-4ed8-9272-0e1c013e794e",
+                "example": false
+            }
+    ...
+
+10. FEEDBACK:
+No feedback
+
+11. RAW RUN OBJECT ATTRIBUTES:
+app_path: 
+/o/d46348af-8871-4fc1-bb27-5d17f0589bd5/projects/p/a807d9fb-2c58-4d09-a4b2-4037e
+0668fcc/r/1f0669c6-a989-67ec-a016-8f63b91f79c2?trace_id=1f0669c6-a989-67ec-a016-
+8f63b91f79c2&start_time=2025-07-22T01:37:23.833817
+attachments: {}
+child_run_ids: [UUID('c6edae57-5540-4565-bee8-cf07015e01da'), 
+UUID('1ff5b29d-113f-43a0-99d3-5444df38548b'), 
+UUID('583b5847-7818-4bad-a5ac-e1ba8ce5b060'), 
+UUID('e68365cd-6e8f-4bd5-b43e-2dabc86c0306'), 
+UUID('778588d7-11c4-43df-afb0-22500a40e209'), 
+UUID('f8b97282-601e-491c-ad4c-c14a932740d9'), 
+UUID('1df95d42-9228-4134-abc4-49a5108c5786'), 
+UUID('e977e399-6c58-41f5-8802-3daf30de5d22'), 
+UUID('2f14a260-ee17-46a6-846f-8f6edb811c2d'), 
+UUID('ecf7ae3f-a0b5-4f50-a54a-787362c27380'), 
+UUID('bface0ef-5562-47fd-87c2-6c21e1524460'), 
+UUID('8446b20b-4ff7-4557-b433-b9d8724d4ea0'), 
+UUID('87784be5-3d39-481f-8ccc-5921163a0017'), 
+UUID('b82723e9-cf31-4682-a099-e92f1bb645a2')]
+child_runs: None
+completion_cost: 0.0003
+completion_cost_details: None
+completion_token_details: None
+completion_tokens: 10
+dotted_order: 20250722T013723833817Z1f0669c6-a989-67ec-a016-8f63b91f79c2
+end_time: 2025-07-22 01:37:28.615866
+error: None
+events: [{'name': 'start', 'time': '2025-07-22T01:37:23.833817+00:00'}, {'name':
+'end', 'time': '2025-07-22T01:37:28.615866+00:00'}]
+extra: {'metadata': {'graph_id': 'agent', 'created_by': 'system', 
+'assistant_id': 'fe096781-5601-53d2-b2f6-0d3403f7e9ca', 'run_attempt': 1, 
+'langgraph_version': '0.5.3', 'langgraph_api_version': '0.2.98', 
+'langgraph_plan': 'enterprise', 'langgraph_host': 'saas', 'langgraph_api_url': 
+None, 'run_id': '1f0669c6-a989-67ec-a016-8f63b91f79c2', 'user_id': 
+'166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 'x-scheme': 'https', 'thread_id': 
+'d779d1e2-ee2c-458d-8ce6-8828d106ad7f', 'x-real-ip': '10.0.127.1', 'user-agent':
+'axios/0.21.4', 'x-request-id': 'd1ce71369c2f664218784333e2301167', 
+'x-forwarded-for': '10.0.127.1', 'x-forwarded-host': 
+'ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app', 
+'x-forwarded-port': '443', 'x-forwarded-proto': 'https', 'x-forwarded-scheme': 
+'https', 'langgraph_request_id': 'd1ce71369c2f664218784333e2301167', 
+'langgraph_auth_user_id': '166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 
+'LANGSMITH_LANGGRAPH_API_REVISION': 'e375385', 
+'LANGSMITH_LANGGRAPH_API_VARIANT': 'cloud', 'LANGSMITH_AUTH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_HOST_PROJECT_ID': 
+'b91140bf-d8b2-4d1f-b36a-53f18f2db65d', 'LANGSMITH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_LANGGRAPH_GIT_REF': 'main', 
+'LANGCHAIN_CALLBACKS_BACKGROUND': 'true', 'LANGSMITH_TRACING': 'true', 
+'LANGSMITH_LANGGRAPH_GIT_REF_SHA': 'caf536db87d928ec31e9b26de82fbb27cf347ca2', 
+'LANGSMITH_HOST_PROJECT_NAME': 'ghl-langgraph-agent', 
+'LANGSMITH_LANGGRAPH_GIT_REPO': 
+'https://github.com/palinopr/ghl-langgraph-agent', 'LANGSMITH_HOST_REVISION_ID':
+'eb96fabf-a9aa-4a98-9056-6174ea48876f', 'LANGSMITH_AUTH_VERIFY_TENANT_ID': 
+'False', 'LANGSMITH_PROJECT': 'ghl-langgraph-agent', 'LANGSMITH_TENANT_ID': 
+'d46348af-8871-4fc1-bb27-5d17f0589bd5', 'revision_id': 
+'caf536db87d928ec31e9b26de82fbb27cf347ca2', 'ls_run_depth': 0}, 'runtime': 
+{'sdk': 'langsmith-py', 'sdk_version': '0.4.8', 'library': 'langchain-core', 
+'platform': 'Linux-6.6.87+-x86_64-with-glibc2.36', 'runtime': 'python', 
+'py_implementation': 'CPython', 'runtime_version': '3.13.5', 
+'langchain_version': '0.3.26', 'langchain_core_version': '0.3.69', 
+'library_version': '0.3.69'}}
+feedback_stats: None
+first_token_time: None
+id: 1f0669c6-a989-67ec-a016-8f63b91f79c2
+in_dataset: False
+input_cost: 0.00806
+input_cost_details: None
+input_token_details: None
+input_tokens: 806
+inputs: {'messages': [{'role': 'user', 'content': 'Hola'}], 'contact_id': 
+'L850LitpO3RGj0l504Vu', 'contact_name': 'Jaime Ortiz', 'contact_email': '', 
+'contact_phone': '(305) 487-0475'}
+manifest_id: None
+metadata: {'graph_id': 'agent', 'created_by': 'system', 'assistant_id': 
+'fe096781-5601-53d2-b2f6-0d3403f7e9ca', 'run_attempt': 1, 'langgraph_version': 
+'0.5.3', 'langgraph_api_version': '0.2.98', 'langgraph_plan': 'enterprise', 
+'langgraph_host': 'saas', 'langgraph_api_url': None, 'run_id': 
+'1f0669c6-a989-67ec-a016-8f63b91f79c2', 'user_id': 
+'166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 'x-scheme': 'https', 'thread_id': 
+'d779d1e2-ee2c-458d-8ce6-8828d106ad7f', 'x-real-ip': '10.0.127.1', 'user-agent':
+'axios/0.21.4', 'x-request-id': 'd1ce71369c2f664218784333e2301167', 
+'x-forwarded-for': '10.0.127.1', 'x-forwarded-host': 
+'ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app', 
+'x-forwarded-port': '443', 'x-forwarded-proto': 'https', 'x-forwarded-scheme': 
+'https', 'langgraph_request_id': 'd1ce71369c2f664218784333e2301167', 
+'langgraph_auth_user_id': '166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 
+'LANGSMITH_LANGGRAPH_API_REVISION': 'e375385', 
+'LANGSMITH_LANGGRAPH_API_VARIANT': 'cloud', 'LANGSMITH_AUTH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_HOST_PROJECT_ID': 
+'b91140bf-d8b2-4d1f-b36a-53f18f2db65d', 'LANGSMITH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_LANGGRAPH_GIT_REF': 'main', 
+'LANGCHAIN_CALLBACKS_BACKGROUND': 'true', 'LANGSMITH_TRACING': 'true', 
+'LANGSMITH_LANGGRAPH_GIT_REF_SHA': 'caf536db87d928ec31e9b26de82fbb27cf347ca2', 
+'LANGSMITH_HOST_PROJECT_NAME': 'ghl-langgraph-agent', 
+'LANGSMITH_LANGGRAPH_GIT_REPO': 
+'https://github.com/palinopr/ghl-langgraph-agent', 'LANGSMITH_HOST_REVISION_ID':
+'eb96fabf-a9aa-4a98-9056-6174ea48876f', 'LANGSMITH_AUTH_VERIFY_TENANT_ID': 
+'False', 'LANGSMITH_PROJECT': 'ghl-langgraph-agent', 'LANGSMITH_TENANT_ID': 
+'d46348af-8871-4fc1-bb27-5d17f0589bd5', 'revision_id': 
+'caf536db87d928ec31e9b26de82fbb27cf347ca2', 'ls_run_depth': 0}
+name: agent
+output_cost: 0.0003
+output_cost_details: None
+output_token_details: None
+output_tokens: 10
+outputs: {'messages': [{'content': 'Hola', 'additional_kwargs': {}, 
+'response_metadata': {}, 'type': 'human', 'id': 
+'e031d64d-0b08-4ed8-9272-0e1c013e794e', 'example': False}, {'content': "You are 
+Maria, a professional WhatsApp automation consultant for Main Outlet 
+Media.\n\n🧠 MEMORY-AWARE MODE ACTIVE 🧠\nYou now have ISOLATED memory - you 
+only see messages relevant to YOU.\nNo confusion from other agents or old 
+conversations!\n\n\\n📊 MARIA'S CONTEXT:\\n\\n📋 CUSTOMER DATA:\\n- Name: 
+None\\n- Business: None\\n- Problem: None\\n- Budget: NOT CONFIRMED\\n\\n🎯 LEAD
+SCORE: 1/10\\n\\n💬 CUSTOMER JUST SAID: 'Hola'\\n\\n📊 Context size: 1 
+messages\n\nYour Role: Handle COLD leads (score 0-4), build trust, qualify 
+initially.\n\nCONVERSATION FLOW:\n1. If no name → Ask for name\n2. If no 
+business → Ask for business type  \n3. If no problem → Ask about WhatsApp 
+challenges\n4. If score < 5 → Present value and ask budget\n5. If budget 
+confirmed & score >= 5 → Escalate to Carlos\n\n⚡ CRITICAL RULES:\n- You handle 
+scores 0-4 ONLY\n- Score 5+ → Use escalate_to_supervisor tool immediately\n- 
+Speak Spanish (Mexican friendly style)\n- One question at a time\n- If customer 
+provides info, acknowledge it and move forward\n\nRemember: You have CLEAN 
+context now - no more confusion!", 'additional_kwargs': {}, 'response_metadata':
+{}, 'type': 'system', 'id': '3f3c7738-4798-4574-aad1-246360126b04'}, {'content':
+'¡Hola! ¿Cómo te llamas?', 'additional_kwargs': {'refusal': None}, 
+'response_metadata': {'token_usage': {'completion_tokens': 10, 'prompt_tokens': 
+806, 'total_tokens': 816, 'completion_tokens_details': 
+{'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 
+'rejected_prediction_tokens': 0}, 'prompt_tokens_details': {'audio_tokens': 0, 
+'cached_tokens': 0}}, 'model_name': 'gpt-4-turbo-2024-04-09', 
+'system_fingerprint': 'fp_de235176ee', 'id': 
+'chatcmpl-BvwEXctgwMiq03wGSpTLtYk2aPCSb', 'service_tier': 'default', 
+'finish_reason': 'stop', 'logprobs': None}, 'type': 'ai', 'name': 'maria', 'id':
+'run--bface0ef-5562-47fd-87c2-6c21e1524460-0', 'example': False, 'tool_calls': 
+[], 'invalid_tool_calls': [], 'usage_metadata': {'input_tokens': 806, 
+'output_tokens': 10, 'total_tokens': 816, 'input_token_details': {'audio': 0, 
+'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}}], 
+'contact_id': 'L850LitpO3RGj0l504Vu', 'lead_score': 1, 'lead_category': 'cold', 
+'extracted_data': {'name': None, 'business_type': None, 'budget': None, 'goal': 
+None, 'email': None, 'phone': None, 'extraction_confidence': {}}, 
+'score_reasoning': 'minimal information', 'score_history': [{'score': 1, 
+'previous_score': 0, 'timestamp': '2025-07-22T01:37:23.865554', 'reasoning': 
+'minimal information', 'trigger': 'message_analysis'}], 'next_agent': 'maria', 
+'suggested_agent': 'maria', 'supervisor_complete': True, 'last_sent_message': 
+'¡Hola! ¿Cómo te llamas?'}
+parent_run_id: None
+parent_run_ids: []
+prompt_cost: 0.00806
+prompt_cost_details: None
+prompt_token_details: None
+prompt_tokens: 806
+reference_example_id: None
+revision_id: caf536db87d928ec31e9b26de82fbb27cf347ca2
+run_type: chain
+serialized: None
+session_id: a807d9fb-2c58-4d09-a4b2-4037e0668fcc
+start_time: 2025-07-22 01:37:23.833817
+status: success
+tags: []
+total_cost: 0.00836
+total_tokens: 816
+trace_id: 1f0669c6-a989-67ec-a016-8f63b91f79c2
+url: 
+https://smith.langchain.com/o/d46348af-8871-4fc1-bb27-5d17f0589bd5/projects/p/a8
+07d9fb-2c58-4d09-a4b2-4037e0668fcc/r/1f0669c6-a989-67ec-a016-8f63b91f79c2?trace_
+id=1f0669c6-a989-67ec-a016-8f63b91f79c2&start_time=2025-07-22T01:37:23.833817
+
+================================================================================
+TRACE 2: 1f0669c7-6120-6563-b484-e5ca2a2740d1
+================================================================================
+
+1. BASIC INFO:
+Name: agent
+Status: success
+Type: chain
+Start: 2025-07-22 01:37:43.054424
+End: 2025-07-22 01:37:50.711834
+Parent: None
+Error: None
+
+2. FULL METADATA:
+{                                                                               
+  "graph_id": "agent",                                                          
+  "created_by": "system",                                                       
+  "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca",                       
+  "run_attempt": 1,                                                             
+  "langgraph_version": "0.5.3",                                                 
+  "langgraph_api_version": "0.2.98",                                            
+  "langgraph_plan": "enterprise",                                               
+  "langgraph_host": "saas",                                                     
+  "langgraph_api_url": null,                                                    
+  "run_id": "1f0669c7-6120-6563-b484-e5ca2a2740d1",                             
+  "user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",                            
+  "x-scheme": "https",                                                          
+  "thread_id": "0dbc1c79-30eb-4a12-9509-dbd17eb0d4bd",                          
+  "x-real-ip": "10.0.0.212",                                                    
+  "user-agent": "axios/0.21.4",                                                 
+  "x-request-id": "95ab0268a852ec9322309df24225f7e1",                           
+  "x-forwarded-for": "10.0.0.212",                                              
+  "x-forwarded-host": "ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.l
+  "x-forwarded-port": "443",                                                    
+  "x-forwarded-proto": "https",                                                 
+  "x-forwarded-scheme": "https",                                                
+  "langgraph_request_id": "95ab0268a852ec9322309df24225f7e1",                   
+  "langgraph_auth_user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",             
+  "LANGSMITH_LANGGRAPH_API_REVISION": "e375385",                                
+  "LANGSMITH_LANGGRAPH_API_VARIANT": "cloud",                                   
+  "LANGSMITH_AUTH_ENDPOINT": "https://api.smith.langchain.com",                 
+  "LANGSMITH_HOST_PROJECT_ID": "b91140bf-d8b2-4d1f-b36a-53f18f2db65d",          
+  "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",                      
+  "LANGSMITH_LANGGRAPH_GIT_REF": "main",                                        
+  "LANGCHAIN_CALLBACKS_BACKGROUND": "true",                                     
+  "LANGSMITH_TRACING": "true",                                                  
+  "LANGSMITH_LANGGRAPH_GIT_REF_SHA": "caf536db87d928ec31e9b26de82fbb27cf347ca2",
+  "LANGSMITH_HOST_PROJECT_NAME": "ghl-langgraph-agent",                         
+  "LANGSMITH_LANGGRAPH_GIT_REPO": "https://github.com/palinopr/ghl-langgraph-age
+  "LANGSMITH_HOST_REVISION_ID": "eb96fabf-a9aa-4a98-9056-6174ea48876f",         
+  "LANGSMITH_AUTH_VERIFY_TENANT_ID": "False",                                   
+  "LANGSMITH_PROJECT": "ghl-langgraph-agent",                                   
+  "LANGSMITH_TENANT_ID": "d46348af-8871-4fc1-bb27-5d17f0589bd5",                
+  "revision_id": "caf536db87d928ec31e9b26de82fbb27cf347ca2",                    
+  "ls_run_depth": 0                                                             
+}                                                                               
+
+3. FULL INPUTS:
+{                                                                               
+  "messages": [                                                                 
+    {                                                                           
+      "role": "user",                                                           
+      "content": "Jaime"                                                        
+    }                                                                           
+  ],                                                                            
+  "contact_id": "L850LitpO3RGj0l504Vu",                                         
+  "contact_name": "Jaime Ortiz",                                                
+  "contact_email": "",                                                          
+  "contact_phone": "(305) 487-0475"                                             
+}                                                                               
+
+4. FULL OUTPUTS:
+{                                                                               
+  "messages": [                                                                 
+    {                                                                           
+      "content": "Jaime",                                                       
+      "additional_kwargs": {},                                                  
+      "response_metadata": {},                                                  
+      "type": "human",                                                          
+      "id": "b97cd3b3-bfe2-4dea-bcb8-259d84bc2deb",                             
+      "example": false                                                          
+    },                                                                          
+    {                                                                           
+      "content": "You are Maria, a professional WhatsApp automation consultant f
+      "additional_kwargs": {},                                                  
+      "response_metadata": {},                                                  
+      "type": "system",                                                         
+      "id": "b6315df0-f1b5-4a65-8262-7837d961520d"                              
+    },                                                                          
+    {                                                                           
+      "content": "\u00a1Hola Jaime! Me alegra que est\u00e9s interesado en mejor
+      "additional_kwargs": {                                                    
+        "refusal": null                                                         
+      },                                                                        
+      "response_metadata": {                                                    
+        "token_usage": {                                                        
+          "completion_tokens": 36,                                              
+          "prompt_tokens": 808,                                                 
+          "total_tokens": 844,                                                  
+          "completion_tokens_details": {                                        
+            "accepted_prediction_tokens": 0,                                    
+            "audio_tokens": 0,                                                  
+            "reasoning_tokens": 0,                                              
+            "rejected_prediction_tokens": 0                                     
+          },                                                                    
+          "prompt_tokens_details": {                                            
+            "audio_tokens": 0,                                                  
+            "cached_tokens": 0                                                  
+          }                                                                     
+        },                                                                      
+        "model_name": "gpt-4-turbo-2024-04-09",                                 
+        "system_fingerprint": "fp_de235176ee",                                  
+        "id": "chatcmpl-BvwEp7tKrucwJgJamSjvpO1ruTFSp",                         
+        "service_tier": "default",                                              
+        "finish_reason": "stop",                                                
+        "logprobs": null                                                        
+      },                                                                        
+      "type": "ai",                                                             
+      "name": "maria",                                                          
+      "id": "run--b66d8288-05dc-4bc0-a3dd-8b05a7474665-0",                      
+      "example": false,                                                         
+      "tool_calls": [],                                                         
+      "invalid_tool_calls": [],                                                 
+      "usage_metadata": {                                                       
+        "input_tokens": 808,                                                    
+        "output_tokens": 36,                                                    
+        "total_tokens": 844,                                                    
+        "input_token_details": {                                                
+          "audio": 0,                                                           
+          "cache_read": 0                                                       
+        },                                                                      
+        "output_token_details": {                                               
+          "audio": 0,                                                           
+          "reasoning": 0                                                        
+        }                                                                       
+      }                                                                         
+    }                                                                           
+  ],                                                                            
+  "contact_id": "L850LitpO3RGj0l504Vu",                                         
+  "lead_score": 2,                                                              
+  "lead_category": "cold",                                                      
+  "extracted_data": {                                                           
+    "name": "Jaime",                                                            
+    "business_type": null,                                                      
+    "budget": null,                                                             
+    "goal": null,                                                               
+    "email": null,                                                              
+    "phone": null,                                                              
+    "extraction_confidence": {                                                  
+      "name": 0.7999999999999999                                                
+    }                                                                           
+  },                                                                            
+  "score_reasoning": "Score 2: has name",                                       
+  "score_history": [                                                            
+    {                                                                           
+      "score": 2,                                                               
+      "previous_score": 0,                                                      
+      "timestamp": "2025-07-22T01:37:43.063682",                                
+      "reasoning": "Score 2: has name",                                         
+      "trigger": "message_analysis"                                             
+    }                                                                           
+  ],                                                                            
+  "next_agent": "maria",                                                        
+  "suggested_agent": "maria",                                                   
+  "supervisor_complete": true,                                                  
+  "last_sent_message": "\u00a1Hola Jaime! Me alegra que est\u00e9s interesado en
+}                                                                               
+
+5. EXTRA DATA:
+{                                                                               
+  "metadata": {                                                                 
+    "graph_id": "agent",                                                        
+    "created_by": "system",                                                     
+    "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca",                     
+    "run_attempt": 1,                                                           
+    "langgraph_version": "0.5.3",                                               
+    "langgraph_api_version": "0.2.98",                                          
+    "langgraph_plan": "enterprise",                                             
+    "langgraph_host": "saas",                                                   
+    "langgraph_api_url": null,                                                  
+    "run_id": "1f0669c7-6120-6563-b484-e5ca2a2740d1",                           
+    "user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",                          
+    "x-scheme": "https",                                                        
+    "thread_id": "0dbc1c79-30eb-4a12-9509-dbd17eb0d4bd",                        
+    "x-real-ip": "10.0.0.212",                                                  
+    "user-agent": "axios/0.21.4",                                               
+    "x-request-id": "95ab0268a852ec9322309df24225f7e1",                         
+    "x-forwarded-for": "10.0.0.212",                                            
+    "x-forwarded-host": "ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us
+    "x-forwarded-port": "443",                                                  
+    "x-forwarded-proto": "https",                                               
+    "x-forwarded-scheme": "https",                                              
+    "langgraph_request_id": "95ab0268a852ec9322309df24225f7e1",                 
+    "langgraph_auth_user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",           
+    "LANGSMITH_LANGGRAPH_API_REVISION": "e375385",                              
+    "LANGSMITH_LANGGRAPH_API_VARIANT": "cloud",                                 
+    "LANGSMITH_AUTH_ENDPOINT": "https://api.smith.langchain.com",               
+    "LANGSMITH_HOST_PROJECT_ID": "b91140bf-d8b2-4d1f-b36a-53f18f2db65d",        
+    "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",                    
+    "LANGSMITH_LANGGRAPH_GIT_REF": "main",                                      
+    "LANGCHAIN_CALLBACKS_BACKGROUND": "true",                                   
+    "LANGSMITH_TRACING": "true",                                                
+    "LANGSMITH_LANGGRAPH_GIT_REF_SHA": "caf536db87d928ec31e9b26de82fbb27cf347ca2
+    "LANGSMITH_HOST_PROJECT_NAME": "ghl-langgraph-agent",                       
+    "LANGSMITH_LANGGRAPH_GIT_REPO": "https://github.com/palinopr/ghl-langgraph-a
+    "LANGSMITH_HOST_REVISION_ID": "eb96fabf-a9aa-4a98-9056-6174ea48876f",       
+    "LANGSMITH_AUTH_VERIFY_TENANT_ID": "False",                                 
+    "LANGSMITH_PROJECT": "ghl-langgraph-agent",                                 
+    "LANGSMITH_TENANT_ID": "d46348af-8871-4fc1-bb27-5d17f0589bd5",              
+    "revision_id": "caf536db87d928ec31e9b26de82fbb27cf347ca2",                  
+    "ls_run_depth": 0                                                           
+  },                                                                            
+  "runtime": {                                                                  
+    "sdk": "langsmith-py",                                                      
+    "sdk_version": "0.4.8",                                                     
+    "library": "langchain-core",                                                
+    "platform": "Linux-6.6.87+-x86_64-with-glibc2.36",                          
+    "runtime": "python",                                                        
+    "py_implementation": "CPython",                                             
+    "runtime_version": "3.13.5",                                                
+    "langchain_version": "0.3.26",                                              
+    "langchain_core_version": "0.3.69",                                         
+    "library_version": "0.3.69"                                                 
+  }                                                                             
+}                                                                               
+
+6. TOKEN USAGE:
+Total Tokens: 844
+Prompt Tokens: 808
+Completion Tokens: 36
+Total Cost: $0.00916
+Prompt Cost: $0.00808
+Completion Cost: $0.00108
+
+7. EVENTS:
+Event 1: {'name': 'start', 'time': '2025-07-22T01:37:43.054424+00:00'}
+Event 2: {'name': 'end', 'time': '2025-07-22T01:37:50.711834+00:00'}
+
+8. TAGS:
+No tags
+
+9. ALL CHILD RUNS:
+Total child runs: 5
+
+Child 1: responder
+  ID: b5d5eb14-a050-4272-8978-ce563d7a5e7c
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:37:45.169735
+  End: 2025-07-22 01:37:50.705972
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Jaime",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "b97cd3b3-bfe2-4dea-bcb8-259d84bc2deb",
+                "example": false
+            },
+    ...
+  Outputs:
+    {
+        "last_sent_message": "\u00a1Hola Jaime! Me alegra que est\u00e9s 
+interesado en mejorar la automatizaci\u00f3n de WhatsApp para tu negocio. 
+\u00bfPodr\u00edas decirme qu\u00e9 tipo de negocio tienes?",
+        "message_sent": true
+    }
+
+Child 2: maria
+  ID: ea3199ce-d182-4d24-9600-fbebe2d15569
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:37:43.075771
+  End: 2025-07-22 01:37:45.166467
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Jaime",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "b97cd3b3-bfe2-4dea-bcb8-259d84bc2deb",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "You are Maria, a professional WhatsApp automation 
+consultant for Main Outlet Media.\n\n\ud83e\udde0 MEMORY-AWARE MODE ACTIVE 
+\ud83e\udde0\nYou now have ISOLATED memory - you only see messages relevant to 
+YOU.\nNo confusion from other agents or old conversations!\n\n\\n\ud83d\udcca 
+MARIA'S CONTEXT:\\n\\n\ud83d\udccb CUSTOMER DATA:\\n- Name: Jaime\\n- Business: 
+None\\n- Problem: None\\n- Budget: NOT CONFIRMED\\n\\n\ud83c\udfaf LEAD SCORE: 
+2/10\\n\\n\ud83d\udcac CUSTOMER JUST SAID: 'Jaime'\\n\\n\ud83d\udcca Context 
+size: 1 messages\n\nYour Role: Handle COLD leads (score 0-4), build trust, 
+qualify initially.\n\nCONVERSATION FLOW:\n1. If no name \u2192 Ask for name\n2. 
+If no business \u2192 Ask for business type  \n3. If no problem \u2192 Ask about
+WhatsApp challenges\n4. If score < 5 \u2192 Present value and ask budget\n5. If 
+budget confirmed & score >= 5 \u2192 Escalate to Carlos\n\n\u26a1 CRITICAL 
+RULES:\n- You handle scores 0-4 ONLY\n- Score 5+ \u2192 Use 
+escalate_to_supervisor tool immediately\n- Speak Spanish (Mexican friendly 
+style)\n- One question at a time\n- If customer provides info, acknowledge it 
+and move forward\n\nRemember: You have CLEAN context now - no more confusion!",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "system",
+                "id": "b6315df0-f1b5-4a65-8262-7837d961520d"
+            },
+            {
+    ...
+
+Child 3: supervisor
+  ID: b087ace4-5696-4c62-b6a7-50b16ac66b38
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:37:43.066774
+  End: 2025-07-22 01:37:43.073331
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Jaime",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "b97cd3b3-bfe2-4dea-bcb8-259d84bc2deb",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "next_agent": "maria",
+        "supervisor_complete": true,
+        "error": "Missing required key(s) {'remaining_steps'} in state_schema"
+    }
+
+Child 4: intelligence
+  ID: b084d2cd-1341-4bdc-a7fc-2e5ec8c022fb
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:37:43.061175
+  End: 2025-07-22 01:37:43.064198
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Jaime",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "b97cd3b3-bfe2-4dea-bcb8-259d84bc2deb",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "Jaime",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "b97cd3b3-bfe2-4dea-bcb8-259d84bc2deb",
+                "example": false
+            }
+    ...
+
+Child 5: receptionist
+  ID: dc7c2a71-d6d1-4fbe-b536-b853d3ace8c9
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:37:43.056860
+  End: 2025-07-22 01:37:43.058609
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Jaime",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "b97cd3b3-bfe2-4dea-bcb8-259d84bc2deb",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "Jaime",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "b97cd3b3-bfe2-4dea-bcb8-259d84bc2deb",
+                "example": false
+            }
+    ...
+
+10. FEEDBACK:
+No feedback
+
+11. RAW RUN OBJECT ATTRIBUTES:
+app_path: 
+/o/d46348af-8871-4fc1-bb27-5d17f0589bd5/projects/p/a807d9fb-2c58-4d09-a4b2-4037e
+0668fcc/r/1f0669c7-6120-6563-b484-e5ca2a2740d1?trace_id=1f0669c7-6120-6563-b484-
+e5ca2a2740d1&start_time=2025-07-22T01:37:43.054424
+attachments: {}
+child_run_ids: [UUID('dc7c2a71-d6d1-4fbe-b536-b853d3ace8c9'), 
+UUID('b084d2cd-1341-4bdc-a7fc-2e5ec8c022fb'), 
+UUID('b087ace4-5696-4c62-b6a7-50b16ac66b38'), 
+UUID('be6d7da6-1e4e-45d1-a225-f89c12173ad2'), 
+UUID('ea3199ce-d182-4d24-9600-fbebe2d15569'), 
+UUID('0388607f-f638-482e-ae09-9668ffc62129'), 
+UUID('5a143d91-db57-4e06-8cc0-f7a6942ca325'), 
+UUID('cf78e167-4d06-4e84-8779-350772a71117'), 
+UUID('c3a4b92a-a8af-4ff4-8e9d-bdcfbcb58062'), 
+UUID('b86b52b6-d723-4d0a-b832-424e774a6409'), 
+UUID('b66d8288-05dc-4bc0-a3dd-8b05a7474665'), 
+UUID('e5d76b0a-deb0-43a0-9083-77331f59517b'), 
+UUID('aa3f105e-04f2-4cfa-b093-7c073c3b5511'), 
+UUID('b5d5eb14-a050-4272-8978-ce563d7a5e7c')]
+child_runs: None
+completion_cost: 0.00108
+completion_cost_details: None
+completion_token_details: None
+completion_tokens: 36
+dotted_order: 20250722T013743054424Z1f0669c7-6120-6563-b484-e5ca2a2740d1
+end_time: 2025-07-22 01:37:50.711834
+error: None
+events: [{'name': 'start', 'time': '2025-07-22T01:37:43.054424+00:00'}, {'name':
+'end', 'time': '2025-07-22T01:37:50.711834+00:00'}]
+extra: {'metadata': {'graph_id': 'agent', 'created_by': 'system', 
+'assistant_id': 'fe096781-5601-53d2-b2f6-0d3403f7e9ca', 'run_attempt': 1, 
+'langgraph_version': '0.5.3', 'langgraph_api_version': '0.2.98', 
+'langgraph_plan': 'enterprise', 'langgraph_host': 'saas', 'langgraph_api_url': 
+None, 'run_id': '1f0669c7-6120-6563-b484-e5ca2a2740d1', 'user_id': 
+'166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 'x-scheme': 'https', 'thread_id': 
+'0dbc1c79-30eb-4a12-9509-dbd17eb0d4bd', 'x-real-ip': '10.0.0.212', 'user-agent':
+'axios/0.21.4', 'x-request-id': '95ab0268a852ec9322309df24225f7e1', 
+'x-forwarded-for': '10.0.0.212', 'x-forwarded-host': 
+'ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app', 
+'x-forwarded-port': '443', 'x-forwarded-proto': 'https', 'x-forwarded-scheme': 
+'https', 'langgraph_request_id': '95ab0268a852ec9322309df24225f7e1', 
+'langgraph_auth_user_id': '166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 
+'LANGSMITH_LANGGRAPH_API_REVISION': 'e375385', 
+'LANGSMITH_LANGGRAPH_API_VARIANT': 'cloud', 'LANGSMITH_AUTH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_HOST_PROJECT_ID': 
+'b91140bf-d8b2-4d1f-b36a-53f18f2db65d', 'LANGSMITH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_LANGGRAPH_GIT_REF': 'main', 
+'LANGCHAIN_CALLBACKS_BACKGROUND': 'true', 'LANGSMITH_TRACING': 'true', 
+'LANGSMITH_LANGGRAPH_GIT_REF_SHA': 'caf536db87d928ec31e9b26de82fbb27cf347ca2', 
+'LANGSMITH_HOST_PROJECT_NAME': 'ghl-langgraph-agent', 
+'LANGSMITH_LANGGRAPH_GIT_REPO': 
+'https://github.com/palinopr/ghl-langgraph-agent', 'LANGSMITH_HOST_REVISION_ID':
+'eb96fabf-a9aa-4a98-9056-6174ea48876f', 'LANGSMITH_AUTH_VERIFY_TENANT_ID': 
+'False', 'LANGSMITH_PROJECT': 'ghl-langgraph-agent', 'LANGSMITH_TENANT_ID': 
+'d46348af-8871-4fc1-bb27-5d17f0589bd5', 'revision_id': 
+'caf536db87d928ec31e9b26de82fbb27cf347ca2', 'ls_run_depth': 0}, 'runtime': 
+{'sdk': 'langsmith-py', 'sdk_version': '0.4.8', 'library': 'langchain-core', 
+'platform': 'Linux-6.6.87+-x86_64-with-glibc2.36', 'runtime': 'python', 
+'py_implementation': 'CPython', 'runtime_version': '3.13.5', 
+'langchain_version': '0.3.26', 'langchain_core_version': '0.3.69', 
+'library_version': '0.3.69'}}
+feedback_stats: None
+first_token_time: None
+id: 1f0669c7-6120-6563-b484-e5ca2a2740d1
+in_dataset: False
+input_cost: 0.00808
+input_cost_details: None
+input_token_details: None
+input_tokens: 808
+inputs: {'messages': [{'role': 'user', 'content': 'Jaime'}], 'contact_id': 
+'L850LitpO3RGj0l504Vu', 'contact_name': 'Jaime Ortiz', 'contact_email': '', 
+'contact_phone': '(305) 487-0475'}
+manifest_id: None
+metadata: {'graph_id': 'agent', 'created_by': 'system', 'assistant_id': 
+'fe096781-5601-53d2-b2f6-0d3403f7e9ca', 'run_attempt': 1, 'langgraph_version': 
+'0.5.3', 'langgraph_api_version': '0.2.98', 'langgraph_plan': 'enterprise', 
+'langgraph_host': 'saas', 'langgraph_api_url': None, 'run_id': 
+'1f0669c7-6120-6563-b484-e5ca2a2740d1', 'user_id': 
+'166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 'x-scheme': 'https', 'thread_id': 
+'0dbc1c79-30eb-4a12-9509-dbd17eb0d4bd', 'x-real-ip': '10.0.0.212', 'user-agent':
+'axios/0.21.4', 'x-request-id': '95ab0268a852ec9322309df24225f7e1', 
+'x-forwarded-for': '10.0.0.212', 'x-forwarded-host': 
+'ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app', 
+'x-forwarded-port': '443', 'x-forwarded-proto': 'https', 'x-forwarded-scheme': 
+'https', 'langgraph_request_id': '95ab0268a852ec9322309df24225f7e1', 
+'langgraph_auth_user_id': '166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 
+'LANGSMITH_LANGGRAPH_API_REVISION': 'e375385', 
+'LANGSMITH_LANGGRAPH_API_VARIANT': 'cloud', 'LANGSMITH_AUTH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_HOST_PROJECT_ID': 
+'b91140bf-d8b2-4d1f-b36a-53f18f2db65d', 'LANGSMITH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_LANGGRAPH_GIT_REF': 'main', 
+'LANGCHAIN_CALLBACKS_BACKGROUND': 'true', 'LANGSMITH_TRACING': 'true', 
+'LANGSMITH_LANGGRAPH_GIT_REF_SHA': 'caf536db87d928ec31e9b26de82fbb27cf347ca2', 
+'LANGSMITH_HOST_PROJECT_NAME': 'ghl-langgraph-agent', 
+'LANGSMITH_LANGGRAPH_GIT_REPO': 
+'https://github.com/palinopr/ghl-langgraph-agent', 'LANGSMITH_HOST_REVISION_ID':
+'eb96fabf-a9aa-4a98-9056-6174ea48876f', 'LANGSMITH_AUTH_VERIFY_TENANT_ID': 
+'False', 'LANGSMITH_PROJECT': 'ghl-langgraph-agent', 'LANGSMITH_TENANT_ID': 
+'d46348af-8871-4fc1-bb27-5d17f0589bd5', 'revision_id': 
+'caf536db87d928ec31e9b26de82fbb27cf347ca2', 'ls_run_depth': 0}
+name: agent
+output_cost: 0.00108
+output_cost_details: None
+output_token_details: None
+output_tokens: 36
+outputs: {'messages': [{'content': 'Jaime', 'additional_kwargs': {}, 
+'response_metadata': {}, 'type': 'human', 'id': 
+'b97cd3b3-bfe2-4dea-bcb8-259d84bc2deb', 'example': False}, {'content': "You are 
+Maria, a professional WhatsApp automation consultant for Main Outlet 
+Media.\n\n🧠 MEMORY-AWARE MODE ACTIVE 🧠\nYou now have ISOLATED memory - you 
+only see messages relevant to YOU.\nNo confusion from other agents or old 
+conversations!\n\n\\n📊 MARIA'S CONTEXT:\\n\\n📋 CUSTOMER DATA:\\n- Name: 
+Jaime\\n- Business: None\\n- Problem: None\\n- Budget: NOT CONFIRMED\\n\\n🎯 
+LEAD SCORE: 2/10\\n\\n💬 CUSTOMER JUST SAID: 'Jaime'\\n\\n📊 Context size: 1 
+messages\n\nYour Role: Handle COLD leads (score 0-4), build trust, qualify 
+initially.\n\nCONVERSATION FLOW:\n1. If no name → Ask for name\n2. If no 
+business → Ask for business type  \n3. If no problem → Ask about WhatsApp 
+challenges\n4. If score < 5 → Present value and ask budget\n5. If budget 
+confirmed & score >= 5 → Escalate to Carlos\n\n⚡ CRITICAL RULES:\n- You handle 
+scores 0-4 ONLY\n- Score 5+ → Use escalate_to_supervisor tool immediately\n- 
+Speak Spanish (Mexican friendly style)\n- One question at a time\n- If customer 
+provides info, acknowledge it and move forward\n\nRemember: You have CLEAN 
+context now - no more confusion!", 'additional_kwargs': {}, 'response_metadata':
+{}, 'type': 'system', 'id': 'b6315df0-f1b5-4a65-8262-7837d961520d'}, {'content':
+'¡Hola Jaime! Me alegra que estés interesado en mejorar la automatización de 
+WhatsApp para tu negocio. ¿Podrías decirme qué tipo de negocio tienes?', 
+'additional_kwargs': {'refusal': None}, 'response_metadata': {'token_usage': 
+{'completion_tokens': 36, 'prompt_tokens': 808, 'total_tokens': 844, 
+'completion_tokens_details': {'accepted_prediction_tokens': 0, 'audio_tokens': 
+0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0}, 
+'prompt_tokens_details': {'audio_tokens': 0, 'cached_tokens': 0}}, 'model_name':
+'gpt-4-turbo-2024-04-09', 'system_fingerprint': 'fp_de235176ee', 'id': 
+'chatcmpl-BvwEp7tKrucwJgJamSjvpO1ruTFSp', 'service_tier': 'default', 
+'finish_reason': 'stop', 'logprobs': None}, 'type': 'ai', 'name': 'maria', 'id':
+'run--b66d8288-05dc-4bc0-a3dd-8b05a7474665-0', 'example': False, 'tool_calls': 
+[], 'invalid_tool_calls': [], 'usage_metadata': {'input_tokens': 808, 
+'output_tokens': 36, 'total_tokens': 844, 'input_token_details': {'audio': 0, 
+'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}}], 
+'contact_id': 'L850LitpO3RGj0l504Vu', 'lead_score': 2, 'lead_category': 'cold', 
+'extracted_data': {'name': 'Jaime', 'business_type': None, 'budget': None, 
+'goal': None, 'email': None, 'phone': None, 'extraction_confidence': {'name': 
+0.7999999999999999}}, 'score_reasoning': 'Score 2: has name', 'score_history': 
+[{'score': 2, 'previous_score': 0, 'timestamp': '2025-07-22T01:37:43.063682', 
+'reasoning': 'Score 2: has name', 'trigger': 'message_analysis'}], 'next_agent':
+'maria', 'suggested_agent': 'maria', 'supervisor_complete': True, 
+'last_sent_message': '¡Hola Jaime! Me alegra que estés interesado en mejorar la 
+automatización de WhatsApp para tu negocio. ¿Podrías decirme qué tipo de negocio
+tienes?'}
+parent_run_id: None
+parent_run_ids: []
+prompt_cost: 0.00808
+prompt_cost_details: None
+prompt_token_details: None
+prompt_tokens: 808
+reference_example_id: None
+revision_id: caf536db87d928ec31e9b26de82fbb27cf347ca2
+run_type: chain
+serialized: None
+session_id: a807d9fb-2c58-4d09-a4b2-4037e0668fcc
+start_time: 2025-07-22 01:37:43.054424
+status: success
+tags: []
+total_cost: 0.00916
+total_tokens: 844
+trace_id: 1f0669c7-6120-6563-b484-e5ca2a2740d1
+url: 
+https://smith.langchain.com/o/d46348af-8871-4fc1-bb27-5d17f0589bd5/projects/p/a8
+07d9fb-2c58-4d09-a4b2-4037e0668fcc/r/1f0669c7-6120-6563-b484-e5ca2a2740d1?trace_
+id=1f0669c7-6120-6563-b484-e5ca2a2740d1&start_time=2025-07-22T01:37:43.054424
+
+================================================================================
+TRACE 3: 1f0669c8-709c-6207-9a9f-ac54af55789c
+================================================================================
+
+1. BASIC INFO:
+Name: agent
+Status: success
+Type: chain
+Start: 2025-07-22 01:38:11.520244
+End: 2025-07-22 01:38:18.023549
+Parent: None
+Error: None
+
+2. FULL METADATA:
+{                                                                               
+  "graph_id": "agent",                                                          
+  "created_by": "system",                                                       
+  "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca",                       
+  "run_attempt": 1,                                                             
+  "langgraph_version": "0.5.3",                                                 
+  "langgraph_api_version": "0.2.98",                                            
+  "langgraph_plan": "enterprise",                                               
+  "langgraph_host": "saas",                                                     
+  "langgraph_api_url": null,                                                    
+  "run_id": "1f0669c8-709c-6207-9a9f-ac54af55789c",                             
+  "user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",                            
+  "x-scheme": "https",                                                          
+  "thread_id": "3969eb20-54d1-41a9-a201-2da88df6a578",                          
+  "x-real-ip": "10.0.0.107",                                                    
+  "user-agent": "axios/0.21.4",                                                 
+  "x-request-id": "7c67e3f35d7974e195b44d1ef76fcf0d",                           
+  "x-forwarded-for": "10.0.0.107",                                              
+  "x-forwarded-host": "ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.l
+  "x-forwarded-port": "443",                                                    
+  "x-forwarded-proto": "https",                                                 
+  "x-forwarded-scheme": "https",                                                
+  "langgraph_request_id": "7c67e3f35d7974e195b44d1ef76fcf0d",                   
+  "langgraph_auth_user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",             
+  "LANGSMITH_LANGGRAPH_API_REVISION": "e375385",                                
+  "LANGSMITH_LANGGRAPH_API_VARIANT": "cloud",                                   
+  "LANGSMITH_AUTH_ENDPOINT": "https://api.smith.langchain.com",                 
+  "LANGSMITH_HOST_PROJECT_ID": "b91140bf-d8b2-4d1f-b36a-53f18f2db65d",          
+  "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",                      
+  "LANGSMITH_LANGGRAPH_GIT_REF": "main",                                        
+  "LANGCHAIN_CALLBACKS_BACKGROUND": "true",                                     
+  "LANGSMITH_TRACING": "true",                                                  
+  "LANGSMITH_LANGGRAPH_GIT_REF_SHA": "caf536db87d928ec31e9b26de82fbb27cf347ca2",
+  "LANGSMITH_HOST_PROJECT_NAME": "ghl-langgraph-agent",                         
+  "LANGSMITH_LANGGRAPH_GIT_REPO": "https://github.com/palinopr/ghl-langgraph-age
+  "LANGSMITH_HOST_REVISION_ID": "eb96fabf-a9aa-4a98-9056-6174ea48876f",         
+  "LANGSMITH_AUTH_VERIFY_TENANT_ID": "False",                                   
+  "LANGSMITH_PROJECT": "ghl-langgraph-agent",                                   
+  "LANGSMITH_TENANT_ID": "d46348af-8871-4fc1-bb27-5d17f0589bd5",                
+  "revision_id": "caf536db87d928ec31e9b26de82fbb27cf347ca2",                    
+  "ls_run_depth": 0                                                             
+}                                                                               
+
+3. FULL INPUTS:
+{                                                                               
+  "messages": [                                                                 
+    {                                                                           
+      "role": "user",                                                           
+      "content": "Restaurante"                                                  
+    }                                                                           
+  ],                                                                            
+  "contact_id": "L850LitpO3RGj0l504Vu",                                         
+  "contact_name": "Jaime Ortiz",                                                
+  "contact_email": "",                                                          
+  "contact_phone": "(305) 487-0475"                                             
+}                                                                               
+
+4. FULL OUTPUTS:
+{                                                                               
+  "messages": [                                                                 
+    {                                                                           
+      "content": "Restaurante",                                                 
+      "additional_kwargs": {},                                                  
+      "response_metadata": {},                                                  
+      "type": "human",                                                          
+      "id": "c7e432b0-412e-4bc9-81c1-f8b7d5e3cb05",                             
+      "example": false                                                          
+    },                                                                          
+    {                                                                           
+      "content": "You are Maria, a professional WhatsApp automation consultant f
+      "additional_kwargs": {},                                                  
+      "response_metadata": {},                                                  
+      "type": "system",                                                         
+      "id": "05b5a981-3ff0-4a72-87ea-69425290fade"                              
+    },                                                                          
+    {                                                                           
+      "content": "\u00a1Hola! Gracias por contactarnos. \u00bfPodr\u00edas decir
+      "additional_kwargs": {                                                    
+        "refusal": null                                                         
+      },                                                                        
+      "response_metadata": {                                                    
+        "token_usage": {                                                        
+          "completion_tokens": 30,                                              
+          "prompt_tokens": 813,                                                 
+          "total_tokens": 843,                                                  
+          "completion_tokens_details": {                                        
+            "accepted_prediction_tokens": 0,                                    
+            "audio_tokens": 0,                                                  
+            "reasoning_tokens": 0,                                              
+            "rejected_prediction_tokens": 0                                     
+          },                                                                    
+          "prompt_tokens_details": {                                            
+            "audio_tokens": 0,                                                  
+            "cached_tokens": 0                                                  
+          }                                                                     
+        },                                                                      
+        "model_name": "gpt-4-turbo-2024-04-09",                                 
+        "system_fingerprint": "fp_de235176ee",                                  
+        "id": "chatcmpl-BvwFHYwW1mjF85K9RSYu6MJIdNh6X",                         
+        "service_tier": "default",                                              
+        "finish_reason": "stop",                                                
+        "logprobs": null                                                        
+      },                                                                        
+      "type": "ai",                                                             
+      "name": "maria",                                                          
+      "id": "run--313833e2-7c02-4c13-992a-5c89708841bb-0",                      
+      "example": false,                                                         
+      "tool_calls": [],                                                         
+      "invalid_tool_calls": [],                                                 
+      "usage_metadata": {                                                       
+        "input_tokens": 813,                                                    
+        "output_tokens": 30,                                                    
+        "total_tokens": 843,                                                    
+        "input_token_details": {                                                
+          "audio": 0,                                                           
+          "cache_read": 0                                                       
+        },                                                                      
+        "output_token_details": {                                               
+          "audio": 0,                                                           
+          "reasoning": 0                                                        
+        }                                                                       
+      }                                                                         
+    }                                                                           
+  ],                                                                            
+  "contact_id": "L850LitpO3RGj0l504Vu",                                         
+  "lead_score": 4,                                                              
+  "lead_category": "cold",                                                      
+  "extracted_data": {                                                           
+    "name": "Restaurante",                                                      
+    "business_type": "restaurante",                                             
+    "budget": null,                                                             
+    "goal": null,                                                               
+    "email": null,                                                              
+    "phone": null,                                                              
+    "extraction_confidence": {                                                  
+      "name": 0.7999999999999999,                                               
+      "business_type": 0.7999999999999999                                       
+    }                                                                           
+  },                                                                            
+  "score_reasoning": "Score 4: has name, has business (restaurante)",           
+  "score_history": [                                                            
+    {                                                                           
+      "score": 4,                                                               
+      "previous_score": 0,                                                      
+      "timestamp": "2025-07-22T01:38:11.530689",                                
+      "reasoning": "Score 4: has name, has business (restaurante)",             
+      "trigger": "message_analysis"                                             
+    }                                                                           
+  ],                                                                            
+  "next_agent": "maria",                                                        
+  "suggested_agent": "maria",                                                   
+  "supervisor_complete": true,                                                  
+  "last_sent_message": "\u00a1Hola! Gracias por contactarnos. \u00bfPodr\u00edas
+}                                                                               
+
+5. EXTRA DATA:
+{                                                                               
+  "metadata": {                                                                 
+    "graph_id": "agent",                                                        
+    "created_by": "system",                                                     
+    "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca",                     
+    "run_attempt": 1,                                                           
+    "langgraph_version": "0.5.3",                                               
+    "langgraph_api_version": "0.2.98",                                          
+    "langgraph_plan": "enterprise",                                             
+    "langgraph_host": "saas",                                                   
+    "langgraph_api_url": null,                                                  
+    "run_id": "1f0669c8-709c-6207-9a9f-ac54af55789c",                           
+    "user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",                          
+    "x-scheme": "https",                                                        
+    "thread_id": "3969eb20-54d1-41a9-a201-2da88df6a578",                        
+    "x-real-ip": "10.0.0.107",                                                  
+    "user-agent": "axios/0.21.4",                                               
+    "x-request-id": "7c67e3f35d7974e195b44d1ef76fcf0d",                         
+    "x-forwarded-for": "10.0.0.107",                                            
+    "x-forwarded-host": "ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us
+    "x-forwarded-port": "443",                                                  
+    "x-forwarded-proto": "https",                                               
+    "x-forwarded-scheme": "https",                                              
+    "langgraph_request_id": "7c67e3f35d7974e195b44d1ef76fcf0d",                 
+    "langgraph_auth_user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",           
+    "LANGSMITH_LANGGRAPH_API_REVISION": "e375385",                              
+    "LANGSMITH_LANGGRAPH_API_VARIANT": "cloud",                                 
+    "LANGSMITH_AUTH_ENDPOINT": "https://api.smith.langchain.com",               
+    "LANGSMITH_HOST_PROJECT_ID": "b91140bf-d8b2-4d1f-b36a-53f18f2db65d",        
+    "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",                    
+    "LANGSMITH_LANGGRAPH_GIT_REF": "main",                                      
+    "LANGCHAIN_CALLBACKS_BACKGROUND": "true",                                   
+    "LANGSMITH_TRACING": "true",                                                
+    "LANGSMITH_LANGGRAPH_GIT_REF_SHA": "caf536db87d928ec31e9b26de82fbb27cf347ca2
+    "LANGSMITH_HOST_PROJECT_NAME": "ghl-langgraph-agent",                       
+    "LANGSMITH_LANGGRAPH_GIT_REPO": "https://github.com/palinopr/ghl-langgraph-a
+    "LANGSMITH_HOST_REVISION_ID": "eb96fabf-a9aa-4a98-9056-6174ea48876f",       
+    "LANGSMITH_AUTH_VERIFY_TENANT_ID": "False",                                 
+    "LANGSMITH_PROJECT": "ghl-langgraph-agent",                                 
+    "LANGSMITH_TENANT_ID": "d46348af-8871-4fc1-bb27-5d17f0589bd5",              
+    "revision_id": "caf536db87d928ec31e9b26de82fbb27cf347ca2",                  
+    "ls_run_depth": 0                                                           
+  },                                                                            
+  "runtime": {                                                                  
+    "sdk": "langsmith-py",                                                      
+    "sdk_version": "0.4.8",                                                     
+    "library": "langchain-core",                                                
+    "platform": "Linux-6.6.87+-x86_64-with-glibc2.36",                          
+    "runtime": "python",                                                        
+    "py_implementation": "CPython",                                             
+    "runtime_version": "3.13.5",                                                
+    "langchain_version": "0.3.26",                                              
+    "langchain_core_version": "0.3.69",                                         
+    "library_version": "0.3.69"                                                 
+  }                                                                             
+}                                                                               
+
+6. TOKEN USAGE:
+Total Tokens: 843
+Prompt Tokens: 813
+Completion Tokens: 30
+Total Cost: $0.00903
+Prompt Cost: $0.00813
+Completion Cost: $0.0009
+
+7. EVENTS:
+Event 1: {'name': 'start', 'time': '2025-07-22T01:38:11.520244+00:00'}
+Event 2: {'name': 'end', 'time': '2025-07-22T01:38:18.023549+00:00'}
+
+8. TAGS:
+No tags
+
+9. ALL CHILD RUNS:
+Total child runs: 5
+
+Child 1: responder
+  ID: 9b455d7f-159a-4cfc-bd5c-1755e9c0bcad
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:38:12.708521
+  End: 2025-07-22 01:38:18.018721
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Restaurante",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "c7e432b0-412e-4bc9-81c1-f8b7d5e3cb05",
+                "example": false
+            },
+    ...
+  Outputs:
+    {
+        "last_sent_message": "\u00a1Hola! Gracias por contactarnos. 
+\u00bfPodr\u00edas decirme el nombre de tu restaurante y un poco m\u00e1s sobre 
+\u00e9l?",
+        "message_sent": true
+    }
+
+Child 2: maria
+  ID: 2f6a91c2-7093-4de1-860c-c95f4330fab8
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:38:11.543262
+  End: 2025-07-22 01:38:12.705348
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Restaurante",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "c7e432b0-412e-4bc9-81c1-f8b7d5e3cb05",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "You are Maria, a professional WhatsApp automation 
+consultant for Main Outlet Media.\n\n\ud83e\udde0 MEMORY-AWARE MODE ACTIVE 
+\ud83e\udde0\nYou now have ISOLATED memory - you only see messages relevant to 
+YOU.\nNo confusion from other agents or old conversations!\n\n\\n\ud83d\udcca 
+MARIA'S CONTEXT:\\n\\n\ud83d\udccb CUSTOMER DATA:\\n- Name: Restaurante\\n- 
+Business: restaurante\\n- Problem: None\\n- Budget: NOT 
+CONFIRMED\\n\\n\ud83c\udfaf LEAD SCORE: 4/10\\n\\n\ud83d\udcac CUSTOMER JUST 
+SAID: 'Restaurante'\\n\\n\ud83d\udcca Context size: 1 messages\n\nYour Role: 
+Handle COLD leads (score 0-4), build trust, qualify initially.\n\nCONVERSATION 
+FLOW:\n1. If no name \u2192 Ask for name\n2. If no business \u2192 Ask for 
+business type  \n3. If no problem \u2192 Ask about WhatsApp challenges\n4. If 
+score < 5 \u2192 Present value and ask budget\n5. If budget confirmed & score >=
+5 \u2192 Escalate to Carlos\n\n\u26a1 CRITICAL RULES:\n- You handle scores 0-4 
+ONLY\n- Score 5+ \u2192 Use escalate_to_supervisor tool immediately\n- Speak 
+Spanish (Mexican friendly style)\n- One question at a time\n- If customer 
+provides info, acknowledge it and move forward\n\nRemember: You have CLEAN 
+context now - no more confusion!",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "system",
+                "id": "05b5a981-3ff0-4a72-87ea-69425290fade"
+            },
+            {
+    ...
+
+Child 3: supervisor
+  ID: 1293405a-cb29-48b9-babf-f558c16465b3
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:38:11.533896
+  End: 2025-07-22 01:38:11.540840
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Restaurante",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "c7e432b0-412e-4bc9-81c1-f8b7d5e3cb05",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "next_agent": "maria",
+        "supervisor_complete": true,
+        "error": "Missing required key(s) {'remaining_steps'} in state_schema"
+    }
+
+Child 4: intelligence
+  ID: ef48cd89-3759-4e13-be84-750ed6f47db9
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:38:11.527790
+  End: 2025-07-22 01:38:11.531187
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Restaurante",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "c7e432b0-412e-4bc9-81c1-f8b7d5e3cb05",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "Restaurante",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "c7e432b0-412e-4bc9-81c1-f8b7d5e3cb05",
+                "example": false
+            }
+    ...
+
+Child 5: receptionist
+  ID: 8668ab32-1707-4544-ab67-1c7fd31080be
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:38:11.523089
+  End: 2025-07-22 01:38:11.525196
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Restaurante",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "c7e432b0-412e-4bc9-81c1-f8b7d5e3cb05",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "Restaurante",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "c7e432b0-412e-4bc9-81c1-f8b7d5e3cb05",
+                "example": false
+            }
+    ...
+
+10. FEEDBACK:
+No feedback
+
+11. RAW RUN OBJECT ATTRIBUTES:
+app_path: 
+/o/d46348af-8871-4fc1-bb27-5d17f0589bd5/projects/p/a807d9fb-2c58-4d09-a4b2-4037e
+0668fcc/r/1f0669c8-709c-6207-9a9f-ac54af55789c?trace_id=1f0669c8-709c-6207-9a9f-
+ac54af55789c&start_time=2025-07-22T01:38:11.520244
+attachments: {}
+child_run_ids: [UUID('8668ab32-1707-4544-ab67-1c7fd31080be'), 
+UUID('ef48cd89-3759-4e13-be84-750ed6f47db9'), 
+UUID('1293405a-cb29-48b9-babf-f558c16465b3'), 
+UUID('4bcfa9cc-8364-40af-a5c2-40b2c7a2ba0c'), 
+UUID('2f6a91c2-7093-4de1-860c-c95f4330fab8'), 
+UUID('7835d8d7-1c2b-4703-8429-2a1e633c727e'), 
+UUID('9af6bf54-a1ce-452d-9520-a1564cbb1f5a'), 
+UUID('866a106f-52cc-401c-8297-cadef34841cd'), 
+UUID('59a5b880-6e9b-4bc7-97e1-7387f16f514e'), 
+UUID('a2569c0c-a465-4bd0-983b-457476c1537b'), 
+UUID('313833e2-7c02-4c13-992a-5c89708841bb'), 
+UUID('a2ddda3f-9333-4f17-a31f-925f0d265a5d'), 
+UUID('f8b6f143-509e-4f93-9301-b35dbe25ba78'), 
+UUID('9b455d7f-159a-4cfc-bd5c-1755e9c0bcad')]
+child_runs: None
+completion_cost: 0.0009
+completion_cost_details: None
+completion_token_details: None
+completion_tokens: 30
+dotted_order: 20250722T013811520244Z1f0669c8-709c-6207-9a9f-ac54af55789c
+end_time: 2025-07-22 01:38:18.023549
+error: None
+events: [{'name': 'start', 'time': '2025-07-22T01:38:11.520244+00:00'}, {'name':
+'end', 'time': '2025-07-22T01:38:18.023549+00:00'}]
+extra: {'metadata': {'graph_id': 'agent', 'created_by': 'system', 
+'assistant_id': 'fe096781-5601-53d2-b2f6-0d3403f7e9ca', 'run_attempt': 1, 
+'langgraph_version': '0.5.3', 'langgraph_api_version': '0.2.98', 
+'langgraph_plan': 'enterprise', 'langgraph_host': 'saas', 'langgraph_api_url': 
+None, 'run_id': '1f0669c8-709c-6207-9a9f-ac54af55789c', 'user_id': 
+'166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 'x-scheme': 'https', 'thread_id': 
+'3969eb20-54d1-41a9-a201-2da88df6a578', 'x-real-ip': '10.0.0.107', 'user-agent':
+'axios/0.21.4', 'x-request-id': '7c67e3f35d7974e195b44d1ef76fcf0d', 
+'x-forwarded-for': '10.0.0.107', 'x-forwarded-host': 
+'ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app', 
+'x-forwarded-port': '443', 'x-forwarded-proto': 'https', 'x-forwarded-scheme': 
+'https', 'langgraph_request_id': '7c67e3f35d7974e195b44d1ef76fcf0d', 
+'langgraph_auth_user_id': '166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 
+'LANGSMITH_LANGGRAPH_API_REVISION': 'e375385', 
+'LANGSMITH_LANGGRAPH_API_VARIANT': 'cloud', 'LANGSMITH_AUTH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_HOST_PROJECT_ID': 
+'b91140bf-d8b2-4d1f-b36a-53f18f2db65d', 'LANGSMITH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_LANGGRAPH_GIT_REF': 'main', 
+'LANGCHAIN_CALLBACKS_BACKGROUND': 'true', 'LANGSMITH_TRACING': 'true', 
+'LANGSMITH_LANGGRAPH_GIT_REF_SHA': 'caf536db87d928ec31e9b26de82fbb27cf347ca2', 
+'LANGSMITH_HOST_PROJECT_NAME': 'ghl-langgraph-agent', 
+'LANGSMITH_LANGGRAPH_GIT_REPO': 
+'https://github.com/palinopr/ghl-langgraph-agent', 'LANGSMITH_HOST_REVISION_ID':
+'eb96fabf-a9aa-4a98-9056-6174ea48876f', 'LANGSMITH_AUTH_VERIFY_TENANT_ID': 
+'False', 'LANGSMITH_PROJECT': 'ghl-langgraph-agent', 'LANGSMITH_TENANT_ID': 
+'d46348af-8871-4fc1-bb27-5d17f0589bd5', 'revision_id': 
+'caf536db87d928ec31e9b26de82fbb27cf347ca2', 'ls_run_depth': 0}, 'runtime': 
+{'sdk': 'langsmith-py', 'sdk_version': '0.4.8', 'library': 'langchain-core', 
+'platform': 'Linux-6.6.87+-x86_64-with-glibc2.36', 'runtime': 'python', 
+'py_implementation': 'CPython', 'runtime_version': '3.13.5', 
+'langchain_version': '0.3.26', 'langchain_core_version': '0.3.69', 
+'library_version': '0.3.69'}}
+feedback_stats: None
+first_token_time: None
+id: 1f0669c8-709c-6207-9a9f-ac54af55789c
+in_dataset: False
+input_cost: 0.00813
+input_cost_details: None
+input_token_details: None
+input_tokens: 813
+inputs: {'messages': [{'role': 'user', 'content': 'Restaurante'}], 'contact_id':
+'L850LitpO3RGj0l504Vu', 'contact_name': 'Jaime Ortiz', 'contact_email': '', 
+'contact_phone': '(305) 487-0475'}
+manifest_id: None
+metadata: {'graph_id': 'agent', 'created_by': 'system', 'assistant_id': 
+'fe096781-5601-53d2-b2f6-0d3403f7e9ca', 'run_attempt': 1, 'langgraph_version': 
+'0.5.3', 'langgraph_api_version': '0.2.98', 'langgraph_plan': 'enterprise', 
+'langgraph_host': 'saas', 'langgraph_api_url': None, 'run_id': 
+'1f0669c8-709c-6207-9a9f-ac54af55789c', 'user_id': 
+'166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 'x-scheme': 'https', 'thread_id': 
+'3969eb20-54d1-41a9-a201-2da88df6a578', 'x-real-ip': '10.0.0.107', 'user-agent':
+'axios/0.21.4', 'x-request-id': '7c67e3f35d7974e195b44d1ef76fcf0d', 
+'x-forwarded-for': '10.0.0.107', 'x-forwarded-host': 
+'ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app', 
+'x-forwarded-port': '443', 'x-forwarded-proto': 'https', 'x-forwarded-scheme': 
+'https', 'langgraph_request_id': '7c67e3f35d7974e195b44d1ef76fcf0d', 
+'langgraph_auth_user_id': '166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 
+'LANGSMITH_LANGGRAPH_API_REVISION': 'e375385', 
+'LANGSMITH_LANGGRAPH_API_VARIANT': 'cloud', 'LANGSMITH_AUTH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_HOST_PROJECT_ID': 
+'b91140bf-d8b2-4d1f-b36a-53f18f2db65d', 'LANGSMITH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_LANGGRAPH_GIT_REF': 'main', 
+'LANGCHAIN_CALLBACKS_BACKGROUND': 'true', 'LANGSMITH_TRACING': 'true', 
+'LANGSMITH_LANGGRAPH_GIT_REF_SHA': 'caf536db87d928ec31e9b26de82fbb27cf347ca2', 
+'LANGSMITH_HOST_PROJECT_NAME': 'ghl-langgraph-agent', 
+'LANGSMITH_LANGGRAPH_GIT_REPO': 
+'https://github.com/palinopr/ghl-langgraph-agent', 'LANGSMITH_HOST_REVISION_ID':
+'eb96fabf-a9aa-4a98-9056-6174ea48876f', 'LANGSMITH_AUTH_VERIFY_TENANT_ID': 
+'False', 'LANGSMITH_PROJECT': 'ghl-langgraph-agent', 'LANGSMITH_TENANT_ID': 
+'d46348af-8871-4fc1-bb27-5d17f0589bd5', 'revision_id': 
+'caf536db87d928ec31e9b26de82fbb27cf347ca2', 'ls_run_depth': 0}
+name: agent
+output_cost: 0.0009
+output_cost_details: None
+output_token_details: None
+output_tokens: 30
+outputs: {'messages': [{'content': 'Restaurante', 'additional_kwargs': {}, 
+'response_metadata': {}, 'type': 'human', 'id': 
+'c7e432b0-412e-4bc9-81c1-f8b7d5e3cb05', 'example': False}, {'content': "You are 
+Maria, a professional WhatsApp automation consultant for Main Outlet 
+Media.\n\n🧠 MEMORY-AWARE MODE ACTIVE 🧠\nYou now have ISOLATED memory - you 
+only see messages relevant to YOU.\nNo confusion from other agents or old 
+conversations!\n\n\\n📊 MARIA'S CONTEXT:\\n\\n📋 CUSTOMER DATA:\\n- Name: 
+Restaurante\\n- Business: restaurante\\n- Problem: None\\n- Budget: NOT 
+CONFIRMED\\n\\n🎯 LEAD SCORE: 4/10\\n\\n💬 CUSTOMER JUST SAID: 
+'Restaurante'\\n\\n📊 Context size: 1 messages\n\nYour Role: Handle COLD leads 
+(score 0-4), build trust, qualify initially.\n\nCONVERSATION FLOW:\n1. If no 
+name → Ask for name\n2. If no business → Ask for business type  \n3. If no 
+problem → Ask about WhatsApp challenges\n4. If score < 5 → Present value and ask
+budget\n5. If budget confirmed & score >= 5 → Escalate to Carlos\n\n⚡ CRITICAL 
+RULES:\n- You handle scores 0-4 ONLY\n- Score 5+ → Use escalate_to_supervisor 
+tool immediately\n- Speak Spanish (Mexican friendly style)\n- One question at a 
+time\n- If customer provides info, acknowledge it and move forward\n\nRemember: 
+You have CLEAN context now - no more confusion!", 'additional_kwargs': {}, 
+'response_metadata': {}, 'type': 'system', 'id': 
+'05b5a981-3ff0-4a72-87ea-69425290fade'}, {'content': '¡Hola! Gracias por 
+contactarnos. ¿Podrías decirme el nombre de tu restaurante y un poco más sobre 
+él?', 'additional_kwargs': {'refusal': None}, 'response_metadata': 
+{'token_usage': {'completion_tokens': 30, 'prompt_tokens': 813, 'total_tokens': 
+843, 'completion_tokens_details': {'accepted_prediction_tokens': 0, 
+'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0}, 
+'prompt_tokens_details': {'audio_tokens': 0, 'cached_tokens': 0}}, 'model_name':
+'gpt-4-turbo-2024-04-09', 'system_fingerprint': 'fp_de235176ee', 'id': 
+'chatcmpl-BvwFHYwW1mjF85K9RSYu6MJIdNh6X', 'service_tier': 'default', 
+'finish_reason': 'stop', 'logprobs': None}, 'type': 'ai', 'name': 'maria', 'id':
+'run--313833e2-7c02-4c13-992a-5c89708841bb-0', 'example': False, 'tool_calls': 
+[], 'invalid_tool_calls': [], 'usage_metadata': {'input_tokens': 813, 
+'output_tokens': 30, 'total_tokens': 843, 'input_token_details': {'audio': 0, 
+'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}}], 
+'contact_id': 'L850LitpO3RGj0l504Vu', 'lead_score': 4, 'lead_category': 'cold', 
+'extracted_data': {'name': 'Restaurante', 'business_type': 'restaurante', 
+'budget': None, 'goal': None, 'email': None, 'phone': None, 
+'extraction_confidence': {'name': 0.7999999999999999, 'business_type': 
+0.7999999999999999}}, 'score_reasoning': 'Score 4: has name, has business 
+(restaurante)', 'score_history': [{'score': 4, 'previous_score': 0, 'timestamp':
+'2025-07-22T01:38:11.530689', 'reasoning': 'Score 4: has name, has business 
+(restaurante)', 'trigger': 'message_analysis'}], 'next_agent': 'maria', 
+'suggested_agent': 'maria', 'supervisor_complete': True, 'last_sent_message': 
+'¡Hola! Gracias por contactarnos. ¿Podrías decirme el nombre de tu restaurante y
+un poco más sobre él?'}
+parent_run_id: None
+parent_run_ids: []
+prompt_cost: 0.00813
+prompt_cost_details: None
+prompt_token_details: None
+prompt_tokens: 813
+reference_example_id: None
+revision_id: caf536db87d928ec31e9b26de82fbb27cf347ca2
+run_type: chain
+serialized: None
+session_id: a807d9fb-2c58-4d09-a4b2-4037e0668fcc
+start_time: 2025-07-22 01:38:11.520244
+status: success
+tags: []
+total_cost: 0.00903
+total_tokens: 843
+trace_id: 1f0669c8-709c-6207-9a9f-ac54af55789c
+url: 
+https://smith.langchain.com/o/d46348af-8871-4fc1-bb27-5d17f0589bd5/projects/p/a8
+07d9fb-2c58-4d09-a4b2-4037e0668fcc/r/1f0669c8-709c-6207-9a9f-ac54af55789c?trace_
+id=1f0669c8-709c-6207-9a9f-ac54af55789c&start_time=2025-07-22T01:38:11.520244
+
+================================================================================
+TRACE 4: 1f0669c9-c860-6dac-9fd9-2f962b941a71
+================================================================================
+
+1. BASIC INFO:
+Name: agent
+Status: success
+Type: chain
+Start: 2025-07-22 01:38:47.566692
+End: 2025-07-22 01:38:54.488206
+Parent: None
+Error: None
+
+2. FULL METADATA:
+{                                                                               
+  "graph_id": "agent",                                                          
+  "created_by": "system",                                                       
+  "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca",                       
+  "run_attempt": 1,                                                             
+  "langgraph_version": "0.5.3",                                                 
+  "langgraph_api_version": "0.2.98",                                            
+  "langgraph_plan": "enterprise",                                               
+  "langgraph_host": "saas",                                                     
+  "langgraph_api_url": null,                                                    
+  "run_id": "1f0669c9-c860-6dac-9fd9-2f962b941a71",                             
+  "user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",                            
+  "x-scheme": "https",                                                          
+  "thread_id": "c95ee525-421e-4810-8887-4bd2ce0e4746",                          
+  "x-real-ip": "10.0.0.32",                                                     
+  "user-agent": "axios/0.21.4",                                                 
+  "x-request-id": "d7dc1a011f463f94587c8f4b920160da",                           
+  "x-forwarded-for": "10.0.0.32",                                               
+  "x-forwarded-host": "ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.l
+  "x-forwarded-port": "443",                                                    
+  "x-forwarded-proto": "https",                                                 
+  "x-forwarded-scheme": "https",                                                
+  "langgraph_request_id": "d7dc1a011f463f94587c8f4b920160da",                   
+  "langgraph_auth_user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",             
+  "LANGSMITH_LANGGRAPH_API_REVISION": "e375385",                                
+  "LANGSMITH_LANGGRAPH_API_VARIANT": "cloud",                                   
+  "LANGSMITH_AUTH_ENDPOINT": "https://api.smith.langchain.com",                 
+  "LANGSMITH_HOST_PROJECT_ID": "b91140bf-d8b2-4d1f-b36a-53f18f2db65d",          
+  "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",                      
+  "LANGSMITH_LANGGRAPH_GIT_REF": "main",                                        
+  "LANGCHAIN_CALLBACKS_BACKGROUND": "true",                                     
+  "LANGSMITH_TRACING": "true",                                                  
+  "LANGSMITH_LANGGRAPH_GIT_REF_SHA": "caf536db87d928ec31e9b26de82fbb27cf347ca2",
+  "LANGSMITH_HOST_PROJECT_NAME": "ghl-langgraph-agent",                         
+  "LANGSMITH_LANGGRAPH_GIT_REPO": "https://github.com/palinopr/ghl-langgraph-age
+  "LANGSMITH_HOST_REVISION_ID": "eb96fabf-a9aa-4a98-9056-6174ea48876f",         
+  "LANGSMITH_AUTH_VERIFY_TENANT_ID": "False",                                   
+  "LANGSMITH_PROJECT": "ghl-langgraph-agent",                                   
+  "LANGSMITH_TENANT_ID": "d46348af-8871-4fc1-bb27-5d17f0589bd5",                
+  "revision_id": "caf536db87d928ec31e9b26de82fbb27cf347ca2",                    
+  "ls_run_depth": 0                                                             
+}                                                                               
+
+3. FULL INPUTS:
+{                                                                               
+  "messages": [                                                                 
+    {                                                                           
+      "role": "user",                                                           
+      "content": "Papas locas restaurant"                                       
+    }                                                                           
+  ],                                                                            
+  "contact_id": "L850LitpO3RGj0l504Vu",                                         
+  "contact_name": "Jaime Ortiz",                                                
+  "contact_email": "",                                                          
+  "contact_phone": "(305) 487-0475"                                             
+}                                                                               
+
+4. FULL OUTPUTS:
+{                                                                               
+  "messages": [                                                                 
+    {                                                                           
+      "content": "Papas locas restaurant",                                      
+      "additional_kwargs": {},                                                  
+      "response_metadata": {},                                                  
+      "type": "human",                                                          
+      "id": "bc196c18-3b0e-47d3-bcdd-c428f2560676",                             
+      "example": false                                                          
+    },                                                                          
+    {                                                                           
+      "content": "You are Maria, a professional WhatsApp automation consultant f
+      "additional_kwargs": {},                                                  
+      "response_metadata": {},                                                  
+      "type": "system",                                                         
+      "id": "c71106b8-e437-44d6-b117-faa73b821d89"                              
+    },                                                                          
+    {                                                                           
+      "content": "\u00a1Hola! Gracias por compartir el nombre de tu restaurante,
+      "additional_kwargs": {                                                    
+        "refusal": null                                                         
+      },                                                                        
+      "response_metadata": {                                                    
+        "token_usage": {                                                        
+          "completion_tokens": 39,                                              
+          "prompt_tokens": 814,                                                 
+          "total_tokens": 853,                                                  
+          "completion_tokens_details": {                                        
+            "accepted_prediction_tokens": 0,                                    
+            "audio_tokens": 0,                                                  
+            "reasoning_tokens": 0,                                              
+            "rejected_prediction_tokens": 0                                     
+          },                                                                    
+          "prompt_tokens_details": {                                            
+            "audio_tokens": 0,                                                  
+            "cached_tokens": 0                                                  
+          }                                                                     
+        },                                                                      
+        "model_name": "gpt-4-turbo-2024-04-09",                                 
+        "system_fingerprint": "fp_de235176ee",                                  
+        "id": "chatcmpl-BvwFr5fS6zN4Py5NbMCJpSsE4mrOr",                         
+        "service_tier": "default",                                              
+        "finish_reason": "stop",                                                
+        "logprobs": null                                                        
+      },                                                                        
+      "type": "ai",                                                             
+      "name": "maria",                                                          
+      "id": "run--ce070609-cd80-48b3-be8c-4bff583c3f48-0",                      
+      "example": false,                                                         
+      "tool_calls": [],                                                         
+      "invalid_tool_calls": [],                                                 
+      "usage_metadata": {                                                       
+        "input_tokens": 814,                                                    
+        "output_tokens": 39,                                                    
+        "total_tokens": 853,                                                    
+        "input_token_details": {                                                
+          "audio": 0,                                                           
+          "cache_read": 0                                                       
+        },                                                                      
+        "output_token_details": {                                               
+          "audio": 0,                                                           
+          "reasoning": 0                                                        
+        }                                                                       
+      }                                                                         
+    }                                                                           
+  ],                                                                            
+  "contact_id": "L850LitpO3RGj0l504Vu",                                         
+  "lead_score": 3,                                                              
+  "lead_category": "cold",                                                      
+  "extracted_data": {                                                           
+    "name": null,                                                               
+    "business_type": "restaurant",                                              
+    "budget": null,                                                             
+    "goal": null,                                                               
+    "email": null,                                                              
+    "phone": null,                                                              
+    "extraction_confidence": {                                                  
+      "business_type": 0.7999999999999999                                       
+    }                                                                           
+  },                                                                            
+  "score_reasoning": "Score 3: has business (restaurant)",                      
+  "score_history": [                                                            
+    {                                                                           
+      "score": 3,                                                               
+      "previous_score": 0,                                                      
+      "timestamp": "2025-07-22T01:38:47.575515",                                
+      "reasoning": "Score 3: has business (restaurant)",                        
+      "trigger": "message_analysis"                                             
+    }                                                                           
+  ],                                                                            
+  "next_agent": "maria",                                                        
+  "suggested_agent": "maria",                                                   
+  "supervisor_complete": true,                                                  
+  "last_sent_message": "\u00a1Hola! Gracias por compartir el nombre de tu restau
+}                                                                               
+
+5. EXTRA DATA:
+{                                                                               
+  "metadata": {                                                                 
+    "graph_id": "agent",                                                        
+    "created_by": "system",                                                     
+    "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca",                     
+    "run_attempt": 1,                                                           
+    "langgraph_version": "0.5.3",                                               
+    "langgraph_api_version": "0.2.98",                                          
+    "langgraph_plan": "enterprise",                                             
+    "langgraph_host": "saas",                                                   
+    "langgraph_api_url": null,                                                  
+    "run_id": "1f0669c9-c860-6dac-9fd9-2f962b941a71",                           
+    "user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",                          
+    "x-scheme": "https",                                                        
+    "thread_id": "c95ee525-421e-4810-8887-4bd2ce0e4746",                        
+    "x-real-ip": "10.0.0.32",                                                   
+    "user-agent": "axios/0.21.4",                                               
+    "x-request-id": "d7dc1a011f463f94587c8f4b920160da",                         
+    "x-forwarded-for": "10.0.0.32",                                             
+    "x-forwarded-host": "ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us
+    "x-forwarded-port": "443",                                                  
+    "x-forwarded-proto": "https",                                               
+    "x-forwarded-scheme": "https",                                              
+    "langgraph_request_id": "d7dc1a011f463f94587c8f4b920160da",                 
+    "langgraph_auth_user_id": "166053ac-d03e-4638-b8f6-d1cf0c2c3d73",           
+    "LANGSMITH_LANGGRAPH_API_REVISION": "e375385",                              
+    "LANGSMITH_LANGGRAPH_API_VARIANT": "cloud",                                 
+    "LANGSMITH_AUTH_ENDPOINT": "https://api.smith.langchain.com",               
+    "LANGSMITH_HOST_PROJECT_ID": "b91140bf-d8b2-4d1f-b36a-53f18f2db65d",        
+    "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",                    
+    "LANGSMITH_LANGGRAPH_GIT_REF": "main",                                      
+    "LANGCHAIN_CALLBACKS_BACKGROUND": "true",                                   
+    "LANGSMITH_TRACING": "true",                                                
+    "LANGSMITH_LANGGRAPH_GIT_REF_SHA": "caf536db87d928ec31e9b26de82fbb27cf347ca2
+    "LANGSMITH_HOST_PROJECT_NAME": "ghl-langgraph-agent",                       
+    "LANGSMITH_LANGGRAPH_GIT_REPO": "https://github.com/palinopr/ghl-langgraph-a
+    "LANGSMITH_HOST_REVISION_ID": "eb96fabf-a9aa-4a98-9056-6174ea48876f",       
+    "LANGSMITH_AUTH_VERIFY_TENANT_ID": "False",                                 
+    "LANGSMITH_PROJECT": "ghl-langgraph-agent",                                 
+    "LANGSMITH_TENANT_ID": "d46348af-8871-4fc1-bb27-5d17f0589bd5",              
+    "revision_id": "caf536db87d928ec31e9b26de82fbb27cf347ca2",                  
+    "ls_run_depth": 0                                                           
+  },                                                                            
+  "runtime": {                                                                  
+    "sdk": "langsmith-py",                                                      
+    "sdk_version": "0.4.8",                                                     
+    "library": "langchain-core",                                                
+    "platform": "Linux-6.6.87+-x86_64-with-glibc2.36",                          
+    "runtime": "python",                                                        
+    "py_implementation": "CPython",                                             
+    "runtime_version": "3.13.5",                                                
+    "langchain_version": "0.3.26",                                              
+    "langchain_core_version": "0.3.69",                                         
+    "library_version": "0.3.69"                                                 
+  }                                                                             
+}                                                                               
+
+6. TOKEN USAGE:
+Total Tokens: 853
+Prompt Tokens: 814
+Completion Tokens: 39
+Total Cost: $0.00931
+Prompt Cost: $0.00814
+Completion Cost: $0.00117
+
+7. EVENTS:
+Event 1: {'name': 'start', 'time': '2025-07-22T01:38:47.566692+00:00'}
+Event 2: {'name': 'end', 'time': '2025-07-22T01:38:54.488206+00:00'}
+
+8. TAGS:
+No tags
+
+9. ALL CHILD RUNS:
+Total child runs: 5
+
+Child 1: responder
+  ID: a9edd4ef-6ae9-4da2-a472-2cab50f5dafe
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:38:49.095324
+  End: 2025-07-22 01:38:54.482706
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Papas locas restaurant",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "bc196c18-3b0e-47d3-bcdd-c428f2560676",
+                "example": false
+            },
+    ...
+  Outputs:
+    {
+        "last_sent_message": "\u00a1Hola! Gracias por compartir el nombre de tu 
+restaurante, Papas Locas. \u00bfPodr\u00edas decirme tu nombre para dirigirme a 
+ti de manera m\u00e1s personal?",
+        "message_sent": true
+    }
+
+Child 2: maria
+  ID: 6856f8ae-4046-466f-9c49-55783c8219ad
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:38:47.587159
+  End: 2025-07-22 01:38:49.092468
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Papas locas restaurant",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "bc196c18-3b0e-47d3-bcdd-c428f2560676",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "You are Maria, a professional WhatsApp automation 
+consultant for Main Outlet Media.\n\n\ud83e\udde0 MEMORY-AWARE MODE ACTIVE 
+\ud83e\udde0\nYou now have ISOLATED memory - you only see messages relevant to 
+YOU.\nNo confusion from other agents or old conversations!\n\n\\n\ud83d\udcca 
+MARIA'S CONTEXT:\\n\\n\ud83d\udccb CUSTOMER DATA:\\n- Name: None\\n- Business: 
+restaurant\\n- Problem: None\\n- Budget: NOT CONFIRMED\\n\\n\ud83c\udfaf LEAD 
+SCORE: 3/10\\n\\n\ud83d\udcac CUSTOMER JUST SAID: 'Papas locas 
+restaurant'\\n\\n\ud83d\udcca Context size: 1 messages\n\nYour Role: Handle COLD
+leads (score 0-4), build trust, qualify initially.\n\nCONVERSATION FLOW:\n1. If 
+no name \u2192 Ask for name\n2. If no business \u2192 Ask for business type  
+\n3. If no problem \u2192 Ask about WhatsApp challenges\n4. If score < 5 \u2192 
+Present value and ask budget\n5. If budget confirmed & score >= 5 \u2192 
+Escalate to Carlos\n\n\u26a1 CRITICAL RULES:\n- You handle scores 0-4 ONLY\n- 
+Score 5+ \u2192 Use escalate_to_supervisor tool immediately\n- Speak Spanish 
+(Mexican friendly style)\n- One question at a time\n- If customer provides info,
+acknowledge it and move forward\n\nRemember: You have CLEAN context now - no 
+more confusion!",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "system",
+                "id": "c71106b8-e437-44d6-b117-faa73b821d89"
+            },
+            {
+    ...
+
+Child 3: supervisor
+  ID: 66061569-bde6-4fd0-af4a-75177ad56768
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:38:47.578498
+  End: 2025-07-22 01:38:47.584838
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Papas locas restaurant",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "bc196c18-3b0e-47d3-bcdd-c428f2560676",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "next_agent": "maria",
+        "supervisor_complete": true,
+        "error": "Missing required key(s) {'remaining_steps'} in state_schema"
+    }
+
+Child 4: intelligence
+  ID: 132fa606-4495-427b-8d37-9570287fd358
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:38:47.573341
+  End: 2025-07-22 01:38:47.575939
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Papas locas restaurant",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "bc196c18-3b0e-47d3-bcdd-c428f2560676",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "Papas locas restaurant",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "bc196c18-3b0e-47d3-bcdd-c428f2560676",
+                "example": false
+            }
+    ...
+
+Child 5: receptionist
+  ID: 7684bc46-851b-4b48-82d5-04e108361a80
+  Type: chain
+  Status: success
+  Start: 2025-07-22 01:38:47.568972
+  End: 2025-07-22 01:38:47.570856
+  Inputs:
+    {
+        "messages": [
+            {
+                "content": "Papas locas restaurant",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "bc196c18-3b0e-47d3-bcdd-c428f2560676",
+                "example": false
+            }
+    ...
+  Outputs:
+    {
+        "messages": [
+            {
+                "content": "Papas locas restaurant",
+                "additional_kwargs": {},
+                "response_metadata": {},
+                "type": "human",
+                "id": "bc196c18-3b0e-47d3-bcdd-c428f2560676",
+                "example": false
+            }
+    ...
+
+10. FEEDBACK:
+No feedback
+
+11. RAW RUN OBJECT ATTRIBUTES:
+app_path: 
+/o/d46348af-8871-4fc1-bb27-5d17f0589bd5/projects/p/a807d9fb-2c58-4d09-a4b2-4037e
+0668fcc/r/1f0669c9-c860-6dac-9fd9-2f962b941a71?trace_id=1f0669c9-c860-6dac-9fd9-
+2f962b941a71&start_time=2025-07-22T01:38:47.566692
+attachments: {}
+child_run_ids: [UUID('7684bc46-851b-4b48-82d5-04e108361a80'), 
+UUID('132fa606-4495-427b-8d37-9570287fd358'), 
+UUID('66061569-bde6-4fd0-af4a-75177ad56768'), 
+UUID('a6054ca3-0410-4929-8790-c0cbc2cefe9a'), 
+UUID('6856f8ae-4046-466f-9c49-55783c8219ad'), 
+UUID('d6c3fb49-6010-4e80-a222-247e50d9eed0'), 
+UUID('dc56fdaa-c673-416e-a7d7-306038d24b2d'), 
+UUID('2a3bac10-8bac-49e0-a34b-05ab8c5e8f8c'), 
+UUID('b6f91142-c44a-467f-9033-86fbe89dced9'), 
+UUID('53c465cb-5af1-4524-90e1-ab14e7a158b5'), 
+UUID('ce070609-cd80-48b3-be8c-4bff583c3f48'), 
+UUID('2cebfbce-c7d9-4f39-a38a-80929c9de67a'), 
+UUID('4491a91d-0822-4102-bff3-de43bd6148ac'), 
+UUID('a9edd4ef-6ae9-4da2-a472-2cab50f5dafe')]
+child_runs: None
+completion_cost: 0.00117
+completion_cost_details: None
+completion_token_details: None
+completion_tokens: 39
+dotted_order: 20250722T013847566692Z1f0669c9-c860-6dac-9fd9-2f962b941a71
+end_time: 2025-07-22 01:38:54.488206
+error: None
+events: [{'name': 'start', 'time': '2025-07-22T01:38:47.566692+00:00'}, {'name':
+'end', 'time': '2025-07-22T01:38:54.488206+00:00'}]
+extra: {'metadata': {'graph_id': 'agent', 'created_by': 'system', 
+'assistant_id': 'fe096781-5601-53d2-b2f6-0d3403f7e9ca', 'run_attempt': 1, 
+'langgraph_version': '0.5.3', 'langgraph_api_version': '0.2.98', 
+'langgraph_plan': 'enterprise', 'langgraph_host': 'saas', 'langgraph_api_url': 
+None, 'run_id': '1f0669c9-c860-6dac-9fd9-2f962b941a71', 'user_id': 
+'166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 'x-scheme': 'https', 'thread_id': 
+'c95ee525-421e-4810-8887-4bd2ce0e4746', 'x-real-ip': '10.0.0.32', 'user-agent': 
+'axios/0.21.4', 'x-request-id': 'd7dc1a011f463f94587c8f4b920160da', 
+'x-forwarded-for': '10.0.0.32', 'x-forwarded-host': 
+'ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app', 
+'x-forwarded-port': '443', 'x-forwarded-proto': 'https', 'x-forwarded-scheme': 
+'https', 'langgraph_request_id': 'd7dc1a011f463f94587c8f4b920160da', 
+'langgraph_auth_user_id': '166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 
+'LANGSMITH_LANGGRAPH_API_REVISION': 'e375385', 
+'LANGSMITH_LANGGRAPH_API_VARIANT': 'cloud', 'LANGSMITH_AUTH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_HOST_PROJECT_ID': 
+'b91140bf-d8b2-4d1f-b36a-53f18f2db65d', 'LANGSMITH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_LANGGRAPH_GIT_REF': 'main', 
+'LANGCHAIN_CALLBACKS_BACKGROUND': 'true', 'LANGSMITH_TRACING': 'true', 
+'LANGSMITH_LANGGRAPH_GIT_REF_SHA': 'caf536db87d928ec31e9b26de82fbb27cf347ca2', 
+'LANGSMITH_HOST_PROJECT_NAME': 'ghl-langgraph-agent', 
+'LANGSMITH_LANGGRAPH_GIT_REPO': 
+'https://github.com/palinopr/ghl-langgraph-agent', 'LANGSMITH_HOST_REVISION_ID':
+'eb96fabf-a9aa-4a98-9056-6174ea48876f', 'LANGSMITH_AUTH_VERIFY_TENANT_ID': 
+'False', 'LANGSMITH_PROJECT': 'ghl-langgraph-agent', 'LANGSMITH_TENANT_ID': 
+'d46348af-8871-4fc1-bb27-5d17f0589bd5', 'revision_id': 
+'caf536db87d928ec31e9b26de82fbb27cf347ca2', 'ls_run_depth': 0}, 'runtime': 
+{'sdk': 'langsmith-py', 'sdk_version': '0.4.8', 'library': 'langchain-core', 
+'platform': 'Linux-6.6.87+-x86_64-with-glibc2.36', 'runtime': 'python', 
+'py_implementation': 'CPython', 'runtime_version': '3.13.5', 
+'langchain_version': '0.3.26', 'langchain_core_version': '0.3.69', 
+'library_version': '0.3.69'}}
+feedback_stats: None
+first_token_time: None
+id: 1f0669c9-c860-6dac-9fd9-2f962b941a71
+in_dataset: False
+input_cost: 0.00814
+input_cost_details: None
+input_token_details: None
+input_tokens: 814
+inputs: {'messages': [{'role': 'user', 'content': 'Papas locas restaurant'}], 
+'contact_id': 'L850LitpO3RGj0l504Vu', 'contact_name': 'Jaime Ortiz', 
+'contact_email': '', 'contact_phone': '(305) 487-0475'}
+manifest_id: None
+metadata: {'graph_id': 'agent', 'created_by': 'system', 'assistant_id': 
+'fe096781-5601-53d2-b2f6-0d3403f7e9ca', 'run_attempt': 1, 'langgraph_version': 
+'0.5.3', 'langgraph_api_version': '0.2.98', 'langgraph_plan': 'enterprise', 
+'langgraph_host': 'saas', 'langgraph_api_url': None, 'run_id': 
+'1f0669c9-c860-6dac-9fd9-2f962b941a71', 'user_id': 
+'166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 'x-scheme': 'https', 'thread_id': 
+'c95ee525-421e-4810-8887-4bd2ce0e4746', 'x-real-ip': '10.0.0.32', 'user-agent': 
+'axios/0.21.4', 'x-request-id': 'd7dc1a011f463f94587c8f4b920160da', 
+'x-forwarded-for': '10.0.0.32', 'x-forwarded-host': 
+'ghl-langgraph-agent-95f8713b0bd6545391589bd2f0ca67eb.us.langgraph.app', 
+'x-forwarded-port': '443', 'x-forwarded-proto': 'https', 'x-forwarded-scheme': 
+'https', 'langgraph_request_id': 'd7dc1a011f463f94587c8f4b920160da', 
+'langgraph_auth_user_id': '166053ac-d03e-4638-b8f6-d1cf0c2c3d73', 
+'LANGSMITH_LANGGRAPH_API_REVISION': 'e375385', 
+'LANGSMITH_LANGGRAPH_API_VARIANT': 'cloud', 'LANGSMITH_AUTH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_HOST_PROJECT_ID': 
+'b91140bf-d8b2-4d1f-b36a-53f18f2db65d', 'LANGSMITH_ENDPOINT': 
+'https://api.smith.langchain.com', 'LANGSMITH_LANGGRAPH_GIT_REF': 'main', 
+'LANGCHAIN_CALLBACKS_BACKGROUND': 'true', 'LANGSMITH_TRACING': 'true', 
+'LANGSMITH_LANGGRAPH_GIT_REF_SHA': 'caf536db87d928ec31e9b26de82fbb27cf347ca2', 
+'LANGSMITH_HOST_PROJECT_NAME': 'ghl-langgraph-agent', 
+'LANGSMITH_LANGGRAPH_GIT_REPO': 
+'https://github.com/palinopr/ghl-langgraph-agent', 'LANGSMITH_HOST_REVISION_ID':
+'eb96fabf-a9aa-4a98-9056-6174ea48876f', 'LANGSMITH_AUTH_VERIFY_TENANT_ID': 
+'False', 'LANGSMITH_PROJECT': 'ghl-langgraph-agent', 'LANGSMITH_TENANT_ID': 
+'d46348af-8871-4fc1-bb27-5d17f0589bd5', 'revision_id': 
+'caf536db87d928ec31e9b26de82fbb27cf347ca2', 'ls_run_depth': 0}
+name: agent
+output_cost: 0.00117
+output_cost_details: None
+output_token_details: None
+output_tokens: 39
+outputs: {'messages': [{'content': 'Papas locas restaurant', 
+'additional_kwargs': {}, 'response_metadata': {}, 'type': 'human', 'id': 
+'bc196c18-3b0e-47d3-bcdd-c428f2560676', 'example': False}, {'content': "You are 
+Maria, a professional WhatsApp automation consultant for Main Outlet 
+Media.\n\n🧠 MEMORY-AWARE MODE ACTIVE 🧠\nYou now have ISOLATED memory - you 
+only see messages relevant to YOU.\nNo confusion from other agents or old 
+conversations!\n\n\\n📊 MARIA'S CONTEXT:\\n\\n📋 CUSTOMER DATA:\\n- Name: 
+None\\n- Business: restaurant\\n- Problem: None\\n- Budget: NOT 
+CONFIRMED\\n\\n🎯 LEAD SCORE: 3/10\\n\\n💬 CUSTOMER JUST SAID: 'Papas locas 
+restaurant'\\n\\n📊 Context size: 1 messages\n\nYour Role: Handle COLD leads 
+(score 0-4), build trust, qualify initially.\n\nCONVERSATION FLOW:\n1. If no 
+name → Ask for name\n2. If no business → Ask for business type  \n3. If no 
+problem → Ask about WhatsApp challenges\n4. If score < 5 → Present value and ask
+budget\n5. If budget confirmed & score >= 5 → Escalate to Carlos\n\n⚡ CRITICAL 
+RULES:\n- You handle scores 0-4 ONLY\n- Score 5+ → Use escalate_to_supervisor 
+tool immediately\n- Speak Spanish (Mexican friendly style)\n- One question at a 
+time\n- If customer provides info, acknowledge it and move forward\n\nRemember: 
+You have CLEAN context now - no more confusion!", 'additional_kwargs': {}, 
+'response_metadata': {}, 'type': 'system', 'id': 
+'c71106b8-e437-44d6-b117-faa73b821d89'}, {'content': '¡Hola! Gracias por 
+compartir el nombre de tu restaurante, Papas Locas. ¿Podrías decirme tu nombre 
+para dirigirme a ti de manera más personal?', 'additional_kwargs': {'refusal': 
+None}, 'response_metadata': {'token_usage': {'completion_tokens': 39, 
+'prompt_tokens': 814, 'total_tokens': 853, 'completion_tokens_details': 
+{'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 
+'rejected_prediction_tokens': 0}, 'prompt_tokens_details': {'audio_tokens': 0, 
+'cached_tokens': 0}}, 'model_name': 'gpt-4-turbo-2024-04-09', 
+'system_fingerprint': 'fp_de235176ee', 'id': 
+'chatcmpl-BvwFr5fS6zN4Py5NbMCJpSsE4mrOr', 'service_tier': 'default', 
+'finish_reason': 'stop', 'logprobs': None}, 'type': 'ai', 'name': 'maria', 'id':
+'run--ce070609-cd80-48b3-be8c-4bff583c3f48-0', 'example': False, 'tool_calls': 
+[], 'invalid_tool_calls': [], 'usage_metadata': {'input_tokens': 814, 
+'output_tokens': 39, 'total_tokens': 853, 'input_token_details': {'audio': 0, 
+'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}}], 
+'contact_id': 'L850LitpO3RGj0l504Vu', 'lead_score': 3, 'lead_category': 'cold', 
+'extracted_data': {'name': None, 'business_type': 'restaurant', 'budget': None, 
+'goal': None, 'email': None, 'phone': None, 'extraction_confidence': 
+{'business_type': 0.7999999999999999}}, 'score_reasoning': 'Score 3: has 
+business (restaurant)', 'score_history': [{'score': 3, 'previous_score': 0, 
+'timestamp': '2025-07-22T01:38:47.575515', 'reasoning': 'Score 3: has business 
+(restaurant)', 'trigger': 'message_analysis'}], 'next_agent': 'maria', 
+'suggested_agent': 'maria', 'supervisor_complete': True, 'last_sent_message': 
+'¡Hola! Gracias por compartir el nombre de tu restaurante, Papas Locas. ¿Podrías
+decirme tu nombre para dirigirme a ti de manera más personal?'}
+parent_run_id: None
+parent_run_ids: []
+prompt_cost: 0.00814
+prompt_cost_details: None
+prompt_token_details: None
+prompt_tokens: 814
+reference_example_id: None
+revision_id: caf536db87d928ec31e9b26de82fbb27cf347ca2
+run_type: chain
+serialized: None
+session_id: a807d9fb-2c58-4d09-a4b2-4037e0668fcc
+start_time: 2025-07-22 01:38:47.566692
+status: success
+tags: []
+total_cost: 0.00931
+total_tokens: 853
+trace_id: 1f0669c9-c860-6dac-9fd9-2f962b941a71
+url: 
+https://smith.langchain.com/o/d46348af-8871-4fc1-bb27-5d17f0589bd5/projects/p/a8
+07d9fb-2c58-4d09-a4b2-4037e0668fcc/r/1f0669c9-c860-6dac-9fd9-2f962b941a71?trace_
+id=1f0669c9-c860-6dac-9fd9-2f962b941a71&start_time=2025-07-22T01:38:47.566692
+
+================================================================================
+DEBUG COMPLETE
+================================================================================
