@@ -18,7 +18,7 @@ from app.state.minimal_state import MinimalState
 
 # Import modernized nodes
 from app.agents.receptionist_memory_aware import receptionist_memory_aware_node
-from app.agents.supervisor_official import supervisor_official_node
+from app.agents.supervisor import supervisor_node
 from app.agents.maria_memory_aware import maria_memory_aware_node
 from app.agents.carlos_agent_v2_fixed import carlos_node_v2_fixed as carlos_node
 from app.agents.sofia_agent_v2_fixed import sofia_node_v2_fixed as sofia_node
@@ -138,7 +138,7 @@ def create_modernized_workflow():
     # Add all nodes
     workflow.add_node("receptionist", receptionist_memory_aware_node)
     workflow.add_node("intelligence", intelligence_node)
-    workflow.add_node("supervisor", supervisor_official_node)
+    workflow.add_node("supervisor", supervisor_node)
     workflow.add_node("maria", maria_enhanced)
     workflow.add_node("carlos", carlos_enhanced)
     workflow.add_node("sofia", sofia_enhanced)
