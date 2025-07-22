@@ -6,7 +6,6 @@ from typing import Dict, Any, List, Union
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.types import Command
-from app.state.minimal_state import MinimalState
 from app.tools.agent_tools_fixed import (
     get_contact_details_with_task,
     escalate_to_supervisor,
@@ -150,7 +149,6 @@ async def maria_memory_aware_node(state: Dict[str, Any]) -> Union[Command, Dict[
         agent = create_react_agent(
             model=model,
             tools=tools,
-            state_schema=MinimalState,  # Enable InjectedState support
             name="maria"
         )
         
