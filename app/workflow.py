@@ -1,449 +1,176 @@
 """
-Modernized Workflow with Official LangGraph Patterns
-Implements all the latest patterns from LangGraph documentation:
-1. Official supervisor pattern with task descriptions
-2. Command objects for agent handoffs
-3. Health check endpoints integration
-4. Simplified state management
-5. Better error handling and routing
+Production-Ready Workflow with Redis Persistence
+Fixed version with proper checkpoint configuration
 """
-from typing import Dict, Any, Literal, Union
-from langgraph.graph import StateGraph, END, START
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-from langgraph.checkpoint.sqlite import SqliteSaver
-from langgraph.store.memory import InMemoryStore
-from langchain_core.messages import AIMessage, HumanMessage
+from typing import Dict, Any, Literal, TypedDict, Annotated, List, Union
+from langgraph.graph import StateGraph, END
+from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
+from langchain_openai import ChatOpenAI
 import os
-import sys
+import logging
 
-# Add src to path for redis_store import
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from src.state.redis_store import RedisCheckpointSaver
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Import enhanced state
-from app.state.minimal_state import MinimalState
+# Production State Definition
+class ProductionState(TypedDict):
+    messages: Annotated[List[BaseMessage], lambda x, y: x + y]
+    current_agent: str
+    lead_score: int
+    contact_id: str
+    conversation_id: str
+    location_id: str
+    next_agent: str
+    agent_task: str
+    supervisor_complete: bool
+    needs_escalation: bool
+    escalation_reason: str
+    routing_attempts: int
+    should_end: bool
+    contact_name: str
+    email: str
+    phone: str
+    business_type: str
+    goal: str
+    urgency_level: str
+    budget: str
+    thread_id: str
+    webhook_data: Dict[str, Any]  # For passing webhook data to receptionist
+    # Receptionist outputs
+    last_message: str
+    is_first_contact: bool
+    receptionist_complete: bool
+    # Intelligence outputs  
+    last_intent: str
+    intelligence_complete: bool
+    # Additional fields from checkpoint-aware receptionist
+    contact_info: Dict[str, Any]
+    previous_custom_fields: Dict[str, Any]
+    is_new_conversation: bool
+    thread_message_count: int
+    has_checkpoint: bool
+    # Responder outputs
+    last_sent_message: str
+    message_sent: bool
+    final_response: str
+    responder_complete: bool
+    # Agent completion flags
+    agent_complete: bool
 
-# Import modernized nodes
+
+# Import all agent nodes and utilities
+from app.agents.thread_id_mapper_enhanced import thread_id_mapper_enhanced_node as thread_mapper_node
 from app.agents.receptionist_checkpoint_aware import receptionist_checkpoint_aware_node
-from app.agents.supervisor import supervisor_node
-from app.agents.maria_memory_aware import maria_memory_aware_node
+from app.intelligence.analyzer import intelligence_node as intelligence_analyzer_node
+from app.agents.supervisor_fixed import supervisor_fixed_node as supervisor_node
+from app.agents.maria_memory_aware import maria_memory_aware_node as maria_node
 from app.agents.carlos_agent_v2_fixed import carlos_node_v2_fixed as carlos_node
 from app.agents.sofia_agent_v2_fixed import sofia_node_v2_fixed as sofia_node
-from app.agents.responder_streaming import responder_streaming_node as responder_node
-from app.intelligence.analyzer import intelligence_node
-
-# Import utilities
-from app.utils.simple_logger import get_logger
-
-logger = get_logger("workflow")
+from app.agents.responder_streaming import responder_streaming_node
 
 
-def enhance_agent_with_task(agent_func):
-    """
-    Decorator to enhance agents with task awareness
-    """
-    async def enhanced_agent(state: Dict[str, Any]) -> Dict[str, Any]:
-        # Add task context to state if available
-        agent_task = state.get("agent_task")
-        if agent_task:
-            logger.info(f"Agent received task: {agent_task}")
-            # Add task as a system message for context
-            task_msg = AIMessage(
-                content=f"[Task from supervisor: {agent_task}]",
-                name="system"
-            )
-            if "messages" not in state:
-                state["messages"] = []
-            state["messages"].append(task_msg)
-        
-        # Run the original agent
-        result = await agent_func(state)
-        
-        # Clear task after processing
-        if "agent_task" in result:
-            result["agent_task"] = None
-            
-        return result
-    
-    return enhanced_agent
-
-
-def route_from_supervisor(state: MinimalState) -> Literal["maria", "carlos", "sofia", "responder", "end"]:
+def route_from_supervisor(state: ProductionState) -> Literal["maria", "carlos", "sofia", "responder", "end"]:
     """Route based on supervisor decision"""
     if state.get("should_end", False):
-        logger.info("Ending workflow: should_end flag is True")
         return "end"
     
-    # Check if supervisor completed
     if not state.get("supervisor_complete"):
-        logger.warning("Supervisor not complete, ending workflow")
         return "end"
-    
-    # Check routing attempts
-    routing_attempts = state.get("routing_attempts", 0)
-    if routing_attempts >= 3:
-        logger.warning("Max routing attempts reached, going to responder")
-        return "responder"
     
     next_agent = state.get("next_agent")
     
     if next_agent in ["maria", "carlos", "sofia"]:
-        logger.info(f"ROUTING: Supervisor → {next_agent}")
-        if state.get("agent_task"):
-            logger.info(f"Task: {state['agent_task']}")
         return next_agent
-    
-    # If no explicit routing, check if we have messages to send
-    if state.get("messages"):
-        logger.info("No explicit routing, going to responder")
+    elif next_agent == "responder":
         return "responder"
-    
-    logger.warning(f"Invalid next_agent: {next_agent}, ending workflow")
-    return "end"
+    else:
+        return "end"
 
 
-def route_from_agent(state: MinimalState) -> Union[Literal["supervisor", "responder"], str]:
-    """Route from agent - can escalate back to supervisor or proceed to responder"""
-    if state.get("needs_rerouting", False) or state.get("needs_escalation", False):
-        reason = state.get("escalation_reason", "unknown")
-        logger.info(f"ESCALATION: {state.get('current_agent')} → Supervisor (reason: {reason})")
-        
-        # Increment routing attempts
-        state["routing_attempts"] = state.get("routing_attempts", 0) + 1
-        
-        # Reset supervisor complete flag for re-routing
-        state["supervisor_complete"] = False
-        
+def route_from_agent(state: ProductionState) -> Literal["responder", "supervisor"]:
+    """Route from agent - either to responder or back to supervisor"""
+    if state.get("needs_escalation", False):
+        logger.info("Escalating back to supervisor")
         return "supervisor"
     
-    # Normal flow to responder
-    logger.info(f"Normal flow: {state.get('current_agent')} → Responder")
     return "responder"
 
 
-async def create_modernized_workflow():
-    """
-    Create workflow with official LangGraph patterns
-    
-    Features:
-    1. Official supervisor pattern with handoff tools
-    2. Task descriptions in agent handoffs
-    3. Command objects for routing
-    4. Clean state management
-    5. Better error handling
-    """
-    logger.info("Creating modernized workflow with official patterns")
-    
-    # Create workflow with standard state
-    workflow_graph = StateGraph(MinimalState)
-    
-    # Import enhanced thread mapper
-    from app.agents.thread_id_mapper_enhanced import thread_id_mapper_enhanced_node as thread_id_mapper_node
-    
-    # Enhance agents with task awareness
-    maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)
-    carlos_enhanced = enhance_agent_with_task(carlos_node)
-    sofia_enhanced = enhance_agent_with_task(sofia_node)
-    
-    # Add all nodes - thread mapper FIRST
-    workflow_graph.add_node("thread_mapper", thread_id_mapper_node)
-    workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)
-    workflow_graph.add_node("intelligence", intelligence_node)
-    workflow_graph.add_node("supervisor", supervisor_node)
-    workflow_graph.add_node("maria", maria_enhanced)
-    workflow_graph.add_node("carlos", carlos_enhanced)
-    workflow_graph.add_node("sofia", sofia_enhanced)
-    workflow_graph.add_node("responder", responder_node)
-    
-    # Set entry point to thread mapper
-    workflow_graph.set_entry_point("thread_mapper")
-    
-    # Define edges
-    workflow_graph.add_edge("thread_mapper", "receptionist")  # Thread mapper runs first
-    workflow_graph.add_edge("receptionist", "intelligence")
-    workflow_graph.add_edge("intelligence", "supervisor")
-    
-    # Supervisor routing with official pattern
+# Create the workflow
+workflow_graph = StateGraph(ProductionState)
+
+# Add all nodes
+workflow_graph.add_node("thread_mapper", thread_mapper_node)
+workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)  
+workflow_graph.add_node("intelligence", intelligence_analyzer_node)
+workflow_graph.add_node("supervisor", supervisor_node)
+workflow_graph.add_node("maria", maria_node)
+workflow_graph.add_node("carlos", carlos_node)
+workflow_graph.add_node("sofia", sofia_node)
+workflow_graph.add_node("responder", responder_streaming_node)  
+
+# Set entry point
+workflow_graph.set_entry_point("thread_mapper")
+
+# Define edges
+workflow_graph.add_edge("thread_mapper", "receptionist")
+workflow_graph.add_edge("receptionist", "intelligence")
+workflow_graph.add_edge("intelligence", "supervisor")
+
+# Supervisor routing
+workflow_graph.add_conditional_edges(
+    "supervisor",
+    route_from_supervisor,
+    {
+        "maria": "maria",
+        "carlos": "carlos",
+        "sofia": "sofia",
+        "responder": "responder",
+        "end": END
+    }
+)
+
+# Agent routing
+for agent in ["maria", "carlos", "sofia"]:
     workflow_graph.add_conditional_edges(
-        "supervisor",
-        route_from_supervisor,
+        agent,
+        route_from_agent,
         {
-            "maria": "maria",
-            "carlos": "carlos",
-            "sofia": "sofia",
             "responder": "responder",
-            "end": END
+            "supervisor": "supervisor"
         }
     )
-    
-    # Agent routing with escalation support
-    for agent in ["maria", "carlos", "sofia"]:
-        workflow_graph.add_conditional_edges(
-            agent,
-            route_from_agent,
-            {
-                "responder": "responder",
-                "supervisor": "supervisor"
-            }
-        )
-    
-    # Responder ends
-    workflow_graph.add_edge("responder", END)
-    
-    # Choose checkpointer based on environment
+
+# Responder ends
+workflow_graph.add_edge("responder", END)
+
+# CRITICAL FIX: Use proper checkpoint configuration
+def create_checkpointer():
+    """Create checkpointer based on environment"""
     redis_url = os.getenv("REDIS_URL")
     
     if redis_url:
-        # Use Redis for production
-        logger.info(f"Using Redis checkpoint store: {redis_url}")
-        checkpointer = RedisCheckpointSaver(redis_url=redis_url)
-        store = InMemoryStore()
-        
-        compiled = workflow_graph.compile(
-            checkpointer=checkpointer,
-            store=store
-        )
-        
-        logger.info("Modernized workflow compiled with Redis persistence")
-        return compiled, checkpointer, "redis"
-    else:
-        # Fallback to SQLite for local dev
-        checkpoint_db = os.path.join(os.path.dirname(__file__), "checkpoints.db")
-        logger.info(f"Using SQLite checkpoint database: {checkpoint_db}")
-        
-        async with AsyncSqliteSaver.from_conn_string(checkpoint_db) as memory:
-            store = InMemoryStore()
-            
-            compiled = workflow_graph.compile(
-                checkpointer=memory,
-                store=store
-            )
-            
-            logger.info("Modernized workflow compiled with SQLite persistence")
-            return compiled, memory, checkpoint_db
-
-
-def create_sync_workflow():
-    """
-    Create a synchronous workflow for module-level compilation.
-    This is what LangGraph will import and use.
-    """
-    logger.info("Creating sync workflow for module export")
-    
-    # Create workflow with standard state
-    workflow_graph = StateGraph(MinimalState)
-    
-    # Import enhanced thread mapper
-    from app.agents.thread_id_mapper_enhanced import thread_id_mapper_enhanced_node as thread_id_mapper_node
-    
-    # Enhance agents with task awareness
-    maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)
-    carlos_enhanced = enhance_agent_with_task(carlos_node)
-    sofia_enhanced = enhance_agent_with_task(sofia_node)
-    
-    # Add all nodes - thread mapper FIRST
-    workflow_graph.add_node("thread_mapper", thread_id_mapper_node)
-    workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)
-    workflow_graph.add_node("intelligence", intelligence_node)
-    workflow_graph.add_node("supervisor", supervisor_node)
-    workflow_graph.add_node("maria", maria_enhanced)
-    workflow_graph.add_node("carlos", carlos_enhanced)
-    workflow_graph.add_node("sofia", sofia_enhanced)
-    workflow_graph.add_node("responder", responder_node)
-    
-    # Set entry point to thread mapper
-    workflow_graph.set_entry_point("thread_mapper")
-    
-    # Define edges
-    workflow_graph.add_edge("thread_mapper", "receptionist")  # Thread mapper runs first
-    workflow_graph.add_edge("receptionist", "intelligence")
-    workflow_graph.add_edge("intelligence", "supervisor")
-    
-    # Supervisor routing with official pattern
-    workflow_graph.add_conditional_edges(
-        "supervisor",
-        route_from_supervisor,
-        {
-            "maria": "maria",
-            "carlos": "carlos",
-            "sofia": "sofia",
-            "responder": "responder",
-            "end": END
-        }
-    )
-    
-    # Agent routing with escalation support
-    for agent in ["maria", "carlos", "sofia"]:
-        workflow_graph.add_conditional_edges(
-            agent,
-            route_from_agent,
-            {
-                "responder": "responder",
-                "supervisor": "supervisor"
-            }
-        )
-    
-    # Responder ends
-    workflow_graph.add_edge("responder", END)
-    
-    # Choose checkpointer based on environment
-    redis_url = os.getenv("REDIS_URL")
-    
-    if redis_url:
-        # Use Redis for production
-        logger.info(f"Using Redis checkpoint store for sync workflow: {redis_url}")
-        checkpointer = RedisCheckpointSaver(redis_url=redis_url)
-        store = InMemoryStore()
-        
-        compiled = workflow_graph.compile(
-            checkpointer=checkpointer,
-            store=store
-        )
-        
-        logger.info("Sync workflow compiled with Redis persistence")
-        return compiled
-    else:
-        # Fallback to SQLite for local dev
-        checkpoint_db = os.path.join(os.path.dirname(__file__), "checkpoints.db")
-        
-        with SqliteSaver.from_conn_string(checkpoint_db) as checkpointer:
-            store = InMemoryStore()
-            
-            compiled = workflow_graph.compile(
-                checkpointer=checkpointer,
-                store=store
-            )
-            
-            logger.info(f"Sync workflow compiled with SQLite at {checkpoint_db}")
-            return compiled
-
-
-# Global workflow and checkpointer will be created on first use
-_workflow = None
-_checkpointer = None
-_db_path = None
-
-
-async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Run the workflow with proper checkpoint loading
-    
-    This ensures conversation history is preserved across messages
-    """
-    global _workflow, _checkpointer, _db_path
-    
-    try:
-        # Extract identifiers
-        contact_id = webhook_data.get("contactId", webhook_data.get("id", "unknown"))
-        message_body = webhook_data.get("body", webhook_data.get("message", ""))
-        conversation_id = webhook_data.get("conversationId")
-        
-        # CRITICAL: Use consistent thread_id - prefer conversationId for GHL consistency
-        thread_id = (
-            webhook_data.get("conversationId") or  # GHL conversation ID (primary)
-            webhook_data.get("threadId") or        # Fallback to threadId
-            f"contact-{contact_id}"                # Last resort: contact-based
-        )
-        logger.info("Using thread configuration", thread_id=thread_id, contact_id=contact_id, conversation_id=conversation_id)
-        
-        # Configuration for checkpointer
-        config = {"configurable": {"thread_id": thread_id}}
-        
-        # Create workflow if not exists (runs within SQLite context)
-        if _workflow is None:
-            _workflow, _checkpointer, _db_path = await create_modernized_workflow()
-        
-        # SQLite database path
-        checkpoint_db = os.path.join(os.path.dirname(__file__), "checkpoints.db")
-        
-        # Try to get existing state from checkpoint
-        existing_state = None
         try:
-            # Use async context manager for checkpoint operations
-            async with AsyncSqliteSaver.from_conn_string(checkpoint_db) as checkpointer:
-                checkpoint_tuple = await checkpointer.aget(config)
-                
-                if checkpoint_tuple and checkpoint_tuple.checkpoint:
-                    existing_state = checkpoint_tuple.checkpoint.get("channel_values", {})
-                    existing_messages = existing_state.get("messages", [])
-                    logger.info(
-                        "Loaded checkpoint from SQLite",
-                        thread_id=thread_id,
-                        message_count=len(existing_messages),
-                        extracted_data=existing_state.get('extracted_data', {}),
-                        lead_score=existing_state.get('lead_score', 0),
-                        checkpoint_status="loaded"
-                    )
-                    
-                    # Debug: Show last few messages for context
-                    if existing_messages:
-                        logger.info("=== RECENT CONVERSATION HISTORY ===")
-                        for i, msg in enumerate(existing_messages[-5:]):  # Show last 5 messages
-                            msg_preview = str(msg.content)[:100].replace('\n', ' ')
-                            logger.info(f"  [{i}] {type(msg).__name__}: {msg_preview}...")
-                        logger.info("=== END HISTORY ===")
-                else:
-                    logger.info("No checkpoint found", thread_id=thread_id, checkpoint_status="new_conversation")
+            # Try to import and use Redis checkpointer
+            from app.state.redis_store import RedisCheckpointSaver
+            logger.info(f"Using Redis checkpointer with URL: {redis_url[:50]}...")
+            return RedisCheckpointSaver(redis_url=redis_url)
         except Exception as e:
-            logger.warning("Failed to load checkpoint", error=str(e), thread_id=thread_id)
-        
-        # Create initial state
-        if existing_state and "messages" in existing_state:
-            # Use checkpoint state as base
-            initial_state = {
-                **existing_state,  # Preserve all checkpoint data
-                "webhook_data": webhook_data,
-                "thread_id": thread_id,
-                # Don't add new message here - receptionist will handle it
-            }
-            logger.info("Using checkpoint state", message_count=len(initial_state.get('messages', [])), thread_id=thread_id)
-        else:
-            # Fresh state if no checkpoint
-            initial_state = {
-                "messages": [],  # Empty - receptionist will add the message
-                "contact_id": contact_id,
-                "thread_id": thread_id,
-                "webhook_data": webhook_data,
-                "extracted_data": {},
-                "lead_score": 0,
-                "should_end": False,
-                "routing_attempts": 0
-            }
-            logger.info("Starting fresh state", thread_id=thread_id, checkpoint_status="fresh")
-        
-        # Run the workflow with persistent checkpointer
-        logger.info("Running workflow", contact_id=contact_id, thread_id=thread_id, workflow_status="started")
-        
-        # Use the already compiled workflow with persistent checkpointer
-        result = await _workflow.ainvoke(
-            initial_state,
-            config=config  # Pass config for checkpoint saving
-        )
-        
-        logger.info(f"Workflow completed for contact {contact_id}")
-        logger.info(f"Final state has {len(result.get('messages', []))} messages")
-        
-        return {
-            "success": True,
-            "contact_id": contact_id,
-            "thread_id": thread_id,
-            "message_sent": result.get("message_sent", False),
-            "message_count": len(result.get("messages", [])),
-            "checkpoint_loaded": existing_state is not None
-        }
-        
-    except Exception as e:
-        logger.error(f"Error in workflow: {str(e)}", exc_info=True)
-        return {
-            "success": False,
-            "error": str(e),
-            "contact_id": webhook_data.get("contactId", "unknown")
-        }
+            logger.warning(f"Failed to create Redis checkpointer: {e}")
+    
+    # Fallback to memory saver
+    logger.info("Using in-memory checkpointer (no persistence)")
+    from langgraph.checkpoint.memory import MemorySaver
+    return MemorySaver()
 
+# Create checkpointer
+checkpointer = create_checkpointer()
 
-# Create the compiled workflow at module level for LangGraph
-# This is what langgraph.json expects to find
-workflow = create_sync_workflow()
+# Compile workflow
+workflow = workflow_graph.compile(checkpointer=checkpointer)
 
-# Export for langgraph.json and imports
-__all__ = ["workflow", "run_workflow"]
+logger.info(f"Production workflow compiled with {type(checkpointer).__name__}")
+
+# Export
+__all__ = ["workflow"]
