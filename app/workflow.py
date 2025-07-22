@@ -132,8 +132,8 @@ async def create_modernized_workflow():
     # Create workflow with standard state
     workflow_graph = StateGraph(MinimalState)
     
-    # Import thread mapper
-    from app.agents.thread_id_mapper import thread_id_mapper_node
+    # Import enhanced thread mapper
+    from app.agents.thread_id_mapper_enhanced import thread_id_mapper_enhanced_node as thread_id_mapper_node
     
     # Enhance agents with task awareness
     maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)
@@ -213,8 +213,8 @@ def create_sync_workflow():
     # Create workflow with standard state
     workflow_graph = StateGraph(MinimalState)
     
-    # Import thread mapper
-    from app.agents.thread_id_mapper import thread_id_mapper_node
+    # Import enhanced thread mapper
+    from app.agents.thread_id_mapper_enhanced import thread_id_mapper_enhanced_node as thread_id_mapper_node
     
     # Enhance agents with task awareness
     maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)

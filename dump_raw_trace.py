@@ -18,7 +18,7 @@ client = Client(
 )
 
 # Trace to dump
-TRACE_ID = "1f067063-cb0e-6fcb-afd5-c1ccbd774d31"
+TRACE_ID = "1f0670aa-0c01-6fe7-8e97-b039425d5aa8"
 
 def dump_raw(run_id: str):
     """Dump everything raw"""
