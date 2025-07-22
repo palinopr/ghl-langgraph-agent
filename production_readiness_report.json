@@ -1,0 +1,54 @@
+{
+  "timestamp": "2025-07-22T15:36:52.627497",
+  "success_rate": 100.0,
+  "results": {
+    "agent_routing": [
+      {
+        "test": "Low Intent - Should route to Maria",
+        "success": true,
+        "agent": "maria",
+        "score": 2,
+        "time": 2.8315560817718506
+      },
+      {
+        "test": "Business Owner - Should route to Carlos",
+        "success": true,
+        "agent": "carlos",
+        "score": 6,
+        "time": 5.458688020706177
+      },
+      {
+        "test": "High Intent - Should route to Sofia",
+        "success": true,
+        "agent": "sofia",
+        "score": 9,
+        "time": 2.2314870357513428
+      }
+    ],
+    "memory_tests": [
+      {
+        "test": "Conversation Memory",
+        "success": true,
+        "score": 100.0,
+        "details": "2/2 memory checks passed"
+      }
+    ],
+    "performance": [
+      {
+        "test": "Response Time",
+        "success": true,
+        "avg_time": 1.6967286586761474,
+        "min_time": 1.3106908798217773,
+        "max_time": 2.3002822399139404
+      },
+      {
+        "test": "Concurrent Handling",
+        "success": true,
+        "successful_requests": 3,
+        "total_requests": 3
+      }
+    ],
+    "errors": []
+  },
+  "verdict": "READY"
+}

@@ -3,7 +3,7 @@
   "version": "3.1.1",
   "description": "GoHighLevel LangGraph Agent - v3.1.1 Modernization Complete and Active",
   "graphs": {
-    "agent": "./app/workflow.py:workflow"
+    "agent": "./app/workflow_production_ready.py:workflow"
   },
   "dependencies": [
     "."
