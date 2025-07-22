@@ -293,9 +293,13 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         message_body = webhook_data.get("body", webhook_data.get("message", ""))
         conversation_id = webhook_data.get("conversationId")
         
-        # CRITICAL: Use consistent thread_id based on contact
-        thread_id = f"contact-{contact_id}"  # Always based on contact for consistency
-        logger.info(f"Thread ID: {thread_id} for contact: {contact_id}")
+        # CRITICAL: Use consistent thread_id - prefer conversationId for GHL consistency
+        thread_id = (
+            webhook_data.get("conversationId") or  # GHL conversation ID (primary)
+            webhook_data.get("threadId") or        # Fallback to threadId
+            f"contact-{contact_id}"                # Last resort: contact-based
+        )
+        logger.info(f"Using thread_id: {thread_id} for contact: {contact_id} (conversationId: {conversation_id})")
         
         # Configuration for checkpointer
         config = {"configurable": {"thread_id": thread_id}}
@@ -317,15 +321,18 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
                 if checkpoint_tuple and checkpoint_tuple.checkpoint:
                     existing_state = checkpoint_tuple.checkpoint.get("channel_values", {})
                     existing_messages = existing_state.get("messages", [])
-                    logger.info(f"✅ Loaded {len(existing_messages)} messages from SQLite for thread {thread_id}")
+                    logger.info(f"✅ Loaded checkpoint for thread {thread_id}")
+                    logger.info(f"   - Messages: {len(existing_messages)}")
+                    logger.info(f"   - Extracted data: {existing_state.get('extracted_data', {})}")
+                    logger.info(f"   - Lead score: {existing_state.get('lead_score', 0)}")
                     
-                    # Debug: Show last message for context
+                    # Debug: Show last few messages for context
                     if existing_messages:
-                        logger.info(f"Last message: '{existing_messages[-1].content}'")
-                        logger.info("=== CHECKPOINT MESSAGES ===")
-                        for i, msg in enumerate(existing_messages[-3:]):
-                            logger.info(f"  [{i}] {type(msg).__name__}: {str(msg.content)[:50]}...")
-                        logger.info("=== END CHECKPOINT ===")
+                        logger.info("=== RECENT CONVERSATION HISTORY ===")
+                        for i, msg in enumerate(existing_messages[-5:]):  # Show last 5 messages
+                            msg_preview = str(msg.content)[:100].replace('\n', ' ')
+                            logger.info(f"  [{i}] {type(msg).__name__}: {msg_preview}...")
+                        logger.info("=== END HISTORY ===")
                 else:
                     logger.info(f"🆕 No checkpoint in SQLite for thread {thread_id} - new conversation")
         except Exception as e:
