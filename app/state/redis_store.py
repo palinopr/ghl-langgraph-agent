@@ -17,7 +17,6 @@ from langgraph.checkpoint.base import (
 )
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from app.utils.simple_logger import get_logger
-from app.utils.tracing import trace_operation
 
 logger = get_logger("redis_store")
 
@@ -71,12 +70,7 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
                 self.redis_url,
                 decode_responses=False,  # We handle encoding
                 socket_connect_timeout=5,
-                socket_keepalive=True,
-                socket_keepalive_options={
-                    1: 3,  # TCP_KEEPIDLE
-                    2: 3,  # TCP_KEEPINTVL
-                    3: 3,  # TCP_KEEPCNT
-                }
+                socket_keepalive=True
             )
             # Test connection
             await self._client.ping()
@@ -99,7 +93,6 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
             return f"{self.key_prefix}meta:{thread_id}:{checkpoint_ns}"
         return f"{self.key_prefix}meta:{thread_id}"
     
-    @trace_operation("state.write")
     async def aput(
         self,
         config: Dict[str, Any],
@@ -172,7 +165,6 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
             }
         }
     
-    @trace_operation("state.read")
     async def aget(
         self,
         config: Dict[str, Any]

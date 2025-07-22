@@ -1,9 +1,9 @@
 {
   "name": "ghl-langgraph-agent",
-  "version": "3.1.1",
-  "description": "GoHighLevel LangGraph Agent - v3.1.1 Modernization Complete and Active",
+  "version": "3.1.2",
+  "description": "GoHighLevel LangGraph Agent - v3.1.2 with Redis Persistence",
   "graphs": {
-    "agent": "./app/workflow_production_ready.py:workflow"
+    "agent": "./app/workflow_production_fixed.py:workflow"
   },
   "dependencies": [
     "."
