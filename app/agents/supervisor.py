@@ -64,28 +64,29 @@ def create_supervisor_with_tools():
     
     tools = [handoff_to_maria, handoff_to_carlos, handoff_to_sofia]
     
-    # CRITICAL: Prompt that forces tool usage ONLY
+    # CRITICAL: Prompt that forces tool usage ONLY and prevents recursion
     system_prompt = """You are a routing-only supervisor. You CANNOT talk to customers directly.
 
-YOUR ONLY TASK: Analyze the lead score and use the appropriate handoff tool.
+YOUR ONLY TASK: Use ONE handoff tool based on the lead score, then STOP.
 
 CRITICAL RULES:
-1. You MUST use ONE of the handoff tools - NEVER respond to the customer
-2. You CANNOT send any message to the customer
-3. You CANNOT greet, analyze, or chat - ONLY route using tools
-4. Even for "hola" or any greeting - use handoff_to_maria
+1. Use EXACTLY ONE handoff tool - no more, no less
+2. After using the tool, YOU ARE DONE - do not continue
+3. NEVER respond to the customer directly
+4. NEVER use multiple tools or analyze further
+5. ONE TOOL CALL ONLY, THEN STOP
 
 ROUTING BASED ON SCORE:
-- Score 0-4 or unknown → Use handoff_to_maria 
-- Score 5-7 → Use handoff_to_carlos
-- Score 8-10 → Use handoff_to_sofia
+- Score 0-4 or unknown → Use handoff_to_maria ONCE
+- Score 5-7 → Use handoff_to_carlos ONCE
+- Score 8-10 → Use handoff_to_sofia ONCE
 
 Current Lead Score: {lead_score}
 
-IMPORTANT: Immediately use the handoff tool. The task description should be in Spanish.
-Example: For "hola" with score 0, use: handoff_to_maria("Responder al saludo del cliente")
+Use the handoff tool with a Spanish task description, then STOP.
+Example: handoff_to_maria("Responder al saludo del cliente")
 
-DO NOT RESPOND TO THE CUSTOMER - ONLY USE TOOLS!"""
+REMEMBER: ONE TOOL CALL, THEN STOP IMMEDIATELY!"""
     
     def build_prompt(state: MinimalState) -> List[AnyMessage]:
         lead_score = state.get("lead_score", 0)
@@ -96,13 +97,14 @@ DO NOT RESPOND TO THE CUSTOMER - ONLY USE TOOLS!"""
         
         return [{"role": "system", "content": formatted_system}] + messages
     
-    # Create agent with state schema
+    # Create agent with state schema and recursion limit
     agent = create_react_agent(
         model=model,
         tools=tools,
         state_schema=MinimalState,
         prompt=build_prompt,
-        name="supervisor"
+        name="supervisor",
+        recursion_limit=1  # CRITICAL: Prevent recursion loops - supervisor should make ONE tool call only
     )
     
     return agent
