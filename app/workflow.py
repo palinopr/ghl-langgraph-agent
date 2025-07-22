@@ -189,18 +189,6 @@ def create_modernized_workflow():
     
     logger.info("Modernized workflow compiled successfully")
     
-    # Add metadata for health checks
-    compiled.metadata = {
-        "version": "3.0.8",
-        "pattern": "official_supervisor",
-        "features": [
-            "task_descriptions",
-            "command_objects",
-            "health_endpoints",
-            "simplified_state"
-        ]
-    }
-    
     return compiled
 
 
