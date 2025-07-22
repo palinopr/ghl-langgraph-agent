@@ -4,6 +4,15 @@
 
 All notable changes, fixes, and improvements to the LangGraph GHL Agent.
 
+## [Unreleased]
+
+### 🔒 Security
+- Added webhook signature verification for GoHighLevel webhooks
+  - New `/webhook/ghl` endpoint with HMAC-SHA256 signature validation
+  - Replay attack prevention with 5-minute timestamp window
+  - Environment variable `GHL_WEBHOOK_SECRET` for webhook authentication
+  - Comprehensive test suite for signature verification scenarios
+
 ## [2.0.0] - 2025-07-21
 
 ### 🚀 Major Simplification & Optimization

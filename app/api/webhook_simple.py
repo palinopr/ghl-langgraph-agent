@@ -2,9 +2,9 @@
 Simple FastAPI webhook endpoint for GoHighLevel messages
 Works without Supabase dependency
 """
-from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks, Header
 from fastapi.responses import JSONResponse
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import asyncio
 from app.workflow import run_workflow
 from app.tools.webhook_processor import webhook_processor
@@ -14,6 +14,14 @@ from app.config import get_settings
 import time
 import psutil
 import platform
+import os
+import sys
+from pathlib import Path
+
+# Add parent directory to Python path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from src.security import verify as verify_signature
 
 logger = get_logger("webhook")
 
@@ -194,6 +202,91 @@ async def appointment_webhook(request: Request):
     webhook_data = await request.json()
     logger.info(f"Appointment webhook received: {webhook_data.get('type', 'unknown')}")
     return {"status": "ok"}
+
+
+@app.post("/webhook/ghl")
+async def ghl_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    x_ghl_signature: Optional[str] = Header(None)
+):
+    """
+    Secure webhook endpoint for GoHighLevel with signature verification
+    
+    Args:
+        request: FastAPI request object
+        background_tasks: Background task manager
+        x_ghl_signature: Signature header from GHL
+        
+    Returns:
+        Acknowledgment response or error
+    """
+    # Get webhook secret from environment
+    webhook_secret = os.getenv("GHL_WEBHOOK_SECRET")
+    
+    # If secret is configured, enforce signature verification
+    if webhook_secret:
+        if not x_ghl_signature:
+            logger.warning("Missing signature header for secured webhook")
+            return JSONResponse(
+                status_code=401,
+                content={"error": "INVALID_SIGNATURE", "message": "Missing signature header"}
+            )
+        
+        # Get raw body for signature verification
+        body = await request.body()
+        
+        try:
+            # Verify signature
+            if not verify_signature(body, x_ghl_signature, webhook_secret):
+                logger.warning("Invalid webhook signature")
+                return JSONResponse(
+                    status_code=401,
+                    content={"error": "INVALID_SIGNATURE", "message": "Invalid signature"}
+                )
+        except ValueError as e:
+            logger.error(f"Signature verification error: {e}")
+            return JSONResponse(
+                status_code=401,
+                content={"error": "INVALID_SIGNATURE", "message": str(e)}
+            )
+        
+        # Parse JSON from verified body
+        webhook_data = await request.json()
+    else:
+        # No secret configured, proceed without verification (development mode)
+        logger.warning("GHL_WEBHOOK_SECRET not configured - signature verification disabled")
+        webhook_data = await request.json()
+    
+    # Log successful verification
+    logger.info(f"Webhook signature verified for contact: {webhook_data.get('contactId', 'unknown')}")
+    
+    # Validate webhook has required fields
+    if not webhook_data.get("contactId") and not webhook_data.get("id"):
+        logger.warning("Missing contact ID in webhook")
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Missing contact ID"}
+        )
+    
+    # Get trace ID from request if available
+    trace_id = getattr(request.state, "trace_id", None)
+    if trace_id:
+        webhook_data.__trace_id__ = trace_id
+    
+    # Process webhook in background for quick response
+    background_tasks.add_task(process_message_async, webhook_data)
+    
+    # Return immediate acknowledgment
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "accepted",
+            "message": "Webhook received and queued for processing",
+            "trace_id": trace_id,
+            "signature_verified": bool(webhook_secret)
+        }
+    )
 
 
 # Export app for uvicorn
