@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Union
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.types import Command
-from app.tools.agent_tools_modernized import (
+from app.tools.agent_tools_fixed import (
     get_contact_details_with_task,
     escalate_to_supervisor,
     update_contact_with_context,

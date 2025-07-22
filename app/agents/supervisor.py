@@ -145,6 +145,8 @@ async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
             state["messages"] = []
         if "thread_id" not in state:
             state["thread_id"] = state.get("contact_id", "unknown")
+        if "remaining_steps" not in state:
+            state["remaining_steps"] = 10  # Default value for create_react_agent
             
         # Create supervisor with tools
         supervisor = create_supervisor_with_tools()

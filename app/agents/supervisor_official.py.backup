@@ -3,16 +3,13 @@ Official LangGraph Supervisor Pattern
 Using langgraph-supervisor library for modern multi-agent orchestration
 """
 from typing import Dict, Any, List, Optional, Literal
-from langchain_core.messages import AnyMessage, BaseMessage
+from langchain_core.messages import AnyMessage, BaseMessage, ToolMessage
 from langgraph.prebuilt import create_react_agent
-from langgraph.types import Command
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
 from app.state.minimal_state import MinimalState
-from langchain_core.tools import tool, InjectedToolCallId
-from langchain_core.messages import ToolMessage
+from langchain_core.tools import tool
 from typing_extensions import Annotated
-from langgraph.prebuilt import InjectedState
 
 logger = get_logger("supervisor_official")
 
@@ -20,10 +17,8 @@ logger = get_logger("supervisor_official")
 # Create handoff tools with task descriptions
 @tool
 def handoff_to_sofia(
-    task_description: Annotated[str, "Description of what Sofia should do next"],
-    state: Annotated[MinimalState, InjectedState],
-    tool_call_id: Annotated[str, InjectedToolCallId],
-) -> Command:
+    task_description: Annotated[str, "Description of what Sofia should do next"]
+) -> str:
     """
     Handoff to Sofia - Appointment Setting Specialist.
     Use when:
@@ -32,29 +27,13 @@ def handoff_to_sofia(
     - Has name, email, and $300+ budget confirmed
     """
     logger.info(f"Handoff to Sofia with task: {task_description}")
-    # Create tool message for tracking
-    tool_message = ToolMessage(
-        content=f"Handing off to Sofia: {task_description}",
-        tool_call_id=tool_call_id
-    )
-    return Command(
-        goto="sofia",
-        update={
-            "messages": [tool_message],
-            "next_agent": "sofia",
-            "agent_task": task_description,
-            "routing_reason": f"Handoff to Sofia: {task_description}"
-        },
-        graph=Command.PARENT,
-    )
+    return f"HANDOFF:sofia:{task_description}"
 
 
 @tool
 def handoff_to_carlos(
-    task_description: Annotated[str, "Description of what Carlos should do next"],
-    state: Annotated[MinimalState, InjectedState],
-    tool_call_id: Annotated[str, InjectedToolCallId],
-) -> Command:
+    task_description: Annotated[str, "Description of what Carlos should do next"]
+) -> str:
     """
     Handoff to Carlos - Lead Qualification Specialist.
     Use when:
@@ -63,29 +42,13 @@ def handoff_to_carlos(
     - Missing budget confirmation or details
     """
     logger.info(f"Handoff to Carlos with task: {task_description}")
-    # Create tool message for tracking
-    tool_message = ToolMessage(
-        content=f"Handing off to Carlos: {task_description}",
-        tool_call_id=tool_call_id
-    )
-    return Command(
-        goto="carlos",
-        update={
-            "messages": [tool_message],
-            "next_agent": "carlos",
-            "agent_task": task_description,
-            "routing_reason": f"Handoff to Carlos: {task_description}"
-        },
-        graph=Command.PARENT,
-    )
+    return f"HANDOFF:carlos:{task_description}"
 
 
 @tool
 def handoff_to_maria(
-    task_description: Annotated[str, "Description of what Maria should do next"],
-    state: Annotated[MinimalState, InjectedState],
-    tool_call_id: Annotated[str, InjectedToolCallId],
-) -> Command:
+    task_description: Annotated[str, "Description of what Maria should do next"]
+) -> str:
     """
     Handoff to Maria - Customer Support Representative.
     Use when:
@@ -94,21 +57,7 @@ def handoff_to_maria(
     - Technical issues or complaints
     """
     logger.info(f"Handoff to Maria with task: {task_description}")
-    # Create tool message for tracking
-    tool_message = ToolMessage(
-        content=f"Handing off to Maria: {task_description}",
-        tool_call_id=tool_call_id
-    )
-    return Command(
-        goto="maria",
-        update={
-            "messages": [tool_message],
-            "next_agent": "maria",
-            "agent_task": task_description,
-            "routing_reason": f"Handoff to Maria: {task_description}"
-        },
-        graph=Command.PARENT,
-    )
+    return f"HANDOFF:maria:{task_description}"
 
 
 def create_official_supervisor():
@@ -199,29 +148,71 @@ async def supervisor_official_node(state: Dict[str, Any]) -> Dict[str, Any]:
     Returns state updates for routing
     """
     try:
+        # Ensure we have minimal required fields
+        if "messages" not in state:
+            state["messages"] = []
+        if "thread_id" not in state:
+            state["thread_id"] = state.get("contact_id", "unknown")
+            
         # Create supervisor with tools
         supervisor = create_supervisor_with_tools()
         
-        # Run supervisor - it will use handoff tools that return Commands
+        # Run supervisor - it will use handoff tools
         result = await supervisor.ainvoke(state)
         
-        # The result contains all state updates from the agent
-        updates = {}
+        # Initialize updates
+        updates = {
+            "supervisor_complete": True,
+            "messages": result.get("messages", [])
+        }
         
-        # Copy all relevant fields from result
-        if "messages" in result:
-            updates["messages"] = result["messages"]
-        if "next_agent" in result:
-            updates["next_agent"] = result["next_agent"]
-        if "agent_task" in result:
-            updates["agent_task"] = result["agent_task"]
-        if "routing_reason" in result:
-            updates["routing_reason"] = result["routing_reason"]
-            
-        # Mark supervisor as complete
-        updates["supervisor_complete"] = True
+        # Parse tool responses to determine routing
+        handoff_detected = False
+        for msg in result.get("messages", []):
+            if hasattr(msg, "content") and isinstance(msg.content, str):
+                if msg.content.startswith("HANDOFF:"):
+                    # Parse handoff format: HANDOFF:agent:task
+                    parts = msg.content.split(":", 2)
+                    if len(parts) >= 3:
+                        _, agent, task = parts
+                        updates["next_agent"] = agent
+                        updates["agent_task"] = task
+                        updates["routing_reason"] = f"Handoff to {agent}: {task}"
+                        handoff_detected = True
+                        logger.info(f"Detected handoff to {agent} with task: {task}")
+                        break
         
-        logger.info(f"Supervisor routing to: {updates.get('next_agent', 'none')} with task: {updates.get('agent_task', 'none')}")
+        # If no handoff detected, check for tool messages
+        if not handoff_detected:
+            for msg in result.get("messages", []):
+                if isinstance(msg, ToolMessage):
+                    # Check tool message content for handoff info
+                    content = msg.content
+                    if "Handing off to" in content:
+                        # Extract agent name
+                        if "Sofia" in content:
+                            updates["next_agent"] = "sofia"
+                        elif "Carlos" in content:
+                            updates["next_agent"] = "carlos"
+                        elif "Maria" in content:
+                            updates["next_agent"] = "maria"
+                        
+                        # Extract task from content
+                        if ":" in content:
+                            task = content.split(":", 1)[1].strip()
+                            updates["agent_task"] = task
+                            updates["routing_reason"] = content
+                            handoff_detected = True
+                            break
+        
+        # Default to Maria if no routing detected
+        if not handoff_detected:
+            logger.warning("No handoff detected, defaulting to Maria")
+            updates["next_agent"] = "maria"
+            updates["agent_task"] = "Handle customer inquiry"
+            updates["routing_reason"] = "Default routing to Maria"
+        
+        logger.info(f"Supervisor routing to: {updates.get('next_agent')} with task: {updates.get('agent_task')}")
         return updates
         
     except Exception as e:
@@ -229,7 +220,9 @@ async def supervisor_official_node(state: Dict[str, Any]) -> Dict[str, Any]:
         # Default to Maria on error
         return {
             "next_agent": "maria",
+            "agent_task": "Handle customer inquiry",
             "supervisor_complete": True,
+            "routing_reason": f"Error in supervisor: {str(e)}",
             "error": str(e)
         }
 
