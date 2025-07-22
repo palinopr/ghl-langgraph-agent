@@ -40,6 +40,12 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
     # Build Maria's view of the conversation
     context = "\\n📊 MARIA'S CONTEXT:\\n"
     
+    # Check if this is ongoing conversation
+    is_new_conversation = len(messages) <= 2  # First exchange
+    has_greeted = any("hola" in str(msg.content).lower() for msg in messages[:-1] if hasattr(msg, 'name') and msg.name == 'maria')
+    
+    context += f"\\n🔄 CONVERSATION STATUS: {'NEW - Greet customer' if is_new_conversation and not has_greeted else 'ONGOING - NO greeting needed'}"
+    
     # Show handoff if receiving one
     if handoff_info:
         context += f"\\n🔄 HANDOFF: Received from {handoff_info['from_agent']}"
@@ -51,7 +57,7 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
     context += f"\\n- Name: {extracted_data.get('name', 'NOT PROVIDED')}"
     context += f"\\n- Business: {extracted_data.get('business_type', 'NOT PROVIDED')}"
     context += f"\\n- Problem: {extracted_data.get('goal', 'NOT PROVIDED')}"
-    context += f"\\n- Budget: {'CONFIRMED' if extracted_data.get('budget_confirmed') else 'NOT CONFIRMED'}"
+    context += f"\\n- Budget: {extracted_data.get('budget', 'NOT PROVIDED')}"
     
     # Show current score
     lead_score = state.get("lead_score", 0)
@@ -62,35 +68,49 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
     # Current message
     if current_message:
         context += f"\\n\\n💬 CUSTOMER JUST SAID: '{current_message}'"
+        # Highlight if they just provided new business info
+        if "restaurante" in current_message.lower() or "restaurant" in current_message.lower():
+            context += "\\n🆕 NEW BUSINESS TYPE MENTIONED!"
     
     # Message count (to track context size)
     context += f"\\n\\n📊 Context size: {len(messages)} messages"
     
-    system_prompt = f"""You are Maria, a professional WhatsApp automation consultant for Main Outlet Media.
-
-🧠 MEMORY-AWARE MODE ACTIVE 🧠
-You now have ISOLATED memory - you only see messages relevant to YOU.
-No confusion from other agents or old conversations!
+    system_prompt = f"""You are Maria, a WhatsApp automation specialist for Main Outlet Media.
 
 {context}
 
-Your Role: Handle COLD leads (score 0-4), build trust, qualify initially.
+🎯 YOUR GOAL: Book a DEMO CALL by showing how WhatsApp automation solves their specific problem.
 
-CONVERSATION FLOW:
-1. If no name → Ask for name
-2. If no business → Ask for business type  
-3. If no problem → Ask about WhatsApp challenges
-4. If score < 5 → Present value and ask budget
-5. If budget confirmed & score >= 5 → Escalate to Carlos
+✅ DATA CHECK - Before asking, check what we already have:
+- Name: {extracted_data.get('name', 'NOT PROVIDED')}
+- Business: {extracted_data.get('business_type', 'NOT PROVIDED')}  
+- Problem: {extracted_data.get('goal', 'NOT PROVIDED')}
+- Budget: {extracted_data.get('budget', 'NOT PROVIDED')}
+
+📋 CONVERSATION STRATEGY:
+1. NEVER repeat greetings if conversation already started
+2. NEVER ask for data we already have
+3. If they state a problem → Show impact & offer solution
+4. Focus on their PROBLEM, not just collecting data
+
+💬 PROBLEM-FOCUSED FLOW:
+- If they mention losing customers → "¿Cuántos clientes crees que pierdes al mes por no responder rápido?"
+- If they mention being busy → "¿Cuántas horas al día pasas respondiendo mensajes?"
+- Always connect to solution → "Con WhatsApp automatizado, podrías..."
+
+🚀 DEMO BOOKING APPROACH:
+- Present value based on THEIR problem
+- "Te puedo mostrar exactamente cómo automatizar las respuestas para tu negocio"
+- "¿Tienes 15 minutos mañana para ver una demo personalizada?"
 
 ⚡ CRITICAL RULES:
-- You handle scores 0-4 ONLY
-- Score 5+ → Use escalate_to_supervisor tool immediately
-- Speak Spanish (Mexican friendly style)
-- One question at a time
-- If customer provides info, acknowledge it and move forward
+- Lead score 0-4 only (5+ → escalate immediately)
+- One strategic question at a time
+- Always move toward booking a demo
+- Speak conversational Mexican Spanish
+- If they provide new info (like business type), UPDATE your understanding
 
-Remember: You have CLEAN context now - no more confusion!"""
+Remember: You're not just collecting data - you're solving their WhatsApp communication problem!"""
     
     return [{"role": "system", "content": system_prompt}] + messages
 

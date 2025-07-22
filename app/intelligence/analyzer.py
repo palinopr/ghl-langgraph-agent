@@ -128,14 +128,14 @@ class SpanishPatternExtractor:
         
         # Extract from CURRENT MESSAGE ONLY
         # CRITICAL: This prevents agents from using old conversation history incorrectly
-        # We extract from the current message and merge with previous data to maintain state
+        # We extract from the current message and OVERWRITE with new data when found
         extracted = {
-            "name": self._extract_name(message) or previous_data.get("name"),
-            "business_type": self._extract_business(message) or previous_data.get("business_type"),
-            "budget": self._extract_budget(message) or previous_data.get("budget"),
-            "goal": self._extract_goal(message) or previous_data.get("goal"),
-            "email": self._extract_email(message) or previous_data.get("email"),
-            "phone": self._extract_phone(message) or previous_data.get("phone"),
+            "name": self._extract_name(message) if self._extract_name(message) else previous_data.get("name"),
+            "business_type": self._extract_business(message) if self._extract_business(message) else previous_data.get("business_type"),
+            "budget": self._extract_budget(message) if self._extract_budget(message) else previous_data.get("budget"),
+            "goal": self._extract_goal(message) if self._extract_goal(message) else previous_data.get("goal"),
+            "email": self._extract_email(message) if self._extract_email(message) else previous_data.get("email"),
+            "phone": self._extract_phone(message) if self._extract_phone(message) else previous_data.get("phone"),
             "extraction_confidence": {}
         }
         
