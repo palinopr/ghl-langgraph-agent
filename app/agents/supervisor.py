@@ -1,11 +1,10 @@
 """
-Supervisor with fixed handoff tools for proper state handling
-Uses minimal parameter requirements for tools to avoid validation errors
+Fixed Supervisor - ALWAYS routes, NEVER responds directly
+Ensures proper handoff to agents based on lead scores
 """
 from typing import Dict, Any, List, Optional, Literal
-from langchain_core.messages import AnyMessage, BaseMessage, ToolMessage
+from langchain_core.messages import AnyMessage, BaseMessage, ToolMessage, AIMessage
 from langgraph.prebuilt import create_react_agent
-from langgraph.types import Command
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
 from app.state.minimal_state import MinimalState
@@ -15,119 +14,94 @@ from typing_extensions import Annotated
 logger = get_logger("supervisor")
 
 
-# Create handoff tools with minimal requirements - no InjectedState to avoid validation errors
+# Handoff tools that return routing information
 @tool
 def handoff_to_sofia(
-    task_description: Annotated[str, "Description of what Sofia should do next"]
+    task_description: Annotated[str, "Task for Sofia to complete in Spanish"]
 ) -> str:
     """
-    Handoff to Sofia - Appointment Setting Specialist.
-    Use when:
+    Route to Sofia - Appointment Setting Specialist.
+    ONLY use when:
     - Lead score is 8-10 (hot leads)
     - Customer is ready to book appointment
     - Has name, email, and $300+ budget confirmed
     """
-    logger.info(f"Handoff to Sofia with task: {task_description}")
     return f"HANDOFF:sofia:{task_description}"
 
 
 @tool
 def handoff_to_carlos(
-    task_description: Annotated[str, "Description of what Carlos should do next"]
+    task_description: Annotated[str, "Task for Carlos to complete in Spanish"]
 ) -> str:
     """
-    Handoff to Carlos - Lead Qualification Specialist.
+    Route to Carlos - Lead Qualification Specialist.
     Use when:
     - Lead score is 5-7 (warm leads)
     - Customer needs qualification
     - Missing budget confirmation or details
     """
-    logger.info(f"Handoff to Carlos with task: {task_description}")
     return f"HANDOFF:carlos:{task_description}"
 
 
 @tool
 def handoff_to_maria(
-    task_description: Annotated[str, "Description of what Maria should do next"]
+    task_description: Annotated[str, "Task for Maria to complete in Spanish"]
 ) -> str:
     """
-    Handoff to Maria - Customer Support Representative.
+    Route to Maria - Customer Support Representative.
     Use when:
-    - Lead score is 1-4 (cold leads)
+    - Lead score is 0-4 (cold leads) 
+    - Score is 0 or unknown
     - Customer has general questions
-    - Technical issues or complaints
+    - New conversations just starting
     """
-    logger.info(f"Handoff to Maria with task: {task_description}")
     return f"HANDOFF:maria:{task_description}"
 
 
 def create_supervisor_with_tools():
-    """
-    Create a supervisor using create_react_agent with handoff tools
-    """
+    """Create supervisor that ONLY routes using tools"""
     model = create_openai_model(temperature=0.0)
     
-    tools = [handoff_to_sofia, handoff_to_carlos, handoff_to_maria]
+    tools = [handoff_to_maria, handoff_to_carlos, handoff_to_sofia]
     
-    def supervisor_prompt(state: MinimalState) -> List[AnyMessage]:
-        """Dynamic prompt based on state"""
+    # CRITICAL: Prompt that forces tool usage ONLY
+    system_prompt = """You are a routing-only supervisor. You CANNOT talk to customers directly.
+
+YOUR ONLY TASK: Analyze the lead score and use the appropriate handoff tool.
+
+CRITICAL RULES:
+1. You MUST use ONE of the handoff tools - NEVER respond to the customer
+2. You CANNOT send any message to the customer
+3. You CANNOT greet, analyze, or chat - ONLY route using tools
+4. Even for "hola" or any greeting - use handoff_to_maria
+
+ROUTING BASED ON SCORE:
+- Score 0-4 or unknown → Use handoff_to_maria 
+- Score 5-7 → Use handoff_to_carlos
+- Score 8-10 → Use handoff_to_sofia
+
+Current Lead Score: {lead_score}
+
+IMPORTANT: Immediately use the handoff tool. The task description should be in Spanish.
+Example: For "hola" with score 0, use: handoff_to_maria("Responder al saludo del cliente")
+
+DO NOT RESPOND TO THE CUSTOMER - ONLY USE TOOLS!"""
+    
+    def build_prompt(state: MinimalState) -> List[AnyMessage]:
         lead_score = state.get("lead_score", 0)
-        lead_category = state.get("lead_category", "unknown")
-        score_reasoning = state.get("score_reasoning", "No scoring available")
-        extracted_data = state.get("extracted_data", {})
+        messages = state.get("messages", [])
         
-        # Build context
-        context_parts = []
-        if extracted_data.get("name"):
-            context_parts.append(f"Name: {extracted_data['name']}")
-        if extracted_data.get("business_type"):
-            context_parts.append(f"Business: {extracted_data['business_type']}")
-        if extracted_data.get("budget"):
-            context_parts.append(f"Budget: {extracted_data['budget']}")
-        if extracted_data.get("email"):
-            context_parts.append(f"Email: {extracted_data['email']}")
-            
-        context_str = "\n".join(context_parts) if context_parts else "No information extracted yet"
+        # Format the system prompt with current score
+        formatted_system = system_prompt.format(lead_score=lead_score)
         
-        # Check qualifications
-        has_email = bool(extracted_data.get("email"))
-        has_budget_300 = bool(extracted_data.get("budget") and ("300" in str(extracted_data["budget"])))
-        has_name = bool(extracted_data.get("name"))
-        
-        system_prompt = f"""You are an intelligent routing supervisor for Main Outlet Media.
-
-Current Status:
-- Lead Score: {lead_score}/10 ({lead_category})
-- Score Reasoning: {score_reasoning}
-
-Extracted Information:
-{context_str}
-
-Appointment Qualification:
-- Name: {"✓" if has_name else "✗"}
-- Email: {"✓" if has_email else "✗"}
-- Budget $300+: {"✓" if has_budget_300 else "✗"}
-- Ready for appointment: {"YES" if all([has_name, has_email, has_budget_300]) else "NO"}
-
-ROUTING RULES:
-1. Route to Sofia when: Score 8+ AND all qualifications met
-2. Route to Carlos when: Score 5-7 OR missing qualifications
-3. Route to Maria when: Score 1-4 OR general questions
-
-Use the handoff tools with clear task descriptions. For example:
-- "Help customer book appointment for Tuesday at 2pm"
-- "Qualify customer's budget and business needs"
-- "Answer customer's questions about our services"
-
-IMPORTANT: You MUST use one of the handoff tools. Do not just analyze - take action!"""
-        
-        return [{"role": "system", "content": system_prompt}] + state["messages"]
+        return [{"role": "system", "content": formatted_system}] + messages
     
-    # Create agent without state_schema to avoid injection issues
+    # Create agent with state schema
     agent = create_react_agent(
         model=model,
         tools=tools,
-        prompt=supervisor_prompt,
+        state_schema=MinimalState,
+        prompt=build_prompt,
         name="supervisor"
     )
     
@@ -135,94 +109,85 @@ IMPORTANT: You MUST use one of the handoff tools. Do not just analyze - take act
 
 
 async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Supervisor node that properly handles tool responses
-    Returns state updates for routing
-    """
+    """Supervisor node that GUARANTEES routing"""
     try:
-        # Ensure we have minimal required fields
-        if "messages" not in state:
-            state["messages"] = []
-        if "thread_id" not in state:
-            state["thread_id"] = state.get("contact_id", "unknown")
-        if "remaining_steps" not in state:
-            state["remaining_steps"] = 10  # Default value for create_react_agent
-            
-        # Create supervisor with tools
-        supervisor = create_supervisor_with_tools()
+        # Ensure required fields
+        for field, default in [("messages", []), ("thread_id", state.get("contact_id", "unknown")), ("remaining_steps", 10)]:
+            if field not in state:
+                state[field] = default
         
-        # Run supervisor - it will use handoff tools
+        lead_score = state.get("lead_score", 0)
+        logger.info(f"Supervisor processing - Lead score: {lead_score}")
+        
+        # Create and run supervisor
+        supervisor = create_supervisor_with_tools()
         result = await supervisor.ainvoke(state)
         
-        # Initialize updates
-        updates = {
+        # Extract routing from result
+        routing_update = {
             "supervisor_complete": True,
             "messages": result.get("messages", [])
         }
         
-        # Parse tool responses to determine routing
-        handoff_detected = False
+        # Find handoff in messages
+        handoff_found = False
+        
         for msg in result.get("messages", []):
-            if hasattr(msg, "content") and isinstance(msg.content, str):
-                if msg.content.startswith("HANDOFF:"):
-                    # Parse handoff format: HANDOFF:agent:task
-                    parts = msg.content.split(":", 2)
-                    if len(parts) >= 3:
-                        _, agent, task = parts
-                        updates["next_agent"] = agent
-                        updates["agent_task"] = task
-                        updates["routing_reason"] = f"Handoff to {agent}: {task}"
-                        handoff_detected = True
-                        logger.info(f"Detected handoff to {agent} with task: {task}")
-                        break
+            # Check if AI message has tool calls
+            if isinstance(msg, AIMessage):
+                if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                    logger.info(f"✅ Supervisor used {len(msg.tool_calls)} tool(s)")
+                    handoff_found = True
+                elif msg.content and not msg.tool_calls:
+                    # CRITICAL ERROR - supervisor responded directly!
+                    logger.error(f"❌ CRITICAL: Supervisor responded directly: {msg.content[:100]}")
+                    # Remove this message from output
+                    routing_update["messages"] = [m for m in routing_update["messages"] if m != msg]
+            
+            # Check for handoff pattern
+            if hasattr(msg, 'content') and isinstance(msg.content, str) and msg.content.startswith("HANDOFF:"):
+                parts = msg.content.split(":", 2)
+                if len(parts) >= 3:
+                    _, agent, task = parts
+                    routing_update.update({
+                        "next_agent": agent,
+                        "agent_task": task,
+                        "routing_reason": f"Routed to {agent} by supervisor"
+                    })
+                    handoff_found = True
+                    logger.info(f"✅ Routing to {agent}: {task}")
         
-        # If no handoff detected, check for tool messages
-        if not handoff_detected:
-            for msg in result.get("messages", []):
-                if isinstance(msg, ToolMessage):
-                    # Check tool message content for handoff info
-                    content = msg.content
-                    if "Handing off to" in content:
-                        # Extract agent name
-                        if "Sofia" in content:
-                            updates["next_agent"] = "sofia"
-                        elif "Carlos" in content:
-                            updates["next_agent"] = "carlos"
-                        elif "Maria" in content:
-                            updates["next_agent"] = "maria"
-                        
-                        # Extract task from content
-                        if ":" in content:
-                            task = content.split(":", 1)[1].strip()
-                            updates["agent_task"] = task
-                            updates["routing_reason"] = content
-                            handoff_detected = True
-                            break
+        # FAILSAFE: Force routing if no handoff detected
+        if not handoff_found:
+            logger.warning("⚠️ No handoff detected - forcing route based on score")
+            
+            # Determine agent based on score
+            if lead_score >= 8:
+                agent = "sofia"
+            elif lead_score >= 5:
+                agent = "carlos"
+            else:
+                agent = "maria"
+            
+            routing_update.update({
+                "next_agent": agent,
+                "agent_task": "Atender al cliente",
+                "routing_reason": f"Forced routing to {agent} (score: {lead_score})"
+            })
         
-        # Default to Maria if no routing detected
-        if not handoff_detected:
-            logger.warning("No handoff detected, defaulting to Maria")
-            updates["next_agent"] = "maria"
-            updates["agent_task"] = "Handle customer inquiry"
-            updates["routing_reason"] = "Default routing to Maria"
-        
-        logger.info(f"Supervisor routing to: {updates.get('next_agent')} with task: {updates.get('agent_task')}")
-        return updates
+        return routing_update
         
     except Exception as e:
-        logger.error(f"Error in supervisor: {str(e)}", exc_info=True)
-        # Default to Maria on error
+        logger.error(f"Supervisor error: {str(e)}", exc_info=True)
         return {
             "next_agent": "maria",
-            "agent_task": "Handle customer inquiry",
+            "agent_task": "Atender al cliente",
             "supervisor_complete": True,
             "routing_reason": f"Error in supervisor: {str(e)}",
-            "error": str(e)
+            "messages": state.get("messages", [])
         }
 
 
-# Export the official node name for compatibility
+# Export
 supervisor_official_node = supervisor_node
-
-
 __all__ = ["supervisor_node", "supervisor_official_node", "create_supervisor_with_tools"]
