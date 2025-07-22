@@ -1,0 +1,10 @@
+# Ruff configuration file
+# This file is for projects that prefer .ruff.toml over pyproject.toml
+
+# Extend the pyproject.toml configuration
+extend = "./pyproject.toml"
+
+# Additional project-specific overrides can go here
+[lint.per-file-ignores]
+"tests/*" = ["S101"]  # Allow assert in tests
+"app/agents/*" = ["C901"]  # Allow complex functions in agents

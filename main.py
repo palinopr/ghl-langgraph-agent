@@ -1,4 +1,4 @@
-"""Deployment entry point"""
+"""Main entry point for production deployment"""
 import os
 import sys
 
@@ -11,25 +11,18 @@ if os.environ.get("ENABLE_FREE_THREADING", "true").lower() == "true":
 if os.environ.get("ENABLE_JIT_COMPILATION", "true").lower() == "true":
     os.environ["PYTHON_JIT"] = "1"
 
-# Import and run the main application
 if __name__ == "__main__":
-    # Import the simple webhook app (no Supabase dependency)
     from app.api.webhook_simple import app
     import uvicorn
     
-    # Configure observability BEFORE starting the server
-    from src.observability import configure
-    configure(app)
-    
     port = int(os.environ.get("PORT", 8000))
-    print(f"Starting server on port {port}...")
-    print(f"Debug endpoints available at http://localhost:{port}/debug")
     
-    # Run the server
+    # Production configuration
     uvicorn.run(
-        app, 
-        host="0.0.0.0", 
+        app,
+        host="0.0.0.0",
         port=port,
-        reload=True,
-        log_level="info"
+        log_level="info",
+        access_log=True,
+        use_colors=False
     )

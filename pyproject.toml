@@ -1,0 +1,108 @@
+[tool.ruff]
+# Python version target
+target-version = "py312"
+
+# Line length (PEP 8 standard)
+line-length = 88
+
+# Include/exclude patterns
+include = ["*.py", "*.pyi", "**/pyproject.toml"]
+exclude = [
+    ".git",
+    ".ruff_cache",
+    ".venv*",
+    "venv*",
+    "__pycache__",
+    "*.egg-info",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+# Enable specific rule sets
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "C90",  # mccabe complexity
+    "TRY",  # tryceratops
+    "SIM",  # flake8-simplify
+]
+
+# Ignore specific rules
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # do not perform function calls in argument defaults
+    "TRY003", # long exception messages
+]
+
+# Maximum complexity
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+# Import sorting
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+# Python version
+python_version = "3.12"
+
+# Strict mode options
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+
+# Import discovery
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "."
+
+# Per-module options
+[[tool.mypy.overrides]]
+module = [
+    "langchain.*",
+    "langgraph.*",
+    "httpx.*",
+    "supabase.*",
+    "redis.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --cov=app --cov=src --cov-report=term-missing --cov-fail-under=70"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/venv*/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

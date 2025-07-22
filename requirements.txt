@@ -26,6 +26,7 @@ storage3>=0.7.0
 sqlalchemy>=2.0.0
 alembic>=1.13.0
 aiosqlite>=0.19.0  # Added for persistent checkpointing
+redis[hiredis]>=5.0.0  # Redis for production state persistence
 
 # Utilities
 python-dotenv>=1.0.0
@@ -43,6 +44,14 @@ rich>=13.0.0  # Added - for checkpoint monitoring UI
 
 # Performance Monitoring
 psutil>=5.9.0
+
+# Observability and Tracing
+opentelemetry-sdk>=1.29.0
+opentelemetry-exporter-otlp>=1.29.0
+opentelemetry-instrumentation-fastapi>=0.50b0
+opentelemetry-instrumentation-httpx>=0.50b0
+opentelemetry-instrumentation-logging>=0.50b0
+structlog>=24.4.0
 
 # Development Tools
 pytest>=8.0.0
