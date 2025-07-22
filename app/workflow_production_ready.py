@@ -37,182 +37,40 @@ class ProductionState(TypedDict):
     budget: str
     thread_id: str
     webhook_data: Dict[str, Any]  # For passing webhook data to receptionist
+    # Receptionist outputs
+    last_message: str
+    is_first_contact: bool
+    receptionist_complete: bool
+    # Intelligence outputs  
+    last_intent: str
+    intelligence_complete: bool
+    # Additional fields from checkpoint-aware receptionist
+    contact_info: Dict[str, Any]
+    previous_custom_fields: Dict[str, Any]
+    is_new_conversation: bool
+    thread_message_count: int
+    has_checkpoint: bool
+    # Responder outputs
+    last_sent_message: str
+    message_sent: bool
+    final_response: str
+    responder_complete: bool
+    # Agent completion flags
+    agent_complete: bool
 
 
-def thread_mapper_node(state: ProductionState) -> Dict[str, Any]:
-    """Map conversation ID to thread ID for consistency"""
-    conversation_id = state.get("conversation_id", "")
-    thread_id = state.get("thread_id", "")
-    
-    if not thread_id and conversation_id:
-        thread_id = f"thread-{conversation_id}"
-        logger.info(f"Mapped conversation {conversation_id} to thread {thread_id}")
-    
-    return {"thread_id": thread_id}
+# Import all agent nodes and utilities
+from app.agents.thread_id_mapper_enhanced import thread_id_mapper_enhanced_node as thread_mapper_node
+from app.agents.receptionist_checkpoint_aware import receptionist_checkpoint_aware_node
+from app.intelligence.analyzer import intelligence_node as intelligence_analyzer_node
+from app.agents.supervisor import supervisor_node
+from app.agents.maria_memory_aware import maria_memory_aware_node as maria_node
+from app.agents.carlos_agent_v2_fixed import carlos_node_v2_fixed as carlos_node
+from app.agents.sofia_agent_v2_fixed import sofia_node_v2_fixed as sofia_node
+from app.agents.responder_streaming import responder_streaming_node
 
 
-# Receptionist node removed - using receptionist_checkpoint_aware_node from imports
-
-
-def intelligence_analyzer_node(state: ProductionState) -> Dict[str, Any]:
-    """Analyze message and determine lead score"""
-    messages = state.get("messages", [])
-    last_message = state.get("last_message", "")
-    
-    if not last_message:
-        for msg in reversed(messages):
-            if isinstance(msg, HumanMessage) or (isinstance(msg, dict) and msg.get("role") == "human"):
-                last_message = msg.content if hasattr(msg, "content") else msg.get("content", "")
-                break
-    
-    logger.info("Intelligence analyzer processing message...")
-    
-    # Enhanced scoring logic
-    last_message_lower = last_message.lower()
-    lead_score = state.get("lead_score", 0)
-    
-    # High intent signals (8-10)
-    high_intent_keywords = ["agendar", "cita", "presupuesto", "$", "appointment", "budget", 
-                           "comprar", "contratar", "necesito ya", "urgente"]
-    
-    # Medium intent signals (5-7)
-    medium_intent_keywords = ["negocio", "empresa", "empleados", "restaurante", "tienda",
-                             "clientes", "ventas", "marketing", "ayuda", "mejorar"]
-    
-    # Calculate score
-    if any(keyword in last_message_lower for keyword in high_intent_keywords):
-        lead_score = 9
-        intent = "high_intent_booking"
-    elif any(keyword in last_message_lower for keyword in medium_intent_keywords):
-        lead_score = 6
-        intent = "business_qualification"
-    else:
-        lead_score = 2
-        intent = "information_gathering"
-    
-    # Extract business info
-    business_type = ""
-    if "restaurante" in last_message_lower:
-        business_type = "restaurant"
-    elif "tienda" in last_message_lower or "ropa" in last_message_lower:
-        business_type = "retail"
-    elif "gimnasio" in last_message_lower:
-        business_type = "gym"
-    elif "panadería" in last_message_lower or "cafetería" in last_message_lower:
-        business_type = "food_service"
-    
-    logger.info(f"Intelligence result: score={lead_score}, intent={intent}")
-    
-    return {
-        "lead_score": lead_score,
-        "last_intent": intent,
-        "business_type": business_type,
-        "intelligence_complete": True
-    }
-
-
-def supervisor_node(state: ProductionState) -> Dict[str, Any]:
-    """Supervisor that routes to appropriate agent"""
-    lead_score = state.get("lead_score", 0)
-    routing_attempts = state.get("routing_attempts", 0)
-    
-    logger.info(f"Supervisor routing with score: {lead_score}")
-    
-    # Determine routing
-    if routing_attempts >= 3:
-        logger.warning("Max routing attempts reached")
-        return {
-            "next_agent": "responder",
-            "supervisor_complete": True,
-            "should_end": False
-        }
-    
-    # Route based on lead score
-    if lead_score >= 8:
-        next_agent = "sofia"
-        task = "Help this high-intent lead book an appointment. They have budget and urgency."
-    elif lead_score >= 5:
-        next_agent = "carlos"
-        task = "Qualify this business owner. Learn about their needs and pain points."
-    else:
-        next_agent = "maria"
-        task = "Welcome this new contact and understand their basic needs."
-    
-    logger.info(f"Routing to {next_agent} with task: {task}")
-    
-    return {
-        "next_agent": next_agent,
-        "agent_task": task,
-        "supervisor_complete": True,
-        "should_end": False
-    }
-
-
-def create_agent_node(agent_name: str, system_prompt: str):
-    """Factory function to create agent nodes"""
-    def agent_node(state: ProductionState) -> Dict[str, Any]:
-        messages = state.get("messages", [])
-        agent_task = state.get("agent_task", "")
-        
-        logger.info(f"{agent_name} agent processing...")
-        
-        # Use OpenAI
-        model = ChatOpenAI(temperature=0.7, model="gpt-4o-mini")
-        
-        # Build conversation for model
-        conversation = [{"role": "system", "content": system_prompt}]
-        
-        if agent_task:
-            conversation.append({"role": "system", "content": f"Task: {agent_task}"})
-        
-        # Add message history
-        for msg in messages:
-            if isinstance(msg, HumanMessage):
-                conversation.append({"role": "user", "content": msg.content})
-            elif isinstance(msg, AIMessage):
-                conversation.append({"role": "assistant", "content": msg.content})
-            elif isinstance(msg, dict):
-                role = "user" if msg.get("role") == "human" else "assistant"
-                conversation.append({"role": role, "content": msg.get("content", "")})
-        
-        # Get response
-        response = model.invoke(conversation)
-        
-        # Update state
-        return {
-            "messages": messages + [AIMessage(content=response.content, name=agent_name)],
-            "current_agent": agent_name,
-            "agent_complete": True,
-            "needs_escalation": False
-        }
-    
-    return agent_node
-
-
-# Create agent nodes
-maria_node = create_agent_node(
-    "maria",
-    """Eres María, una asistente virtual amigable para un servicio de marketing digital.
-    Tu trabajo es dar la bienvenida a nuevos contactos y entender sus necesidades básicas.
-    Sé amigable, haz preguntas sobre su negocio, pero no seas muy técnica.
-    Si mencionan presupuesto específico o quieren agendar, indícalo en tu respuesta."""
-)
-
-carlos_node = create_agent_node(
-    "carlos",
-    """Eres Carlos, un especialista en marketing para negocios establecidos.
-    Tu trabajo es calificar prospectos que ya tienen un negocio.
-    Haz preguntas sobre: tamaño del negocio, empleados, facturación, problemas actuales.
-    Identifica sus puntos de dolor y cómo el marketing puede ayudarles."""
-)
-
-sofia_node = create_agent_node(
-    "sofia",
-    """Eres Sofía, una especialista en cerrar citas para prospectos calificados.
-    Tu trabajo es agendar citas con personas que tienen presupuesto y urgencia.
-    Ofrece horarios específicos (mañana 10am, 2pm, o 4pm).
-    Sé profesional pero cálida. Confirma sus datos de contacto."""
-)
+# All agent implementations imported above with full tool access
 
 
 # Responder node removed - using responder_streaming_node from imports
@@ -245,10 +103,7 @@ def route_from_agent(state: ProductionState) -> Literal["responder", "supervisor
     return "responder"
 
 
-# Import the actual responder that sends to GHL
-from app.agents.responder_streaming import responder_streaming_node
-# Import the checkpoint-aware receptionist for conversation context
-from app.agents.receptionist_checkpoint_aware import receptionist_checkpoint_aware_node
+# All nodes imported at top of file
 
 # Create the workflow
 workflow_graph = StateGraph(ProductionState)
