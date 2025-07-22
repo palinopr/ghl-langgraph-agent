@@ -1,13 +1,8 @@
 """
-Modernized Workflow with Official LangGraph Patterns
-Implements all the latest patterns from LangGraph documentation:
-1. Official supervisor pattern with task descriptions
-2. Command objects for agent handoffs
-3. Health check endpoints integration
-4. Simplified state management
-5. Better error handling and routing
+Fixed Workflow with Proper Checkpoint Loading
+Ensures conversation history is preserved across messages
 """
-from typing import Dict, Any, Literal, Union
+from typing import Dict, Any, Literal, Union, Optional
 from langgraph.graph import StateGraph, END, START
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.store.memory import InMemoryStore
@@ -16,8 +11,10 @@ from langchain_core.messages import AIMessage, HumanMessage
 # Import enhanced state
 from app.state.minimal_state import MinimalState
 
-# Import modernized nodes
+# Import checkpoint-aware receptionist
 from app.agents.receptionist_checkpoint_aware import receptionist_checkpoint_aware_node
+
+# Import other nodes
 from app.agents.supervisor import supervisor_node
 from app.agents.maria_memory_aware import maria_memory_aware_node
 from app.agents.carlos_agent_v2_fixed import carlos_node_v2_fixed as carlos_node
@@ -28,7 +25,7 @@ from app.intelligence.analyzer import intelligence_node
 # Import utilities
 from app.utils.simple_logger import get_logger
 
-logger = get_logger("workflow")
+logger = get_logger("workflow_checkpoint_fix")
 
 
 def enhance_agent_with_task(agent_func):
@@ -50,53 +47,29 @@ def enhance_agent_with_task(agent_func):
             state["messages"].append(task_msg)
         
         # Run the original agent
-        result = await agent_func(state)
-        
-        # Clear task after processing
-        if "agent_task" in result:
-            result["agent_task"] = None
-            
-        return result
+        return await agent_func(state)
     
     return enhanced_agent
 
 
-def route_from_supervisor(state: MinimalState) -> Literal["maria", "carlos", "sofia", "responder", "end"]:
+def route_from_supervisor(state: Dict[str, Any]) -> str:
     """Route based on supervisor decision"""
-    if state.get("should_end", False):
-        logger.info("Ending workflow: should_end flag is True")
-        return "end"
-    
-    # Check if supervisor completed
-    if not state.get("supervisor_complete"):
-        logger.warning("Supervisor not complete, ending workflow")
-        return "end"
-    
-    # Check routing attempts
-    routing_attempts = state.get("routing_attempts", 0)
-    if routing_attempts >= 3:
-        logger.warning("Max routing attempts reached, going to responder")
-        return "responder"
-    
     next_agent = state.get("next_agent")
     
-    if next_agent in ["maria", "carlos", "sofia"]:
-        logger.info(f"ROUTING: Supervisor → {next_agent}")
-        if state.get("agent_task"):
-            logger.info(f"Task: {state['agent_task']}")
-        return next_agent
+    if next_agent == "FINISH" or state.get("should_end", False):
+        logger.info("Supervisor routing to END")
+        return "end"
     
-    # If no explicit routing, check if we have messages to send
-    if state.get("messages"):
-        logger.info("No explicit routing, going to responder")
+    if not next_agent:
+        logger.warning("No next_agent specified, defaulting to responder")
         return "responder"
     
-    logger.warning(f"Invalid next_agent: {next_agent}, ending workflow")
-    return "end"
+    logger.info(f"Supervisor routing to: {next_agent}")
+    return next_agent
 
 
-def route_from_agent(state: MinimalState) -> Union[Literal["supervisor", "responder"], str]:
-    """Route from agent - can escalate back to supervisor or proceed to responder"""
+def route_from_agent(state: Dict[str, Any]) -> str:
+    """Route from agent based on escalation needs"""
     if state.get("needs_rerouting", False) or state.get("needs_escalation", False):
         reason = state.get("escalation_reason", "unknown")
         logger.info(f"ESCALATION: {state.get('current_agent')} → Supervisor (reason: {reason})")
@@ -114,18 +87,11 @@ def route_from_agent(state: MinimalState) -> Union[Literal["supervisor", "respon
     return "responder"
 
 
-def create_modernized_workflow():
+def create_checkpoint_aware_workflow():
     """
-    Create workflow with official LangGraph patterns
-    
-    Features:
-    1. Official supervisor pattern with handoff tools
-    2. Task descriptions in agent handoffs
-    3. Command objects for routing
-    4. Clean state management
-    5. Better error handling
+    Create workflow with proper checkpoint support
     """
-    logger.info("Creating modernized workflow with official patterns")
+    logger.info("Creating checkpoint-aware workflow")
     
     # Create workflow with standard state
     workflow = StateGraph(MinimalState)
@@ -151,7 +117,7 @@ def create_modernized_workflow():
     workflow.add_edge("receptionist", "intelligence")
     workflow.add_edge("intelligence", "supervisor")
     
-    # Supervisor routing with official pattern
+    # Supervisor routing
     workflow.add_conditional_edges(
         "supervisor",
         route_from_supervisor,
@@ -187,16 +153,16 @@ def create_modernized_workflow():
         store=store
     )
     
-    logger.info("Modernized workflow compiled successfully")
+    logger.info("Checkpoint-aware workflow compiled successfully")
     
-    return compiled, memory  # Return both workflow and checkpointer
+    return compiled, memory
 
 
-# Create the workflow and checkpointer
-workflow, checkpointer = create_modernized_workflow()
+# Create the workflow and memory
+workflow, checkpointer = create_checkpoint_aware_workflow()
 
 
-async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
+async def run_workflow_with_checkpoint(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Run the workflow with proper checkpoint loading
     
@@ -208,7 +174,7 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         message_body = webhook_data.get("body", webhook_data.get("message", ""))
         conversation_id = webhook_data.get("conversationId")
         
-        # CRITICAL: Use consistent thread_id based on contact
+        # CRITICAL: Use consistent thread_id
         thread_id = f"contact-{contact_id}"  # Always based on contact for consistency
         logger.info(f"Using thread_id: {thread_id} for checkpoint")
         
@@ -285,5 +251,5 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         }
 
 
-# Export for langgraph.json and imports
-__all__ = ["workflow", "run_workflow", "checkpointer"]
+# Export for use
+__all__ = ["workflow", "run_workflow_with_checkpoint", "checkpointer"]
