@@ -8,7 +8,7 @@ from langgraph.prebuilt import create_react_agent
 from langgraph.types import Command
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
-from app.state.conversation_state import ConversationState
+from app.state.minimal_state import MinimalState
 from langchain_core.tools import tool, InjectedToolCallId
 from langchain_core.messages import ToolMessage
 from typing_extensions import Annotated
@@ -21,7 +21,7 @@ logger = get_logger("supervisor_official")
 @tool
 def handoff_to_sofia(
     task_description: Annotated[str, "Description of what Sofia should do next"],
-    state: Annotated[ConversationState, InjectedState],
+    state: Annotated[MinimalState, InjectedState],
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """
@@ -52,7 +52,7 @@ def handoff_to_sofia(
 @tool
 def handoff_to_carlos(
     task_description: Annotated[str, "Description of what Carlos should do next"],
-    state: Annotated[ConversationState, InjectedState],
+    state: Annotated[MinimalState, InjectedState],
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """
@@ -83,7 +83,7 @@ def handoff_to_carlos(
 @tool
 def handoff_to_maria(
     task_description: Annotated[str, "Description of what Maria should do next"],
-    state: Annotated[ConversationState, InjectedState],
+    state: Annotated[MinimalState, InjectedState],
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
     """
@@ -127,7 +127,7 @@ def create_supervisor_with_tools():
     
     tools = [handoff_to_sofia, handoff_to_carlos, handoff_to_maria]
     
-    def supervisor_prompt(state: ConversationState) -> List[AnyMessage]:
+    def supervisor_prompt(state: MinimalState) -> List[AnyMessage]:
         """Dynamic prompt based on state"""
         lead_score = state.get("lead_score", 0)
         lead_category = state.get("lead_category", "unknown")
@@ -185,7 +185,7 @@ IMPORTANT: You MUST use one of the handoff tools. Do not just analyze - take act
     agent = create_react_agent(
         model=model,
         tools=tools,
-        state_schema=ConversationState,
+        state_schema=MinimalState,
         prompt=supervisor_prompt,
         name="supervisor_official"
     )

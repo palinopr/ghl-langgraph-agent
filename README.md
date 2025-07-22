@@ -1,191 +1,103 @@
-# GoHighLevel LangGraph Messaging Agent (Enhanced v2)
+# GoHighLevel LangGraph Messaging Agent
 
-A cutting-edge Python-based LangGraph implementation of the GoHighLevel messaging agent with intelligent lead routing, real-time streaming, parallel processing, and advanced error recovery.
+A production-ready multi-agent system built with LangGraph v0.5.3+ for intelligent WhatsApp/SMS conversation handling in GoHighLevel. Features deterministic lead scoring, Spanish language support, and appointment booking capabilities.
 
-## Overview
+## 🚀 Key Features
 
-This enhanced system provides enterprise-grade features using LangGraph v0.5.3:
+- **Multi-Agent Architecture**: Three specialized agents (Maria, Carlos, Sofia) handle different lead stages
+- **Intelligent Lead Scoring**: Deterministic 1-10 scoring based on extracted information
+- **Spanish Language Support**: Native Spanish conversation handling with typo tolerance
+- **Appointment Booking**: Integrated calendar management with GHL
+- **Human-Like Responses**: Natural typing delays and message batching
+- **Production Ready**: Comprehensive error handling, monitoring, and validation
+- **Performance Optimized**: Python 3.13 with GIL-free mode and JIT compilation
 
-- **Real-time streaming responses** for instant user feedback
-- **Parallel qualification checks** for 3x faster lead scoring
-- **Intelligent message batching** for human-like conversations
-- **Automatic context management** with token optimization
-- **Advanced error recovery** with circuit breakers and retries
-- **State persistence** with checkpointing and recovery
-- **Production-ready** with comprehensive monitoring
+## 🏗️ Architecture Overview
 
-## Architecture
+```
+WhatsApp/SMS → GHL → Webhook → Intelligence → Supervisor → Agent → Response
+```
 
-### Core Components
+- **Intelligence Layer**: Extracts Spanish patterns and scores leads (1-10)
+- **Supervisor**: Routes based on score using deterministic rules
+- **Agents**: 
+  - Maria (0-4): Initial contact and qualification
+  - Carlos (5-7): Value proposition and budget confirmation
+  - Sofia (8-10): Appointment booking and closing
 
-1. **State Management** (`app/state/`)
-   - Centralized conversation state
-   - Lead information tracking
-   - Message history management
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 
-2. **Enhanced Agents** (`app/agents/`)
-   - **Maria**: Cold lead agent (Score 1-4) with error recovery
-   - **Carlos**: Warm lead agent (Score 5-7) with parallel qualification
-   - **Sofia**: Hot lead agent (Score 8-10) with streaming responses
-
-3. **Tools** (`app/tools/`)
-   - GoHighLevel API integration
-   - Appointment booking
-   - Calendar availability checking
-   - Contact management
-
-4. **Enhanced Workflow** (`app/workflow_v2.py`)
-   - LangGraph StateGraph with supervisor pattern
-   - Intelligence layer for pre-processing
-   - Command-based routing with error protection
-   - Streaming support for real-time responses
-   - Performance metrics and monitoring
-
-## Setup
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.13+ (required for deployment - includes free-threading and JIT)
-- pip
-- Virtual environment (recommended)
-- Redis (optional, for distributed message batching)
-- LangSmith API key (recommended for monitoring)
+- Python 3.13.5 (required for performance features)
+- GoHighLevel API credentials
+- OpenAI API key
 
 ### Installation
 
-1. Clone the repository:
 ```bash
+# Clone repository
 git clone <repository-url>
 cd langgraph-ghl-agent
-```
 
-2. Create and activate virtual environment:
-```bash
-python3.13 -m venv venv313
-source venv313/bin/activate  # On Windows: venv313\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
+# Setup Python environment
+python3.13 -m venv venv_langgraph
+source venv_langgraph/bin/activate
 pip install -r requirements.txt
-```
 
-4. Configure environment:
-```bash
+# Configure environment
 cp .env.example .env
-# Edit .env with your API keys
+# Edit .env with your credentials
+
+# Validate setup
+make validate
 ```
 
-## Running the Application
-
-### Development Mode
-```bash
-python main.py
-# Or with uvicorn directly:
-uvicorn app.api.webhook:app --reload --port 8000
-```
-
-### Production Mode
-```bash
-gunicorn app.api.webhook:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-```
-
-### Background Worker
-```bash
-# Run message queue processor
-python worker.py
-```
-
-## Quick Start (Enhanced)
-
-### Using All Enhanced Features
+### Quick Test
 
 ```bash
-# Start with enhanced features
-python start_enhanced.py
+# Start development server
+make run
+
+# Test webhook
+curl -X POST http://localhost:8000/webhook/message \
+  -H "Content-Type: application/json" \
+  -d '{"contactId": "test123", "message": "Hola, tengo un restaurante"}'
 ```
 
-This will:
-- Enable streaming responses ✅
-- Enable parallel qualification ✅
-- Enable message batching ✅
-- Enable error recovery ✅
-- Start enhanced webhook server ✅
+## 📚 Documentation
 
-## API Endpoints
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Production deployment instructions
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and components
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Local development and debugging
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and fixes
 
-### Standard Endpoints
-- `POST /webhook/message` - Main webhook endpoint with batching
-- `GET /` - Basic health check
-- `GET /health` - Detailed health check with component status
-
-### Enhanced Endpoints
-- `POST /webhook/message/stream` - Streaming webhook for real-time responses
-- `POST /webhook/appointment` - Appointment webhook with streaming confirmation
-
-## Testing
-
-Run tests with pytest:
-```bash
-pytest tests/ -v
-```
-
-## Deployment
-
-### Using Docker
+## 🔧 Key Commands
 
 ```bash
-# Build and run with Docker Compose
-docker-compose up --build
-
-# Or build manually
-docker build -t ghl-langgraph-agent .
-docker run -p 8000:8000 --env-file .env ghl-langgraph-agent
+make validate   # Pre-deployment validation (5 seconds)
+make test      # Run test suite
+make run       # Start development server
+make deploy    # Deploy to production
 ```
 
-### Recommended Deployment Platform
+## 🤝 Contributing
 
-#### LangGraph Platform (LangSmith) - RECOMMENDED
-Best for: Native LangGraph support, built-in monitoring, automatic scaling
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Run validation (`make validate`)
+4. Commit changes (`git commit -m 'Add amazing feature'`)
+5. Push to branch (`git push origin feature/amazing-feature`)
+6. Open Pull Request
 
-```bash
-# Deploy to LangGraph Platform
-# Automatic deployment on push to main branch
-git push origin main
-```
+## 📄 License
 
-Features:
-- Automatic deployment on git push
-- Built-in LangSmith monitoring
-- Native LangGraph optimizations
-- Automatic retries and error handling
-- Streaming support out of the box
-fly deploy
-```
+This project is proprietary software. All rights reserved.
 
-### Why Not Vercel or Railway?
+## 🙏 Acknowledgments
 
-- **Vercel**: Limited to 60-second timeouts, no background tasks, serverless only
-- **Railway**: Better but still limited for long-running processes
-
-LangGraph agents need:
-- Long-running process support
-- Background task processing
-- Persistent connections
-- State management
-
-These requirements make traditional application platforms more suitable than serverless platforms.
-
-## Migration Notes
-
-This is a complete rewrite of the Node.js/Vercel implementation with the following improvements:
-
-1. **Better State Management**: LangGraph provides built-in state persistence
-2. **Visual Debugging**: Use LangGraph Studio to debug workflows
-3. **Error Recovery**: Automatic checkpointing and recovery
-4. **Type Safety**: Full Python type hints throughout
-5. **Testing**: Comprehensive test suite with pytest
-
-## License
-
-Proprietary - All rights reserved# Force rebuild Thu Jul 17 21:57:27 CDT 2025
+- Built with [LangGraph](https://langchain-ai.github.io/langgraph/)
+- Powered by [OpenAI](https://openai.com/)
+- Integrated with [GoHighLevel](https://www.gohighlevel.com/)

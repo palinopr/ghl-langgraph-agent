@@ -11,7 +11,7 @@ from langgraph.prebuilt import InjectedState
 from langgraph.types import Command
 from app.tools.ghl_client import ghl_client
 from app.utils.simple_logger import get_logger
-from app.state.conversation_state import ConversationState
+from app.state.minimal_state import MinimalState
 
 logger = get_logger("agent_tools_modernized")
 
@@ -22,7 +22,7 @@ def escalate_to_supervisor(
     reason: Literal["needs_appointment", "wrong_agent", "customer_confused", "qualification_complete"],
     task_description: Annotated[str, "Clear description of what needs to be done next"],
     details: Optional[str] = None,
-    state: Annotated[ConversationState, InjectedState] = None,
+    state: Annotated[MinimalState, InjectedState] = None,
     tool_call_id: Annotated[str, InjectedToolCallId] = None
 ) -> Command:
     """
@@ -67,7 +67,7 @@ def escalate_to_supervisor(
 async def get_contact_details_with_task(
     contact_id: str,
     task: Annotated[str, "What information to look for"] = "general",
-    state: Annotated[ConversationState, InjectedState] = None,
+    state: Annotated[MinimalState, InjectedState] = None,
     tool_call_id: Annotated[str, InjectedToolCallId] = None
 ) -> Command:
     """
@@ -153,7 +153,7 @@ async def update_contact_with_context(
     contact_id: str,
     updates: Dict[str, Any],
     context: Annotated[str, "Why updating this information"],
-    state: Annotated[ConversationState, InjectedState] = None,
+    state: Annotated[MinimalState, InjectedState] = None,
     tool_call_id: Annotated[str, InjectedToolCallId] = None
 ) -> Command:
     """
@@ -224,7 +224,7 @@ async def book_appointment_with_instructions(
     contact_id: str,
     appointment_request: Annotated[str, "Customer's appointment request (e.g., 'Tuesday at 2pm')"],
     special_instructions: Optional[str] = None,
-    state: Annotated[ConversationState, InjectedState] = None,
+    state: Annotated[MinimalState, InjectedState] = None,
     tool_call_id: Annotated[str, InjectedToolCallId] = None
 ) -> Command:
     """
@@ -352,7 +352,7 @@ def save_important_context(
     content: str,
     context_type: Literal["preference", "business_info", "goal", "constraint"],
     importance: Literal["high", "medium", "low"] = "medium",
-    state: Annotated[ConversationState, InjectedState] = None,
+    state: Annotated[MinimalState, InjectedState] = None,
     tool_call_id: Annotated[str, InjectedToolCallId] = None
 ) -> Command:
     """

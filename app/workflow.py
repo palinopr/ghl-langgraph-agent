@@ -14,7 +14,7 @@ from langgraph.store.memory import InMemoryStore
 from langchain_core.messages import AIMessage, HumanMessage
 
 # Import enhanced state
-from app.state.conversation_state import ConversationState
+from app.state.minimal_state import MinimalState
 
 # Import modernized nodes
 from app.agents.receptionist_memory_aware import receptionist_memory_aware_node
@@ -61,7 +61,7 @@ def enhance_agent_with_task(agent_func):
     return enhanced_agent
 
 
-def route_from_supervisor(state: ConversationState) -> Literal["maria", "carlos", "sofia", "responder", "end"]:
+def route_from_supervisor(state: MinimalState) -> Literal["maria", "carlos", "sofia", "responder", "end"]:
     """Route based on supervisor decision"""
     if state.get("should_end", False):
         logger.info("Ending workflow: should_end flag is True")
@@ -95,7 +95,7 @@ def route_from_supervisor(state: ConversationState) -> Literal["maria", "carlos"
     return "end"
 
 
-def route_from_agent(state: ConversationState) -> Union[Literal["supervisor", "responder"], str]:
+def route_from_agent(state: MinimalState) -> Union[Literal["supervisor", "responder"], str]:
     """Route from agent - can escalate back to supervisor or proceed to responder"""
     if state.get("needs_rerouting", False) or state.get("needs_escalation", False):
         reason = state.get("escalation_reason", "unknown")
@@ -128,7 +128,7 @@ def create_modernized_workflow():
     logger.info("Creating modernized workflow with official patterns")
     
     # Create workflow with standard state
-    workflow = StateGraph(ConversationState)
+    workflow = StateGraph(MinimalState)
     
     # Enhance agents with task awareness
     maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)

@@ -14,6 +14,12 @@ from app.tools.agent_tools_modernized import (
 )
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
+from app.agents.base_agent import (
+    get_current_message,
+    check_score_boundaries,
+    extract_data_status,
+    create_error_response
+)
 
 logger = get_logger("sofia_v2_fixed")
 
@@ -39,20 +45,16 @@ def sofia_prompt_fixed(state: SofiaState) -> list[AnyMessage]:
     extracted_data = state.get("extracted_data", {})
     lead_score = state.get("lead_score", 0)
     
-    # Get what we have collected
-    has_name = bool(extracted_data.get("name") or contact_name)
-    has_business = bool(extracted_data.get("business_type") and 
-                       extracted_data.get("business_type") != "NO_MENCIONADO")
-    has_budget = bool(extracted_data.get("budget"))
-    has_email = bool(extracted_data.get("email"))
+    # Get what we have collected using base function
+    data_status = extract_data_status(extracted_data)
+    has_name = data_status["has_name"] or bool(contact_name)
+    has_business = data_status["has_business"]
+    has_budget = data_status["has_budget"]
+    has_email = data_status["has_email"]
     
     # Get current message
     messages = state.get("messages", [])
-    current_message = ""
-    for msg in reversed(messages):
-        if hasattr(msg, '__class__') and msg.__class__.__name__ == 'HumanMessage':
-            current_message = msg.content
-            break
+    current_message = get_current_message(messages)
     
     # Calculate what we need next (ONE THING AT A TIME!)
     next_step = "ASK_NAME"
@@ -157,15 +159,14 @@ async def sofia_node_v2_fixed(state: Dict[str, Any]) -> Dict[str, Any]:
     try:
         # Check if we should even be here
         lead_score = state.get("lead_score", 0)
-        if lead_score < 8:
-            logger.warning(f"Sofia received low score lead: {lead_score}/10")
-            # Should escalate back
-            return {
-                "needs_rerouting": True,
-                "escalation_reason": "needs_qualification",
-                "escalation_details": f"Lead score too low ({lead_score}/10)",
-                "current_agent": "sofia"
-            }
+        # Sofia only handles score 8-10
+        boundary_check = check_score_boundaries(lead_score, 8, 10, "Sofia", logger)
+        if boundary_check:
+            # Override the reason for scores below 8
+            if lead_score < 8:
+                boundary_check["escalation_reason"] = "needs_qualification"
+                boundary_check["escalation_details"] = f"Lead score too low ({lead_score}/10)"
+            return boundary_check
         
         # Create and run agent
         agent = create_sofia_agent_fixed()
@@ -181,12 +182,13 @@ async def sofia_node_v2_fixed(state: Dict[str, Any]) -> Dict[str, Any]:
         
     except Exception as e:
         logger.error(f"Sofia error: {str(e)}", exc_info=True)
-        return {
-            "error": str(e),
+        error_response = create_error_response("sofia", e, state)
+        # Sofia adds rerouting on errors
+        error_response.update({
             "needs_rerouting": True,
-            "escalation_reason": "error",
-            "current_agent": "sofia"
-        }
+            "escalation_reason": "error"
+        })
+        return error_response
 
 
 # Export

@@ -15,9 +15,13 @@ from app.tools.agent_tools_modernized import (
 from app.utils.simple_logger import get_logger
 from app.config import get_settings
 from app.utils.model_factory import create_openai_model
-# from app.utils.state_utils import filter_agent_result  # Removed: unused utility
-# from app.utils.memory_manager import get_memory_manager  # Removed: unused utility
-# from app.utils.context_filter import ContextFilter  # Removed: unused utility
+from app.agents.base_agent import (
+    get_current_message,
+    check_score_boundaries,
+    extract_data_status,
+    create_error_response,
+    get_base_contact_info
+)
 
 logger = get_logger("maria_memory_aware")
 
@@ -31,7 +35,7 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
     messages = state.get("messages", [])
     extracted_data = state.get("extracted_data", {})
     handoff_info = state.get("handoff_info")
-    current_message = messages[-1].content if messages else ""
+    current_message = get_current_message(messages)
     
     # Build Maria's view of the conversation
     context = "\\n📊 MARIA'S CONTEXT:\\n"
@@ -100,13 +104,9 @@ async def maria_memory_aware_node(state: Dict[str, Any]) -> Union[Command, Dict[
         
         # Check if Maria should handle this
         lead_score = state.get("lead_score", 0)
-        if lead_score >= 5:
-            logger.info(f"Score {lead_score} too high for Maria, escalating")
-            return {
-                "needs_escalation": True,
-                "escalation_reason": "high_score",
-                "messages": state["messages"]
-            }
+        boundary_check = check_score_boundaries(lead_score, 0, 4, "Maria", logger)
+        if boundary_check:
+            return boundary_check
         
         # Create agent with memory-aware prompt
         model = create_openai_model(temperature=0.0)
@@ -143,7 +143,4 @@ async def maria_memory_aware_node(state: Dict[str, Any]) -> Union[Command, Dict[
         
     except Exception as e:
         logger.error(f"Error in Maria memory-aware: {str(e)}", exc_info=True)
-        return {
-            "error": str(e),
-            "messages": state["messages"]
-        }
+        return create_error_response("maria", e, state)

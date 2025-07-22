@@ -14,6 +14,12 @@ from app.tools.agent_tools_modernized import (
 )
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
+from app.agents.base_agent import (
+    get_current_message,
+    check_score_boundaries,
+    extract_data_status,
+    create_error_response
+)
 
 logger = get_logger("carlos_v2_fixed")
 
@@ -117,21 +123,18 @@ async def carlos_node_v2_fixed(state: Dict[str, Any]) -> Dict[str, Any]:
         lead_score = state.get("lead_score", 0)
         extracted_data = state.get("extracted_data", {})
         
-        # Route checks
-        if lead_score < 5:
-            return {
-                "needs_rerouting": True,
-                "escalation_reason": "wrong_agent",
-                "escalation_details": f"Lead score {lead_score} too low for Carlos (handles 5-7)",
-                "current_agent": "carlos"
-            }
-        elif lead_score >= 8 and extracted_data.get("email"):
-            return {
-                "needs_rerouting": True,
-                "escalation_reason": "needs_appointment",
-                "escalation_details": "Ready for appointment booking",
-                "current_agent": "carlos"
-            }
+        # Route checks using base function
+        boundary_check = check_score_boundaries(lead_score, 5, 7, "Carlos", logger)
+        if boundary_check:
+            # Special case: if score is 8+ AND has email, needs appointment
+            if lead_score >= 8 and extracted_data.get("email"):
+                return {
+                    "needs_rerouting": True,
+                    "escalation_reason": "needs_appointment",
+                    "escalation_details": "Ready for appointment booking",
+                    "current_agent": "carlos"
+                }
+            return boundary_check
         
         # Create and run agent
         agent = create_carlos_agent_fixed()
@@ -145,10 +148,7 @@ async def carlos_node_v2_fixed(state: Dict[str, Any]) -> Dict[str, Any]:
         
     except Exception as e:
         logger.error(f"Carlos error: {str(e)}", exc_info=True)
-        return {
-            "error": str(e),
-            "current_agent": "carlos"
-        }
+        return create_error_response("carlos", e, state)
 
 
 # Export
