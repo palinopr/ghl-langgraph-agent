@@ -4,7 +4,7 @@ Provides persistent state storage across distributed deployments
 """
 import json
 import os
-from typing import Optional, Iterator, Any, Dict, Tuple
+from typing import Optional, Iterator, Any, Dict, Tuple, AsyncIterator
 from contextlib import contextmanager
 import redis.asyncio as redis
 from redis.asyncio import Redis
