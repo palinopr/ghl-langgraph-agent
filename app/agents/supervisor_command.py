@@ -1,10 +1,11 @@
 """
-Supervisor with LangGraph 0.5.3 patterns - Backward Compatible Version
-Falls back to dict returns if Command is not available
+Supervisor with proper LangGraph 0.5.3 patterns
+Uses Command objects for routing instead of string parsing
 """
 from typing import Dict, Any, List, Optional, Literal
 from langchain_core.messages import AnyMessage, BaseMessage, ToolMessage
 from langgraph.prebuilt import create_react_agent
+from langgraph.types import Command
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
 from app.state.minimal_state import MinimalState
@@ -12,24 +13,15 @@ from langchain_core.tools import tool
 from typing_extensions import Annotated
 from langgraph.prebuilt import InjectedState
 
-# Try to import Command, fall back if not available
-try:
-    from langgraph.types import Command
-    HAS_COMMAND = True
-except ImportError:
-    HAS_COMMAND = False
-    logger = get_logger("supervisor")
-    logger.warning("Command not available, using dict-based routing")
-
 logger = get_logger("supervisor")
 
 
-# Create handoff tools that work with or without Command
+# Create handoff tools that return proper Command objects
 @tool
 def handoff_to_sofia(
     task_description: Annotated[str, "Description of what Sofia should do next"],
     state: Annotated[MinimalState, InjectedState]
-) -> Dict[str, Any]:
+) -> Command[Literal["sofia"]]:
     """
     Handoff to Sofia - Appointment Setting Specialist.
     Use when:
@@ -38,23 +30,21 @@ def handoff_to_sofia(
     - Has name, email, and $300+ budget confirmed
     """
     logger.info(f"Handoff to Sofia with task: {task_description}")
-    return {
-        "type": "handoff",
-        "agent": "sofia",
-        "task": task_description,
-        "routing_update": {
+    return Command(
+        goto="sofia",
+        update={
             "agent_task": task_description,
             "next_agent": "sofia",
             "routing_reason": f"Handoff to Sofia: {task_description}"
         }
-    }
+    )
 
 
 @tool
 def handoff_to_carlos(
     task_description: Annotated[str, "Description of what Carlos should do next"],
     state: Annotated[MinimalState, InjectedState]
-) -> Dict[str, Any]:
+) -> Command[Literal["carlos"]]:
     """
     Handoff to Carlos - Lead Qualification Specialist.
     Use when:
@@ -63,23 +53,21 @@ def handoff_to_carlos(
     - Missing budget confirmation or details
     """
     logger.info(f"Handoff to Carlos with task: {task_description}")
-    return {
-        "type": "handoff",
-        "agent": "carlos",
-        "task": task_description,
-        "routing_update": {
+    return Command(
+        goto="carlos",
+        update={
             "agent_task": task_description,
             "next_agent": "carlos",
             "routing_reason": f"Handoff to Carlos: {task_description}"
         }
-    }
+    )
 
 
 @tool
 def handoff_to_maria(
     task_description: Annotated[str, "Description of what Maria should do next"],
     state: Annotated[MinimalState, InjectedState]
-) -> Dict[str, Any]:
+) -> Command[Literal["maria"]]:
     """
     Handoff to Maria - Customer Support Representative.
     Use when:
@@ -88,16 +76,14 @@ def handoff_to_maria(
     - Technical issues or complaints
     """
     logger.info(f"Handoff to Maria with task: {task_description}")
-    return {
-        "type": "handoff",
-        "agent": "maria",
-        "task": task_description,
-        "routing_update": {
+    return Command(
+        goto="maria",
+        update={
             "agent_task": task_description,
             "next_agent": "maria",
             "routing_reason": f"Handoff to Maria: {task_description}"
         }
-    }
+    )
 
 
 def create_supervisor_with_proper_state():
@@ -147,9 +133,10 @@ IMPORTANT: You MUST use one of the handoff tools. Do not just analyze - take act
     return agent
 
 
-async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
+async def supervisor_node(state: Dict[str, Any]) -> Command:
     """
-    Supervisor node that works with or without Command objects
+    Supervisor node that returns Command objects directly
+    No more string parsing needed!
     """
     try:
         # Ensure required fields
@@ -190,47 +177,28 @@ async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
         # Create supervisor
         supervisor = create_supervisor_with_proper_state()
         
-        # Run supervisor
+        # Run supervisor - it will return a Command object
         result = await supervisor.ainvoke(agent_state)
         
-        # Handle the result - extract routing from tool calls
-        messages = result.get("messages", [])
-        routing_update = {
-            "supervisor_complete": True,
-            "messages": messages
-        }
+        # The result should contain a Command in the messages
+        # The Command is automatically handled by LangGraph
+        logger.info("Supervisor completed with Command routing")
         
-        # Look for handoff in tool responses
-        for msg in messages:
-            if hasattr(msg, "content") and isinstance(msg.content, dict):
-                if msg.content.get("type") == "handoff":
-                    # Extract routing info from tool response
-                    routing_info = msg.content.get("routing_update", {})
-                    routing_update.update(routing_info)
-                    logger.info(f"Routing to {routing_info.get('next_agent')} with task: {routing_info.get('agent_task')}")
-                    break
-        
-        # Default routing if nothing found
-        if "next_agent" not in routing_update:
-            logger.warning("No handoff detected, defaulting to Maria")
-            routing_update.update({
-                "next_agent": "maria",
-                "agent_task": "Handle customer inquiry",
-                "routing_reason": "Default routing to Maria"
-            })
-        
-        return routing_update
+        # Return the result which contains the Command
+        return result
         
     except Exception as e:
         logger.error(f"Error in supervisor: {str(e)}", exc_info=True)
         # Default to Maria on error
-        return {
-            "next_agent": "maria",
-            "agent_task": "Handle customer inquiry",
-            "supervisor_complete": True,
-            "routing_reason": f"Error in supervisor: {str(e)}",
-            "error": str(e)
-        }
+        return Command(
+            goto="maria",
+            update={
+                "next_agent": "maria",
+                "agent_task": "Handle customer inquiry",
+                "routing_reason": f"Error in supervisor: {str(e)}",
+                "error": str(e)
+            }
+        )
 
 
 # Export the official node name for compatibility

@@ -2,10 +2,10 @@
 Maria - Memory-Aware Customer Support Agent
 Uses isolated memory context to prevent confusion
 """
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt import create_react_agent
-from langgraph.types import Command
+# Command import removed for backward compatibility
 from app.state.minimal_state import MinimalState
 from app.tools.agent_tools_fixed import (
     get_contact_details_with_task,
@@ -116,7 +116,7 @@ Remember: You're not just collecting data - you're solving their WhatsApp commun
     return [{"role": "system", "content": system_prompt}] + messages
 
 
-async def maria_memory_aware_node(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
+async def maria_memory_aware_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Maria agent node with memory isolation
     """

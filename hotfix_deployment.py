@@ -1,4 +1,15 @@
+#!/usr/bin/env python3
 """
+Hotfix script to make supervisor.py backward compatible
+Removes Command usage if not available in the deployment environment
+"""
+import sys
+from pathlib import Path
+
+def create_backward_compatible_supervisor():
+    """Create a version of supervisor.py that works without Command objects"""
+    
+    supervisor_content = '''"""
 Supervisor with LangGraph 0.5.3 patterns - Backward Compatible Version
 Falls back to dict returns if Command is not available
 """
@@ -162,7 +173,7 @@ async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
             
         # Format extracted info for prompt
         extracted_data = state.get("extracted_data", {})
-        extracted_info = "\n".join([
+        extracted_info = "\\n".join([
             f"Name: {extracted_data.get('name', 'NOT PROVIDED')}",
             f"Business: {extracted_data.get('business_type', 'NOT PROVIDED')}",
             f"Budget: {extracted_data.get('budget', 'NOT PROVIDED')}",
@@ -239,3 +250,41 @@ supervisor_fixed_node = supervisor_node  # Alias for fixed version
 
 
 __all__ = ["supervisor_node", "supervisor_official_node", "supervisor_fixed_node", "create_supervisor_with_proper_state"]
+'''
+    
+    # Write the backward compatible version
+    supervisor_path = Path("app/agents/supervisor_compat.py")
+    supervisor_path.write_text(supervisor_content)
+    print(f"✅ Created backward compatible supervisor at: {supervisor_path}")
+    
+    # Create a backup of the current supervisor
+    original_path = Path("app/agents/supervisor.py")
+    backup_path = Path("app/agents/supervisor_command.py")
+    
+    if original_path.exists():
+        original_content = original_path.read_text()
+        backup_path.write_text(original_content)
+        print(f"✅ Backed up original supervisor to: {backup_path}")
+        
+        # Replace with compatible version
+        original_path.write_text(supervisor_content)
+        print(f"✅ Replaced supervisor.py with backward compatible version")
+
+
+def main():
+    print("🔧 Creating Backward Compatible Supervisor")
+    print("=" * 60)
+    
+    create_backward_compatible_supervisor()
+    
+    print("\n📋 Next Steps:")
+    print("1. Commit the changes:")
+    print("   git add -A")
+    print("   git commit -m 'hotfix: Make supervisor backward compatible with older LangGraph'")
+    print("   git push origin main")
+    print("\n2. Monitor deployment again")
+    print("\n3. If it still fails, check for other import issues")
+
+
+if __name__ == "__main__":
+    main()
