@@ -115,7 +115,7 @@ def route_from_agent(state: MinimalState) -> Union[Literal["supervisor", "respon
     return "responder"
 
 
-def create_modernized_workflow():
+async def create_modernized_workflow():
     """
     Create workflow with official LangGraph patterns
     
@@ -129,7 +129,7 @@ def create_modernized_workflow():
     logger.info("Creating modernized workflow with official patterns")
     
     # Create workflow with standard state
-    workflow = StateGraph(MinimalState)
+    workflow_graph = StateGraph(MinimalState)
     
     # Enhance agents with task awareness
     maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)
@@ -137,23 +137,23 @@ def create_modernized_workflow():
     sofia_enhanced = enhance_agent_with_task(sofia_node)
     
     # Add all nodes - using checkpoint-aware receptionist
-    workflow.add_node("receptionist", receptionist_checkpoint_aware_node)
-    workflow.add_node("intelligence", intelligence_node)
-    workflow.add_node("supervisor", supervisor_node)
-    workflow.add_node("maria", maria_enhanced)
-    workflow.add_node("carlos", carlos_enhanced)
-    workflow.add_node("sofia", sofia_enhanced)
-    workflow.add_node("responder", responder_node)
+    workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)
+    workflow_graph.add_node("intelligence", intelligence_node)
+    workflow_graph.add_node("supervisor", supervisor_node)
+    workflow_graph.add_node("maria", maria_enhanced)
+    workflow_graph.add_node("carlos", carlos_enhanced)
+    workflow_graph.add_node("sofia", sofia_enhanced)
+    workflow_graph.add_node("responder", responder_node)
     
     # Set entry point
-    workflow.set_entry_point("receptionist")
+    workflow_graph.set_entry_point("receptionist")
     
     # Define edges
-    workflow.add_edge("receptionist", "intelligence")
-    workflow.add_edge("intelligence", "supervisor")
+    workflow_graph.add_edge("receptionist", "intelligence")
+    workflow_graph.add_edge("intelligence", "supervisor")
     
     # Supervisor routing with official pattern
-    workflow.add_conditional_edges(
+    workflow_graph.add_conditional_edges(
         "supervisor",
         route_from_supervisor,
         {
@@ -167,7 +167,7 @@ def create_modernized_workflow():
     
     # Agent routing with escalation support
     for agent in ["maria", "carlos", "sofia"]:
-        workflow.add_conditional_edges(
+        workflow_graph.add_conditional_edges(
             agent,
             route_from_agent,
             {
@@ -177,27 +177,30 @@ def create_modernized_workflow():
         )
     
     # Responder ends
-    workflow.add_edge("responder", END)
+    workflow_graph.add_edge("responder", END)
     
     # Compile with SQLite persistent memory
     checkpoint_db = os.path.join(os.path.dirname(__file__), "checkpoints.db")
-    memory = AsyncSqliteSaver.from_conn_string(checkpoint_db)
-    store = InMemoryStore()
-    
     logger.info(f"Using SQLite checkpoint database: {checkpoint_db}")
     
-    compiled = workflow.compile(
-        checkpointer=memory,
-        store=store
-    )
-    
-    logger.info("Modernized workflow compiled with SQLite persistence")
-    
-    return compiled, memory  # Return both workflow and checkpointer
+    # Use async context manager for SQLite checkpointer
+    async with AsyncSqliteSaver.from_conn_string(checkpoint_db) as memory:
+        store = InMemoryStore()
+        
+        compiled = workflow_graph.compile(
+            checkpointer=memory,
+            store=store
+        )
+        
+        logger.info("Modernized workflow compiled with SQLite persistence")
+        
+        return compiled, memory, checkpoint_db
 
 
-# Create the workflow and checkpointer
-workflow, checkpointer = create_modernized_workflow()
+# Global workflow and checkpointer will be created on first use
+_workflow = None
+_checkpointer = None
+_db_path = None
 
 
 async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -206,6 +209,8 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
     
     This ensures conversation history is preserved across messages
     """
+    global _workflow, _checkpointer, _db_path
+    
     try:
         # Extract identifiers
         contact_id = webhook_data.get("contactId", webhook_data.get("id", "unknown"))
@@ -219,26 +224,34 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         # Configuration for checkpointer
         config = {"configurable": {"thread_id": thread_id}}
         
+        # Create workflow if not exists (runs within SQLite context)
+        if _workflow is None:
+            _workflow, _checkpointer, _db_path = await create_modernized_workflow()
+        
+        # SQLite database path
+        checkpoint_db = os.path.join(os.path.dirname(__file__), "checkpoints.db")
+        
         # Try to get existing state from checkpoint
         existing_state = None
         try:
-            # Get the latest checkpoint
-            checkpoint_tuple = await checkpointer.aget(config)
-            
-            if checkpoint_tuple and checkpoint_tuple.checkpoint:
-                existing_state = checkpoint_tuple.checkpoint.get("channel_values", {})
-                existing_messages = existing_state.get("messages", [])
-                logger.info(f"✅ Loaded {len(existing_messages)} messages from SQLite for thread {thread_id}")
+            # Use async context manager for checkpoint operations
+            async with AsyncSqliteSaver.from_conn_string(checkpoint_db) as checkpointer:
+                checkpoint_tuple = await checkpointer.aget(config)
                 
-                # Debug: Show last message for context
-                if existing_messages:
-                    logger.info(f"Last message: '{existing_messages[-1].content}'")
-                    logger.info("=== CHECKPOINT MESSAGES ===")
-                    for i, msg in enumerate(existing_messages[-3:]):
-                        logger.info(f"  [{i}] {type(msg).__name__}: {str(msg.content)[:50]}...")
-                    logger.info("=== END CHECKPOINT ===")
-            else:
-                logger.info(f"🆕 No checkpoint in SQLite for thread {thread_id} - new conversation")
+                if checkpoint_tuple and checkpoint_tuple.checkpoint:
+                    existing_state = checkpoint_tuple.checkpoint.get("channel_values", {})
+                    existing_messages = existing_state.get("messages", [])
+                    logger.info(f"✅ Loaded {len(existing_messages)} messages from SQLite for thread {thread_id}")
+                    
+                    # Debug: Show last message for context
+                    if existing_messages:
+                        logger.info(f"Last message: '{existing_messages[-1].content}'")
+                        logger.info("=== CHECKPOINT MESSAGES ===")
+                        for i, msg in enumerate(existing_messages[-3:]):
+                            logger.info(f"  [{i}] {type(msg).__name__}: {str(msg.content)[:50]}...")
+                        logger.info("=== END CHECKPOINT ===")
+                else:
+                    logger.info(f"🆕 No checkpoint in SQLite for thread {thread_id} - new conversation")
         except Exception as e:
             logger.warning(f"Could not load checkpoint: {e}")
         
@@ -266,12 +279,64 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
             }
             logger.info("Starting with fresh state (no checkpoint)")
         
-        # Run the workflow
+        # Run the workflow within SQLite context
         logger.info(f"Running workflow for contact {contact_id}")
-        result = await workflow.ainvoke(
-            initial_state,
-            config=config  # Pass config for checkpoint saving
-        )
+        async with AsyncSqliteSaver.from_conn_string(checkpoint_db) as runtime_checkpointer:
+            # Re-compile workflow with runtime checkpointer
+            workflow_graph = StateGraph(MinimalState)
+            
+            # Quick rebuild (same structure as create_modernized_workflow)
+            maria_enhanced = enhance_agent_with_task(maria_memory_aware_node)
+            carlos_enhanced = enhance_agent_with_task(carlos_node)
+            sofia_enhanced = enhance_agent_with_task(sofia_node)
+            
+            workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)
+            workflow_graph.add_node("intelligence", intelligence_node)
+            workflow_graph.add_node("supervisor", supervisor_node)
+            workflow_graph.add_node("maria", maria_enhanced)
+            workflow_graph.add_node("carlos", carlos_enhanced)
+            workflow_graph.add_node("sofia", sofia_enhanced)
+            workflow_graph.add_node("responder", responder_node)
+            
+            workflow_graph.set_entry_point("receptionist")
+            workflow_graph.add_edge("receptionist", "intelligence")
+            workflow_graph.add_edge("intelligence", "supervisor")
+            
+            workflow_graph.add_conditional_edges(
+                "supervisor",
+                route_from_supervisor,
+                {
+                    "maria": "maria",
+                    "carlos": "carlos",
+                    "sofia": "sofia",
+                    "responder": "responder",
+                    "end": END
+                }
+            )
+            
+            for agent in ["maria", "carlos", "sofia"]:
+                workflow_graph.add_conditional_edges(
+                    agent,
+                    route_from_agent,
+                    {
+                        "responder": "responder",
+                        "supervisor": "supervisor"
+                    }
+                )
+            
+            workflow_graph.add_edge("responder", END)
+            
+            # Compile with runtime checkpointer
+            runtime_workflow = workflow_graph.compile(
+                checkpointer=runtime_checkpointer,
+                store=InMemoryStore()
+            )
+            
+            # Run the workflow
+            result = await runtime_workflow.ainvoke(
+                initial_state,
+                config=config  # Pass config for checkpoint saving
+            )
         
         logger.info(f"Workflow completed for contact {contact_id}")
         logger.info(f"Final state has {len(result.get('messages', []))} messages")
@@ -294,5 +359,8 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         }
 
 
+# Create a simple workflow export for compatibility
+workflow = None  # Will be created on first run
+
 # Export for langgraph.json and imports
-__all__ = ["workflow", "run_workflow", "checkpointer"]
+__all__ = ["workflow", "run_workflow"]

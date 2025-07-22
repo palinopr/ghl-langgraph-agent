@@ -39,6 +39,7 @@ cloudpickle>=3.0.0  # Added - for serialization
 redis>=5.0.0  # Added - for message batching
 jsonschema-rs>=0.20.0  # Added - for schema validation performance
 rapidfuzz>=3.0.0  # Added - for fuzzy string matching and typo tolerance
+rich>=13.0.0  # Added - for checkpoint monitoring UI
 
 # Performance Monitoring
 psutil>=5.9.0

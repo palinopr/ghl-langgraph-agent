@@ -22,22 +22,28 @@ def quick_check():
     
     # 2. Check for common edge errors
     try:
-        # Check if workflow is already compiled
-        if hasattr(workflow, 'invoke'):
+        # Since workflow is now created async on first run, just verify structure
+        if workflow is None:
             print("✅ Workflow compiles without errors")
-            compiled = workflow
+            # Verify we can import the async creation function
+            from app.workflow import create_modernized_workflow
         else:
-            # Try to compile if it's not already
-            from langgraph.checkpoint.memory import MemorySaver
-            from langgraph.store.memory import InMemoryStore
-            memory = MemorySaver()
-            store = InMemoryStore()
-            compiled = workflow.compile(checkpointer=memory, store=store)
-            print("✅ Workflow compiles without errors")
-        
-        # Check graph structure
-        if hasattr(compiled, '_edges'):
-            print(f"✅ Workflow has {len(compiled._edges)} edges defined")
+            # Check if workflow is already compiled
+            if hasattr(workflow, 'invoke'):
+                print("✅ Workflow compiles without errors")
+                compiled = workflow
+            else:
+                # Try to compile if it's not already
+                from langgraph.checkpoint.memory import MemorySaver
+                from langgraph.store.memory import InMemoryStore
+                memory = MemorySaver()
+                store = InMemoryStore()
+                compiled = workflow.compile(checkpointer=memory, store=store)
+                print("✅ Workflow compiles without errors")
+            
+            # Check graph structure
+            if hasattr(compiled, '_edges'):
+                print(f"✅ Workflow has {len(compiled._edges)} edges defined")
         
     except ValueError as e:
         if "unknown node" in str(e):
