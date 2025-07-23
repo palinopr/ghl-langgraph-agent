@@ -20,9 +20,36 @@ class MessageManager:
         """
         # Convert messages to comparable format
         def msg_key(msg):
+            # Normalize the content first
+            content = ""
             if isinstance(msg, dict):
-                return (msg.get('role', ''), msg.get('content', ''))
-            return (type(msg).__name__, msg.content)
+                content = msg.get('content', '')
+            elif hasattr(msg, 'content'):
+                content = msg.content
+            else:
+                content = str(msg)
+            
+            # Normalize the type/role
+            msg_type = ""
+            if isinstance(msg, dict):
+                role = msg.get('role', msg.get('type', ''))
+                # Normalize role names
+                if role in ['human', 'user']:
+                    msg_type = 'human'
+                elif role in ['ai', 'assistant']:
+                    msg_type = 'ai'
+                else:
+                    msg_type = role
+            elif hasattr(msg, '__class__'):
+                class_name = msg.__class__.__name__
+                if class_name == 'HumanMessage':
+                    msg_type = 'human'
+                elif class_name == 'AIMessage':
+                    msg_type = 'ai'
+                else:
+                    msg_type = class_name.lower()
+            
+            return (msg_type, content)
         
         # Get existing message keys
         existing_keys = {msg_key(msg) for msg in current_messages}
@@ -40,16 +67,44 @@ class MessageManager:
         """
         Remove duplicate messages while preserving order
         """
+        # Use the same msg_key function for consistency
+        def msg_key(msg):
+            # Normalize the content first
+            content = ""
+            if isinstance(msg, dict):
+                content = msg.get('content', '')
+            elif hasattr(msg, 'content'):
+                content = msg.content
+            else:
+                content = str(msg)
+            
+            # Normalize the type/role
+            msg_type = ""
+            if isinstance(msg, dict):
+                role = msg.get('role', msg.get('type', ''))
+                # Normalize role names
+                if role in ['human', 'user']:
+                    msg_type = 'human'
+                elif role in ['ai', 'assistant']:
+                    msg_type = 'ai'
+                else:
+                    msg_type = role
+            elif hasattr(msg, '__class__'):
+                class_name = msg.__class__.__name__
+                if class_name == 'HumanMessage':
+                    msg_type = 'human'
+                elif class_name == 'AIMessage':
+                    msg_type = 'ai'
+                else:
+                    msg_type = class_name.lower()
+            
+            return (msg_type, content)
+        
         seen = set()
         deduplicated = []
         
         for msg in messages:
-            # Create a key for comparison
-            if isinstance(msg, dict):
-                key = (msg.get('role', ''), msg.get('content', ''))
-            else:
-                key = (type(msg).__name__, msg.content)
-            
+            key = msg_key(msg)
             if key not in seen:
                 seen.add(key)
                 deduplicated.append(msg)
