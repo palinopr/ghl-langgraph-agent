@@ -1,8 +1,8 @@
 """
 Root level graph entry point for LangGraph deployment
 """
-# Import the simplified Redis workflow
-from app.workflow_simple_redis import workflow
+# Import the FIXED workflow with run_workflow function
+from app.workflow_fixed_final import workflow, run_workflow
 
 # Export as 'agent' which is what langgraph.json expects
 agent = workflow
@@ -10,4 +10,5 @@ agent = workflow
 # Also export as graph for compatibility
 graph = workflow
 
-__all__ = ["agent", "graph", "workflow"]
+# CRITICAL: Export run_workflow so webhook can call it!
+__all__ = ["agent", "graph", "workflow", "run_workflow"]
