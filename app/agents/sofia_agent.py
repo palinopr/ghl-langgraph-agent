@@ -111,7 +111,11 @@ AVAILABLE TOOLS:
 
 Remember: They're HOT leads - CLOSE THE DEMO!"""
     
-    return [{"role": "system", "content": system_prompt}] + state["messages"]
+    # Only include the current message to prevent duplication
+    # create_react_agent returns all input messages plus its response
+    messages = state.get("messages", [])
+    recent_messages = messages[-1:] if messages else []
+    return [{"role": "system", "content": system_prompt}] + recent_messages
 
 
 def create_sofia_agent_fixed():

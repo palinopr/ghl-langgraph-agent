@@ -16,6 +16,7 @@ class MinimalState(TypedDict):
     lead_score: int
     next_agent: str
     agent_task: str
+    remaining_steps: int  # Required by create_react_agent
     supervisor_complete: bool
     needs_escalation: bool
     escalation_reason: str

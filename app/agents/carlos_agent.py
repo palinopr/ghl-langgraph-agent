@@ -91,7 +91,11 @@ CURRENT DATA:
 
 Remember: Don't just qualify - show them why they NEED this demo NOW!"""
     
-    return [{"role": "system", "content": system_prompt}] + state["messages"]
+    # Only include the current message to prevent duplication
+    # create_react_agent returns all input messages plus its response
+    messages = state.get("messages", [])
+    recent_messages = messages[-1:] if messages else []
+    return [{"role": "system", "content": system_prompt}] + recent_messages
 
 
 def create_carlos_agent_fixed():

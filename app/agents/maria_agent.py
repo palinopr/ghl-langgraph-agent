@@ -113,9 +113,10 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
 
 Remember: You're not just collecting data - you're solving their WhatsApp communication problem!"""
     
-    # Only include the last few messages to prevent duplication
-    # The react agent might be duplicating messages internally
-    recent_messages = messages[-3:] if len(messages) > 3 else messages
+    # Only include the current message to prevent duplication
+    # create_react_agent returns all input messages plus its response
+    # So we only pass the latest message to avoid exponential growth
+    recent_messages = messages[-1:] if messages else []
     return [{"role": "system", "content": system_prompt}] + recent_messages
 
 
@@ -156,13 +157,29 @@ async def maria_node(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
             name="maria"
         )
         
+        # Track how many messages we sent to the agent
+        input_message_count = len(messages)
+        
         # Invoke agent with proper state
         result = await agent.ainvoke(agent_state)
         
         # Only return new messages to avoid duplication
         current_messages = state.get("messages", [])
         result_messages = result.get("messages", [])
-        new_messages = MessageManager.set_messages(current_messages, result_messages)
+        
+        # Extract only the NEW messages (those added after our input)
+        if len(result_messages) > input_message_count:
+            # Agent added new messages - take only those
+            new_agent_messages = result_messages[input_message_count:]
+        else:
+            # Fallback - look for the last AI message
+            new_agent_messages = []
+            for msg in reversed(result_messages):
+                if hasattr(msg, '__class__') and 'AI' in msg.__class__.__name__:
+                    new_agent_messages = [msg]
+                    break
+        # Use MessageManager with only the new agent messages
+        new_messages = MessageManager.set_messages(current_messages, new_agent_messages)
         
         logger.info("Maria completed successfully with isolated memory")
         

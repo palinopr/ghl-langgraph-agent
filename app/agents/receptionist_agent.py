@@ -71,12 +71,19 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
                 # Convert to LangChain messages
                 for msg in ghl_messages:
                     if isinstance(msg, dict):
-                        role = msg.get("role", "human")
-                        content = msg.get("content", "")
-                        if role == "user" or role == "human":
+                        # GHL uses 'direction' not 'role'
+                        direction = msg.get("direction", "")
+                        # GHL uses 'body' not 'content'
+                        content = msg.get("body", "")
+                        
+                        # Convert direction to role
+                        if direction == "inbound":
                             messages.append(HumanMessage(content=content))
-                        else:
+                        elif direction == "outbound":
                             messages.append(AIMessage(content=content))
+                        else:
+                            # Fallback - treat as human message
+                            messages.append(HumanMessage(content=content))
                     else:
                         messages.append(msg)
                 
@@ -106,12 +113,19 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
                     # Convert to LangChain messages
                     for msg in ghl_messages:
                         if isinstance(msg, dict):
-                            role = msg.get("role", "human")
-                            content = msg.get("content", "") or msg.get("body", "")
-                            if role == "user" or role == "human":
+                            # GHL uses 'direction' not 'role'
+                            direction = msg.get("direction", "")
+                            # GHL uses 'body' not 'content'
+                            content = msg.get("body", "")
+                            
+                            # Convert direction to role
+                            if direction == "inbound":
                                 messages.append(HumanMessage(content=content))
-                            else:
+                            elif direction == "outbound":
                                 messages.append(AIMessage(content=content))
+                            else:
+                                # Fallback - treat as human message
+                                messages.append(HumanMessage(content=content))
                         else:
                             messages.append(msg)
                     
