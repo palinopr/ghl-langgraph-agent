@@ -170,7 +170,20 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
         
         # Even on error, use MessageManager to avoid duplication
         current_state_messages = state.get("messages", [])
-        error_message = HumanMessage(content=webhook_data.get("body", "Error") if "webhook_data" in locals() else "Error")
+        
+        # Get the original message content from state
+        webhook_data = state.get("webhook_data", {})
+        original_content = webhook_data.get("body", "")
+        if not original_content and current_state_messages:
+            # Try to get from last message
+            last_msg = current_state_messages[-1]
+            if isinstance(last_msg, dict):
+                original_content = last_msg.get("content", "")
+            elif hasattr(last_msg, "content"):
+                original_content = last_msg.content
+        
+        # Create error message with original content if available
+        error_message = HumanMessage(content=original_content if original_content else "Error processing message")
         
         # Only add the error message if it's not already in state
         new_messages = MessageManager.set_messages(current_state_messages, [error_message])

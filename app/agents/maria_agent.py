@@ -113,7 +113,10 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
 
 Remember: You're not just collecting data - you're solving their WhatsApp communication problem!"""
     
-    return [{"role": "system", "content": system_prompt}] + messages
+    # Only include the last few messages to prevent duplication
+    # The react agent might be duplicating messages internally
+    recent_messages = messages[-3:] if len(messages) > 3 else messages
+    return [{"role": "system", "content": system_prompt}] + recent_messages
 
 
 async def maria_node(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:

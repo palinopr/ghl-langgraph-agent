@@ -1,9 +1,12 @@
 """
 Enhanced Thread ID Mapper Node
 Attempts to override LangGraph Cloud's checkpoint configuration
+Also handles message deduplication for LangGraph Cloud invocations
 """
 from typing import Dict, Any, Optional
 from app.utils.simple_logger import get_logger
+from app.state.message_manager import MessageManager
+from app.utils.debug_helpers import log_state_transition, validate_state
 import copy
 
 logger = get_logger("thread_id_mapper")
@@ -12,10 +15,37 @@ logger = get_logger("thread_id_mapper")
 async def thread_id_mapper_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Enhanced mapper that attempts to override checkpoint configuration
-    to force LangGraph Cloud to use our consistent thread_ids
+    to force LangGraph Cloud to use our consistent thread_ids.
+    Also handles initial message deduplication for LangGraph Cloud.
     """
     logger.info("=== ENHANCED THREAD ID MAPPER STARTING ===")
     logger.info(f"State keys: {list(state.keys())}")
+    
+    # Log input state for debugging
+    log_state_transition(state, "thread_mapper", "input")
+    
+    # Check for LangGraph Cloud pre-population issue
+    messages = state.get("messages", [])
+    webhook_body = state.get("webhook_data", {}).get("body", "")
+    
+    if messages and webhook_body:
+        # Check if the first message matches webhook body
+        first_msg_content = ""
+        if messages:
+            first_msg = messages[0]
+            if hasattr(first_msg, 'content'):
+                first_msg_content = first_msg.content
+            elif isinstance(first_msg, dict):
+                first_msg_content = first_msg.get('content', '')
+        
+        if first_msg_content == webhook_body:
+            logger.warning(f"⚠️ Detected LangGraph Cloud pre-population: message '{first_msg_content[:50]}...' appears in both messages and webhook_data")
+            # We'll let receptionist handle this by using MessageManager
+    
+    # Validate input state
+    validation = validate_state(state, "thread_mapper_input")
+    if not validation["valid"]:
+        logger.warning(f"Input validation issues: {validation['issues']}")
     
     # Extract identifiers from various possible locations
     contact_id = (
@@ -119,7 +149,7 @@ async def thread_id_mapper_node(state: Dict[str, Any]) -> Dict[str, Any]:
     
     # CRITICAL: Only return the fields we're updating, NOT the full state
     # Otherwise the state reducer will duplicate messages
-    return {
+    result = {
         "thread_id": new_thread_id,
         "mapped_thread_id": new_thread_id,
         "original_thread_id": original_thread_id,
@@ -127,6 +157,11 @@ async def thread_id_mapper_node(state: Dict[str, Any]) -> Dict[str, Any]:
         "conversation_id": conversation_id,
         "__config__": updated_state.get("__config__")
     }
+    
+    # Log output for debugging
+    log_state_transition(result, "thread_mapper", "output")
+    
+    return result
 
 
 # Export

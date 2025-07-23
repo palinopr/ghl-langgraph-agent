@@ -1,0 +1,3 @@
+{
+  "error": "Failed to POST /runs/query in LangSmith API. HTTPError('400 Client Error: Bad Request for url: https://api.smith.langchain.com/runs/query', '{\"detail\":\"At least one of \\'session\\', \\'id\\', \\'parent_run\\', \\'trace\\' or \\'reference_example\\' must be specified\"}')"
+}

@@ -29,11 +29,20 @@ def analyze_trace_details(trace_id: str, verbose: bool = False) -> Dict[str, Any
         if run.error:
             print(f"❌ ERROR: {run.error}")
         
-        # Get child runs
-        child_runs = list(client.list_runs(
-            filter=f'eq(parent_run_id, "{trace_id}")',
-            limit=100
-        ))
+        # Get child runs - use project_name and trace_id
+        try:
+            child_runs = list(client.list_runs(
+                project_name="ghl-langgraph-agent",
+                trace_id=trace_id,
+                limit=100
+            ))
+        except Exception as e:
+            # Fallback to using the run's project
+            child_runs = list(client.list_runs(
+                project_id=run.session_id,
+                trace_id=trace_id,
+                limit=100
+            ))
         
         # Sort by start time
         child_runs.sort(key=lambda x: x.start_time)

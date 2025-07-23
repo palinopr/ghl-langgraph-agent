@@ -1,0 +1,10 @@
+{
+  "trace_id": "1f067da6-0686-6899-8326-cc1870683eba",
+  "total_nodes": 16,
+  "total_messages": 28,
+  "unique_messages": 4,
+  "duplicates": 24,
+  "problem_nodes": [
+    "agent"
+  ]
+}
