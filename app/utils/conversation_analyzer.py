@@ -36,21 +36,31 @@ def analyze_conversation_state(messages: List[BaseMessage], agent_name: str = No
     
     # Separate messages by type
     for msg in messages:
-        content_lower = str(msg.content).lower()
+        # Handle both dict and BaseMessage objects
+        if isinstance(msg, dict):
+            content = msg.get('content', '')
+            msg_type = msg.get('type', '')
+            msg_name = msg.get('name')
+        else:
+            content = getattr(msg, 'content', '')
+            msg_type = msg.__class__.__name__ if hasattr(msg, '__class__') else ''
+            msg_name = getattr(msg, 'name', None)
+        
+        content_lower = str(content).lower()
         
         # Track customer messages
-        if hasattr(msg, '__class__') and 'Human' in msg.__class__.__name__:
-            if not hasattr(msg, 'name') or not msg.name:  # Real customer message
+        if 'Human' in msg_type or msg_type == 'human':
+            if not msg_name:  # Real customer message
                 analysis["customer_messages"].append(content_lower)
                 analysis["exchange_count"] += 1
                 analysis["last_customer_message"] = content_lower
                 
                 # Track questions asked by customer
-                if '?' in msg.content:
-                    analysis["questions_asked"].append(msg.content)
+                if '?' in content:
+                    analysis["questions_asked"].append(content)
         
         # Track agent messages (any AI message)
-        elif hasattr(msg, '__class__') and 'AI' in msg.__class__.__name__:
+        elif 'AI' in msg_type or msg_type == 'ai':
             analysis["agent_messages"].append(content_lower)
             
             # Check if we've greeted
