@@ -59,7 +59,7 @@ class ProductionState(TypedDict):
 
 
 # Import all agent nodes
-from app.agents.thread_id_mapper import thread_id_mapper_node
+from app.agents.thread_id_mapper import thread_id_mapper_enhanced_node as thread_id_mapper_node
 from app.agents.receptionist_agent import receptionist_simple_node
 from app.intelligence.analyzer import intelligence_node as intelligence_analyzer_node
 from app.agents.supervisor import supervisor_node
