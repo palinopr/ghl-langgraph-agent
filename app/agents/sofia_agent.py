@@ -50,6 +50,11 @@ def sofia_prompt_fixed(state: SofiaState) -> list[AnyMessage]:
     extracted_data = state.get("extracted_data", {})
     lead_score = state.get("lead_score", 0)
     
+    # Add contact name from GHL if available and not already in extracted_data
+    if contact_name and not extracted_data.get("name"):
+        extracted_data["name"] = contact_name
+        logger.info(f"Sofia: Added contact name from GHL: {contact_name}")
+    
     # Get what we have collected using base function
     data_status = extract_data_status(extracted_data)
     has_name = data_status["has_name"] or bool(contact_name)

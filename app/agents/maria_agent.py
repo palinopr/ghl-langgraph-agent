@@ -42,6 +42,12 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
     handoff_info = state.get("handoff_info")
     current_message = get_current_message(messages)
     
+    # Add contact name from GHL if available and not already in extracted_data
+    contact_name = state.get("contact_name", "")
+    if contact_name and not extracted_data.get("name"):
+        extracted_data["name"] = contact_name
+        logger.info(f"Added contact name from GHL: {contact_name}")
+    
     # Log received extracted data
     if extracted_data:
         logger.info(f"Maria received extracted_data: {extracted_data}")
@@ -56,9 +62,34 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
     # Analyze conversation history to understand where we are
     conversation_analysis = analyze_conversation_state(messages, agent_name="maria")
     
+    # Debug: Log what the analyzer found
+    logger.info(f"Maria conversation analysis: Stage={conversation_analysis['stage']}, Topics={conversation_analysis['topics_discussed']}")
+    
+    # Check if user just answered name question
+    user_just_gave_name = False
+    if len(messages) >= 2:
+        last_msg = messages[-1]
+        prev_msg = messages[-2] if len(messages) > 1 else None
+        
+        # Check if previous message asked for name
+        if prev_msg and hasattr(prev_msg, 'content'):
+            prev_content = str(prev_msg.content).lower()
+            if any(q in prev_content for q in ['tu nombre', 'cuál es tu nombre', 'cómo te llamas']):
+                # And current message looks like a name
+                if hasattr(last_msg, 'content') and last_msg.content:
+                    words = str(last_msg.content).strip().split()
+                    if 1 <= len(words) <= 3:
+                        user_just_gave_name = True
+                        if not extracted_data.get('name'):
+                            extracted_data['name'] = last_msg.content
+                            logger.info(f"Maria detected user just gave name: {last_msg.content}")
+    
     context += f"\\n🔄 CONVERSATION STATUS: {conversation_analysis['status']}"
     context += f"\\n📍 CONVERSATION STAGE: {conversation_analysis['stage']}"
     context += f"\\n💬 EXCHANGES SO FAR: {conversation_analysis['exchange_count']}"
+    
+    if user_just_gave_name:
+        context += f"\\n⚡ USER JUST PROVIDED THEIR NAME: {extracted_data.get('name', '')} - ACKNOWLEDGE IT!"
     
     # Show what we've already discussed
     if conversation_analysis['topics_discussed']:
@@ -178,10 +209,12 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
 - "Perfecto {extracted_data.get('name', '')}, con lo que me compartes sobre tu {extracted_data.get('business_type', 'negocio')}..."
 - "Te voy a conectar con Carlos, nuestro especialista en {service_context}"''' if conversation_analysis['stage'] == 'ready_for_handoff' else ''}
 
-💬 CONTEXT-AWARE RESPONSES (Only AFTER getting basic info):
-- If restaurant + losing customers → Acknowledge: "Entiendo, perder clientes es frustrante. ¿Cuántos clientes calculas que pierdes al mes?"
-- If busy + messages → Relate: "Sí, responder mensajes consume mucho tiempo. ¿Cuántas horas al día dedicas a WhatsApp?"
-- Always tie back to their specific situation
+💬 CONTEXT-AWARE RESPONSES:
+- If user JUST provided name → Acknowledge it: "Mucho gusto {extracted_data.get('name', '')}, ¿qué tipo de negocio tienes?"
+- If NAME already collected → NEVER ask for it again! Move to next question
+- If restaurant + losing customers → "Entiendo {extracted_data.get('name', '')}, perder clientes es frustrante. ¿Cuántos calculas que pierdes al mes?"
+- If busy + messages → "Sí {extracted_data.get('name', '')}, responder mensajes consume mucho tiempo. ¿Cuántas horas al día dedicas a WhatsApp?"
+- Always acknowledge what they just shared before asking next question
 
 ⚡ CRITICAL RULES:
 - Lead score 0-4 only (5+ → escalate immediately)

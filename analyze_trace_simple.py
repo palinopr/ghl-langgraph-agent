@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple trace analysis for LangSmith trace 1f067ef4-9109-6606-8c4e-86e61914c970
+Simple trace analysis for LangSmith traces
 Direct approach to examine debug features
 """
 

@@ -46,6 +46,12 @@ def carlos_prompt_fixed(state: CarlosState) -> list[AnyMessage]:
     lead_score = state.get("lead_score", 0)
     extracted_data = state.get("extracted_data", {})
     
+    # Add contact name from GHL if available and not already in extracted_data
+    contact_name = state.get("contact_name", "")
+    if contact_name and not extracted_data.get("name"):
+        extracted_data["name"] = contact_name
+        logger.info(f"Carlos: Added contact name from GHL: {contact_name}")
+    
     # Get messages to analyze conversation stage
     messages = state.get("messages", [])
     

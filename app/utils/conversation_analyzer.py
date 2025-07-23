@@ -120,7 +120,36 @@ def analyze_conversation_state(messages: List[BaseMessage], agent_name: str = No
     
     # Check for name
     name_phrases = ['me llamo', 'mi nombre', 'soy', 'mucho gusto']
+    name_found = False
+    
+    # Direct name phrases
     if any(phrase in all_content for phrase in name_phrases):
+        name_found = True
+    
+    # Check if AI asked for name and human responded with potential name
+    if not name_found and len(analysis["agent_messages"]) > 0 and len(analysis["customer_messages"]) > 0:
+        # Check if last AI message asked for name
+        last_ai = analysis["agent_messages"][-1] if analysis["agent_messages"] else ""
+        name_questions = ['tu nombre', 'cómo te llamas', 'cuál es tu nombre', 'your name', 'como te llamas']
+        
+        if any(question in last_ai for question in name_questions):
+            # Check if last customer message could be a name (1-3 words, capitalized)
+            last_customer = analysis["last_customer_message"].strip()
+            words = last_customer.split()
+            
+            # Simple heuristic: 1-3 words, starts with capital letter (in original case)
+            if 1 <= len(words) <= 3 and len(last_customer) > 1:
+                # Get original message to check capitalization
+                for msg in reversed(messages):
+                    if (isinstance(msg, dict) and msg.get('type') == 'human') or \
+                       (hasattr(msg, '__class__') and 'Human' in msg.__class__.__name__):
+                        original_content = msg.get('content', '') if isinstance(msg, dict) else getattr(msg, 'content', '')
+                        if original_content.strip() and original_content[0].isupper():
+                            name_found = True
+                            break
+                        break
+    
+    if name_found:
         analysis["topics_discussed"].append("name")
         if "name" in analysis["pending_info"]:
             analysis["pending_info"].remove("name")
