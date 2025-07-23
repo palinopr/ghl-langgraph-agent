@@ -6,6 +6,7 @@ from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from app.utils.simple_logger import get_logger
 from app.tools.ghl_client_simple import SimpleGHLClient
 from app.tools.conversation_loader import ConversationLoader
+from app.state.message_manager import MessageManager
 
 logger = get_logger("receptionist")
 
@@ -91,9 +92,18 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
         
         logger.info(f"Total messages: {len(messages)}, Lead score: {lead_score}")
         
-        # Return updated state
+        # Get current messages in state to avoid duplication
+        current_state_messages = state.get("messages", [])
+        
+        # Use MessageManager to only return new messages
+        new_messages = MessageManager.set_messages(current_state_messages, messages)
+        
+        logger.info(f"Current state has {len(current_state_messages)} messages")
+        logger.info(f"Returning {len(new_messages)} new messages to avoid duplication")
+        
+        # Return updated state with only new messages
         return {
-            "messages": messages,  # Only GHL messages, no duplicates!
+            "messages": new_messages,  # Only new messages due to append reducer
             "contact_info": contact_info or {},
             "previous_custom_fields": custom_fields,
             "lead_score": lead_score,

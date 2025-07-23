@@ -8,6 +8,7 @@ from langgraph.prebuilt import create_react_agent
 from langchain_core.tools import tool
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
+from app.state.message_manager import MessageManager
 
 class MinimalState(TypedDict):
     """Minimal state for supervisor agent"""
@@ -133,9 +134,15 @@ async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
         result = await supervisor.ainvoke(state)
         
         # Extract routing from result
+        current_messages = state.get("messages", [])
+        result_messages = result.get("messages", [])
+        
+        # Only keep new messages added by supervisor (tool calls)
+        new_messages = MessageManager.set_messages(current_messages, result_messages)
+        
         routing_update = {
             "supervisor_complete": True,
-            "messages": result.get("messages", [])
+            "messages": new_messages  # Only new messages to avoid duplication
         }
         
         # Find handoff in messages

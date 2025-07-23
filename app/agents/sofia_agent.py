@@ -20,6 +20,7 @@ from app.agents.base_agent import (
     extract_data_status,
     create_error_response
 )
+from app.state.message_manager import MessageManager
 
 logger = get_logger("sofia_v2_fixed")
 
@@ -156,9 +157,14 @@ async def sofia_node(state: Dict[str, Any]) -> Dict[str, Any]:
         agent = create_sofia_agent_fixed()
         result = await agent.ainvoke(state)
         
+        # Only return new messages to avoid duplication
+        current_messages = state.get("messages", [])
+        result_messages = result.get("messages", [])
+        new_messages = MessageManager.set_messages(current_messages, result_messages)
+        
         # Update state
         return {
-            "messages": result.get("messages", []),
+            "messages": new_messages,  # Only new messages
             "appointment_status": result.get("appointment_status"),
             "appointment_id": result.get("appointment_id"),
             "current_agent": "sofia"

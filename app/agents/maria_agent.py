@@ -22,6 +22,7 @@ from app.agents.base_agent import (
     create_error_response,
     get_base_contact_info
 )
+from app.state.message_manager import MessageManager
 
 logger = get_logger("maria")
 
@@ -155,11 +156,18 @@ async def maria_node(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
         # Invoke agent with proper state
         result = await agent.ainvoke(agent_state)
         
-        # Memory manager removed - responses handled by state
+        # Only return new messages to avoid duplication
+        current_messages = state.get("messages", [])
+        result_messages = result.get("messages", [])
+        new_messages = MessageManager.set_messages(current_messages, result_messages)
         
         logger.info("Maria completed successfully with isolated memory")
         
-        return result  # filter_agent_result removed
+        # Return only new messages
+        return {
+            "messages": new_messages,
+            "current_agent": "maria"
+        }
         
     except Exception as e:
         logger.error(f"Error in Maria memory-aware: {str(e)}", exc_info=True)
