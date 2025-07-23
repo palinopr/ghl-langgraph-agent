@@ -10,7 +10,7 @@ from datetime import datetime
 from functools import lru_cache
 from langchain_core.messages import AnyMessage, AIMessage
 from langgraph.types import Command
-from app.state.minimal_state import MinimalState
+# Use Dict instead of MinimalState since we removed the state file
 from app.utils.simple_logger import get_logger
 
 logger = get_logger("intelligence_analyzer")
@@ -509,7 +509,7 @@ class IntelligenceAnalyzer:
         self.scorer = LeadScorer()
         self.budget_detector = BudgetConfirmationDetector()
         
-    async def analyze(self, state: MinimalState) -> Dict[str, Any]:
+    async def analyze(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
         Analyze conversation and extract intelligence
         
@@ -623,7 +623,7 @@ class IntelligenceAnalyzer:
 
 
 # Create node for LangGraph workflow
-async def intelligence_node(state: MinimalState) -> Dict[str, Any]:
+async def intelligence_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Intelligence analysis node for workflow"""
     from app.utils.tracing import log_feedback, TracedOperation
     analyzer = IntelligenceAnalyzer()

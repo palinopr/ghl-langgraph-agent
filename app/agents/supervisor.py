@@ -2,14 +2,23 @@
 Fixed Supervisor - ALWAYS routes, NEVER responds directly
 Ensures proper handoff to agents based on lead scores
 """
-from typing import Dict, Any, List, Optional, Literal
+from typing import Dict, Any, List, Optional, Literal, TypedDict, Annotated
 from langchain_core.messages import AnyMessage, BaseMessage, ToolMessage, AIMessage
 from langgraph.prebuilt import create_react_agent
+from langchain_core.tools import tool
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
-from app.state.minimal_state import MinimalState
-from langchain_core.tools import tool
-from typing_extensions import Annotated
+
+class MinimalState(TypedDict):
+    """Minimal state for supervisor agent"""
+    messages: Annotated[List[BaseMessage], lambda x, y: x + y]
+    lead_score: int
+    next_agent: str
+    agent_task: str
+    supervisor_complete: bool
+    needs_escalation: bool
+    escalation_reason: str
+    should_end: bool
 
 logger = get_logger("supervisor")
 

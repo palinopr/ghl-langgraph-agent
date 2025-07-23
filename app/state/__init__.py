@@ -1,4 +1,4 @@
-"""State module - exports minimal state for production use"""
-from app.state.minimal_state import MinimalState
+"""State module - exports state definitions"""
 
-__all__ = ["MinimalState"]
+# Empty for now since we define ProductionState directly in workflow.py
+__all__ = []
