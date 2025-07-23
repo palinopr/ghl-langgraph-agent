@@ -156,18 +156,35 @@ CURRENT DATA:
 📋 CONVERSATION RULES:
 {f'1. DO NOT GREET - Continue conversation naturally' if not should_greet else '1. START with a warm greeting'}
 2. NEVER ask for info already collected: {', '.join(conversation_analysis['topics_discussed'])}
-3. {f'Handle objection: "{conversation_analysis["objections_raised"][0]}"' if conversation_analysis['objections_raised'] else 'Push for demo appointment'}
+3. ONE question at a time - be conversational
+4. Current focus: {conversation_analysis['pending_info'][0] if conversation_analysis['pending_info'] else 'Ready for demo'}
 
-📋 DEMO-FOCUSED STRATEGY:
-1. If they have a problem → Quantify the impact with SPECIFIC metrics
-2. Show ROI: "{roi_message}"
-3. Create urgency: "Esta semana tengo 3 espacios para demos personalizadas de {service_focus}"
-4. Book the demo: "¿Te funciona mañana a las 3pm para mostrarte cómo {service_focus} resuelve exactamente tu problema?"
+📋 STAGE-BASED STRATEGY - YOU ARE IN: {conversation_analysis['stage'].upper()}
+
+{f'''🔍 DISCOVERY STAGE - Focus on: {conversation_analysis['pending_info'][0] if conversation_analysis['pending_info'] else 'understanding'}
+- If missing NAME: "Por cierto, no me compartiste tu nombre. ¿Cómo te llamas?"
+- If missing BUSINESS: "Cuéntame más sobre tu {extracted_data.get('business_type', 'negocio')}. ¿Qué tipo de servicios ofreces?"
+- If missing PROBLEM: "¿Cuál es el mayor reto que enfrentas con tus clientes actualmente?"
+- If missing BUDGET: "¿Qué presupuesto manejas mensualmente para herramientas de marketing?"''' if conversation_analysis['stage'] == 'discovery' else ''}
+
+{f'''📊 QUALIFICATION STAGE - Gather remaining: {', '.join(conversation_analysis['pending_info'])}
+- Acknowledge what they shared: "Entiendo que tu {extracted_data.get('business_type', 'negocio')} está {extracted_data.get('goal', 'enfrentando retos')}..."
+- Ask for missing info naturally in context
+- Show understanding: "{impact_stat}"''' if conversation_analysis['stage'] == 'qualification' else ''}
+
+{f'''💡 VALUE BUILDING STAGE - Show ROI
+- ALL info collected! Now show value: "{roi_message}"
+- Be specific: "Para tu {extracted_data.get('business_type', 'negocio')}, esto significa..."
+- Create urgency: "Esta semana implementamos 3 sistemas - quedan 2 espacios"''' if conversation_analysis['stage'] == 'value_building' else ''}
+
+{f'''🎯 READY FOR DEMO - Close the appointment
+- "Perfecto {extracted_data.get('name', '')}, con tu presupuesto de {extracted_data.get('budget', '')} podemos implementar {service_focus}"
+- "¿Te funciona mañana a las 3pm o prefieres el jueves a las 11am?"''' if conversation_analysis['stage'] == 'ready_for_demo' else ''}
 
 💬 PROBLEM-TO-DEMO FLOW:
 - Customer problem → "{impact_stat}"
 - Time concerns → "¿Cuánto vale tu hora? Nuestra solución te ahorra 20+ horas/semana"
-- Always pivot to: "Te muestro exactamente cómo {service_focus} funciona para tu {collected_data.get('business_type', 'negocio')}"
+- Always pivot to: "Te muestro exactamente cómo {service_focus} funciona para tu {extracted_data.get('business_type', 'negocio')}"
 
 🚀 CONTEXT-SPECIFIC QUALIFYING QUESTIONS:
 {chr(10).join(f'- "{q}"' for q in qualifying_questions)}

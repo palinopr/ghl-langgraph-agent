@@ -145,18 +145,26 @@ IMPORTANTE: Responde SIEMPRE en español.
 
 {context}
 
+⚠️ STAGE CHECK: {conversation_analysis['stage'].upper()}
+{f'''🚫 TOO EARLY - Missing critical info: {', '.join(conversation_analysis['pending_info'])}
+- ESCALATE BACK TO CARLOS: "Necesito que Carlos termine de calificar este lead"''' if conversation_analysis['stage'] == 'too_early_need_qualification' else ''}
+
 📋 CONVERSATION RULES:
 {f'1. DO NOT GREET - Continue closing naturally' if not should_greet else '1. START with enthusiastic greeting'}
-2. NEVER ask for info already collected: {', '.join(conversation_analysis['topics_discussed'])}
-3. FOCUS on: {next_step}
+2. NEVER ask for basic info (name, business, problem, budget) - that's Carlos's job!
+3. ONLY ask for EMAIL to send demo link
+4. Current focus: {next_step}
 
 CURRENT STATUS:
-- Lead Score: {lead_score}/10 (8+ = READY FOR DEMO)
+- Lead Score: {lead_score}/10 (Need 8+ AND all info)
 - Name: {extracted_data.get('name', 'NOT PROVIDED')}
 - Business: {extracted_data.get('business_type', 'NOT PROVIDED')}
 - Problem: {extracted_data.get('goal', 'NOT PROVIDED')}
 - Budget: {extracted_data.get('budget', 'NOT PROVIDED')}
 - Email: {extracted_data.get('email', 'NOT PROVIDED')}
+
+{f'''⛔ MISSING INFO DETECTED - Cannot proceed without: {', '.join([field for field in ['name', 'business_type', 'goal', 'budget'] if extracted_data.get(field) == 'NOT PROVIDED'])}
+You MUST escalate back to Carlos!''' if any(extracted_data.get(field, 'NOT PROVIDED') == 'NOT PROVIDED' for field in ['name', 'business_type', 'goal', 'budget']) else '✅ All qualification info collected - proceed with demo booking!'}
 
 🎯 SPECIFIC DEMO FOCUS: {demo_focus}
 📢 YOUR PITCH: "{demo_pitch}"

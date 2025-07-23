@@ -25,7 +25,7 @@ def analyze_conversation_state(messages: List[BaseMessage], agent_name: str = No
         "exchange_count": 0,
         "has_greeted": False,
         "topics_discussed": [],
-        "pending_info": ["name", "business_type", "specific_problem", "email"],
+        "pending_info": ["name", "business_type", "specific_problem", "budget", "email"],
         "customer_messages": [],
         "agent_messages": [],
         "last_customer_message": "",
@@ -116,9 +116,11 @@ def analyze_conversation_state(messages: List[BaseMessage], agent_name: str = No
             analysis["pending_info"].remove("name")
     
     # Check for budget discussions
-    budget_keywords = ['presupuesto', 'precio', 'costo', 'inversión', 'pagar', 'budget']
+    budget_keywords = ['presupuesto', 'precio', 'costo', 'inversión', 'pagar', 'budget', '$', 'dollar', 'peso']
     if any(keyword in all_content for keyword in budget_keywords):
         analysis["topics_discussed"].append("budget")
+        if "budget" in analysis["pending_info"]:
+            analysis["pending_info"].remove("budget")
     
     # Check for objections
     objection_phrases = [
@@ -133,28 +135,45 @@ def analyze_conversation_state(messages: List[BaseMessage], agent_name: str = No
     # Determine conversation stage based on agent
     if agent_name == "maria":
         # Maria stages: discovery → qualification → handoff
-        if len(analysis["topics_discussed"]) == 0:
+        # Maria needs at least name, business_type, and specific_problem before handoff
+        required_for_handoff = ["name", "business_type", "specific_problem"]
+        collected = [info for info in required_for_handoff if info in analysis["topics_discussed"]]
+        
+        if len(collected) == 0:
             analysis["stage"] = "discovery"
-        elif len(analysis["topics_discussed"]) >= 2:
-            analysis["stage"] = "ready_for_handoff"
-        else:
+        elif len(collected) < 3:
             analysis["stage"] = "initial_qualification"
+        else:
+            analysis["stage"] = "ready_for_handoff"
     
     elif agent_name == "carlos":
         # Carlos stages: qualification → value_building → demo_push
-        if "specific_problem" not in analysis["topics_discussed"]:
-            analysis["stage"] = "problem_discovery"
-        elif analysis["demo_attempts"] == 0:
+        # Carlos needs ALL info before moving to demo
+        required_info = ["name", "business_type", "specific_problem", "budget"]
+        collected_info = [info for info in required_info if info in analysis["topics_discussed"]]
+        
+        if len(collected_info) < 2:
+            analysis["stage"] = "discovery"
+        elif len(collected_info) < 4:
+            analysis["stage"] = "qualification"
+        elif len(collected_info) == 4 and analysis["demo_attempts"] == 0:
             analysis["stage"] = "value_building"
-        elif analysis["demo_attempts"] >= 1 and analysis["objections_raised"]:
+        elif analysis["objections_raised"]:
             analysis["stage"] = "objection_handling"
-        else:
+        elif analysis["demo_attempts"] >= 1:
             analysis["stage"] = "demo_closing"
+        else:
+            analysis["stage"] = "ready_for_demo"
     
     elif agent_name == "sofia":
-        # Sofia stages: demo_scheduling → confirmation → followup
-        if "email" not in analysis["topics_discussed"]:
-            analysis["stage"] = "contact_collection"
+        # Sofia stages: should only work when we have all info
+        required_info = ["name", "business_type", "specific_problem", "budget"]
+        collected_info = [info for info in required_info if info in analysis["topics_discussed"]]
+        
+        if len(collected_info) < 4:
+            analysis["stage"] = "too_early_need_qualification"
+        elif "email" not in analysis["topics_discussed"]:
+            analysis["stage"] = "email_collection"
         elif analysis["demo_attempts"] == 0:
             analysis["stage"] = "demo_scheduling"
         else:

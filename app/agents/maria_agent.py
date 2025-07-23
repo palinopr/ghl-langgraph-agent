@@ -153,29 +153,35 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
 - Problem: {extracted_data.get('goal', 'NOT PROVIDED')}
 - Budget: {extracted_data.get('budget', 'NOT PROVIDED')}
 
-📋 CONVERSATION STRATEGY BASED ON STAGE:
+📋 CONVERSATION STRATEGY - STAGE: {conversation_analysis['stage'].upper()}
 
-{f'''STAGE: {conversation_analysis["stage"].upper()}
-- Status: {conversation_analysis["status"]}
-- DO NOT GREET''' if conversation_analysis["has_greeted"] else '''STAGE: {conversation_analysis["stage"].upper()}
-- Status: {conversation_analysis["status"]}
-- START with greeting'''}
+{f'DO NOT GREET - Already greeted' if conversation_analysis['has_greeted'] else 'START with warm greeting'}
 
-1. NEVER repeat greetings if already greeted
-2. NEVER ask for data we already have: {', '.join(conversation_analysis['topics_discussed']) if conversation_analysis['topics_discussed'] else 'none yet'}
-3. FOCUS on getting: {', '.join(conversation_analysis['pending_info']) if conversation_analysis['pending_info'] else 'move to closing'}
-4. {f'IMMEDIATELY acknowledge their {extracted_data.get("business_type", "")} problem' if extracted_data.get('business_type') else 'DISCOVER their business type'}
+🎯 CURRENT PRIORITY: {conversation_analysis['pending_info'][0].upper() if conversation_analysis['pending_info'] else 'ESCALATE TO CARLOS'}
 
-💬 CONTEXT-SPECIFIC RESPONSES:
-- Restaurant losing customers → "Entiendo perfectamente. Con nuestro {specific_solution}, podrías recuperar hasta un 30% de clientes inactivos"
-- Busy with messages → "¡Exacto! Nuestro {specific_solution} puede ahorrarte 3-4 horas diarias"
-- Retail inquiries → "Sí, nuestro {specific_solution} aumenta las ventas hasta un 40%"
-- Service appointments → "Claro, con nuestro {specific_solution} reduces no-shows en un 60%"
+📋 STEP-BY-STEP APPROACH:
+1. NEVER ask for info already collected: {', '.join(conversation_analysis['topics_discussed']) if conversation_analysis['topics_discussed'] else 'nothing yet'}
+2. ONE question at a time - be natural and conversational
+3. Next info needed: {conversation_analysis['pending_info'][0] if conversation_analysis['pending_info'] else 'All collected!'}
 
-🚀 DEMO BOOKING APPROACH:
-- Be SPECIFIC: "Te muestro cómo {specific_solution} funciona para tu {extracted_data.get('business_type', 'negocio')}"
-- Create urgency: "Esta semana tengo 2 espacios disponibles para mostrarte exactamente cómo resolver {problem_focus}"
-- "¿Prefieres mañana a las 10am o jueves a las 3pm para ver cómo automatizar esto?"
+{f'''🔍 DISCOVERY STAGE - Focus: {conversation_analysis['pending_info'][0] if conversation_analysis['pending_info'] else 'understanding'}
+- If NAME missing: "Por cierto, ¿cuál es tu nombre?"
+- If BUSINESS missing: "¿Qué tipo de negocio tienes?"
+- If PROBLEM missing: "¿Cuál es el principal reto que enfrentas con tus clientes?"
+- If BUDGET missing: "¿Qué presupuesto manejas para herramientas de marketing?"''' if conversation_analysis['stage'] == 'discovery' else ''}
+
+{f'''📊 INITIAL QUALIFICATION - Acknowledge & Ask Next
+- "Entiendo {extracted_data.get('name', '')}, tu {extracted_data.get('business_type', 'negocio')} necesita {extracted_data.get('goal', 'mejorar')}..."
+- Ask for missing: {conversation_analysis['pending_info'][0] if conversation_analysis['pending_info'] else 'ready to escalate'}''' if conversation_analysis['stage'] == 'initial_qualification' else ''}
+
+{f'''🚀 READY FOR HANDOFF - You have basics, escalate!
+- "Perfecto {extracted_data.get('name', '')}, con lo que me compartes sobre tu {extracted_data.get('business_type', 'negocio')}..."
+- "Te voy a conectar con Carlos, nuestro especialista en {service_context}"''' if conversation_analysis['stage'] == 'ready_for_handoff' else ''}
+
+💬 CONTEXT-AWARE RESPONSES (Only AFTER getting basic info):
+- If restaurant + losing customers → Acknowledge: "Entiendo, perder clientes es frustrante. ¿Cuántos clientes calculas que pierdes al mes?"
+- If busy + messages → Relate: "Sí, responder mensajes consume mucho tiempo. ¿Cuántas horas al día dedicas a WhatsApp?"
+- Always tie back to their specific situation
 
 ⚡ CRITICAL RULES:
 - Lead score 0-4 only (5+ → escalate immediately)
