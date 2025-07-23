@@ -116,8 +116,25 @@ Remember: You're not just collecting data - you're solving their WhatsApp commun
     # Only include the current message to prevent duplication
     # create_react_agent returns all input messages plus its response
     # So we only pass the latest message to avoid exponential growth
-    recent_messages = messages[-1:] if messages else []
-    return [{"role": "system", "content": system_prompt}] + recent_messages
+    
+    # First, find the last valid message (HumanMessage or AIMessage)
+    # Skip ToolMessage and other non-standard message types that OpenAI can't handle
+    valid_message = None
+    for msg in reversed(messages):
+        # Check for HumanMessage type
+        if hasattr(msg, '__class__') and 'Human' in msg.__class__.__name__:
+            valid_message = msg
+            break
+        # Check for AIMessage type
+        elif hasattr(msg, '__class__') and 'AI' in msg.__class__.__name__:
+            valid_message = msg
+            break
+        # Skip ToolMessage and other types
+    
+    # Include the valid message if found
+    filtered_messages = [valid_message] if valid_message else []
+        
+    return [{"role": "system", "content": system_prompt}] + filtered_messages
 
 
 async def maria_node(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
