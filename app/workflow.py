@@ -100,7 +100,7 @@ def route_from_agent(state: ProductionState) -> Literal["responder", "supervisor
 workflow_graph = StateGraph(ProductionState)
 
 # Add all nodes
-workflow_graph.add_node("thread_mapper", thread_mapper_node)
+workflow_graph.add_node("thread_mapper", thread_id_mapper_node)
 workflow_graph.add_node("receptionist", receptionist_node)  
 workflow_graph.add_node("intelligence", intelligence_node)
 workflow_graph.add_node("supervisor", supervisor_node)
