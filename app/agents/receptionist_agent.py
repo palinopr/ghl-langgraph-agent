@@ -5,7 +5,6 @@ from typing import Dict, Any, List
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from app.utils.simple_logger import get_logger
 from app.tools.ghl_client_simple import SimpleGHLClient
-from app.tools.conversation_loader import ConversationLoader
 from app.state.message_manager import MessageManager
 from app.utils.debug_helpers import log_state_transition, validate_state
 
@@ -55,7 +54,6 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
         
         # Initialize GHL client
         ghl_client = SimpleGHLClient()
-        loader = ConversationLoader(ghl_client)
         
         # Load conversation history from GHL ONLY
         messages = []

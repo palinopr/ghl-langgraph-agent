@@ -529,7 +529,17 @@ class IntelligenceAnalyzer:
         from app.utils.message_utils import get_trimmed_messages
         messages = get_trimmed_messages(messages, config_name="extended")
             
-        current_message = messages[-1].content if messages else ""
+        # Handle both dict and BaseMessage formats
+        if messages:
+            last_msg = messages[-1]
+            if isinstance(last_msg, dict):
+                current_message = last_msg.get('content', '')
+            elif hasattr(last_msg, 'content'):
+                current_message = last_msg.content
+            else:
+                current_message = str(last_msg)
+        else:
+            current_message = ""
         
         # Get previous score and data
         previous_score = state.get("lead_score", 0)

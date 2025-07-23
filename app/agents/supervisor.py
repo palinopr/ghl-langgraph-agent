@@ -107,12 +107,11 @@ REMEMBER: ONE TOOL CALL, THEN STOP IMMEDIATELY!"""
         
         return [{"role": "system", "content": formatted_system}] + messages
     
-    # Create agent - use state_modifier for production compatibility
+    # Create agent - without state_modifier for compatibility
     agent = create_react_agent(
         model=model,
         tools=tools,
-        state_schema=MinimalState,
-        state_modifier=build_prompt
+        state_schema=MinimalState
     )
     
     return agent
