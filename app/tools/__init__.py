@@ -2,7 +2,7 @@
 Tool modules for agents
 Production tools with modernized patterns
 """
-from app.tools.agent_tools_modernized import (
+from app.tools.agent_tools import (
     get_contact_details_with_task,
     escalate_to_supervisor,
     update_contact_with_context,
