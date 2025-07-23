@@ -71,51 +71,43 @@ def handoff_to_maria(
 
 def create_supervisor_with_tools():
     """Create supervisor that ONLY routes using tools"""
-    model = create_openai_model(temperature=0.0)
+    base_model = create_openai_model(temperature=0.0)
     
     tools = [handoff_to_maria, handoff_to_carlos, handoff_to_sofia]
     
-    # CRITICAL: Prompt that forces tool usage ONLY
-    system_prompt = """You are a routing-only supervisor. You CANNOT talk to customers directly.
+    # Force the model to ALWAYS use tools, NEVER respond with text
+    model = base_model.bind(tool_choice="required")
+    
+    # CRITICAL: Prompt that focuses on routing decision only
+    system_prompt = """You are a routing engine. Your ONLY function is to select which agent handles this conversation.
 
-YOUR ONLY TASK: Use ONE handoff tool based on the lead score, then STOP.
+Lead Score: {lead_score}
 
-CRITICAL RULES:
-1. Use EXACTLY ONE handoff tool - no more, no less
-2. After using the tool, YOU ARE DONE - do not continue
-3. NEVER respond to the customer directly
-4. NEVER use multiple tools or analyze further
-5. ONE TOOL CALL ONLY, THEN STOP
+ROUTING DECISION:
+- Score 0-4: Use handoff_to_maria
+- Score 5-7: Use handoff_to_carlos
+- Score 8-10: Use handoff_to_sofia
 
-ROUTING BASED ON SCORE:
-- Score 0-4 or unknown → Use handoff_to_maria ONCE
-- Score 5-7 → Use handoff_to_carlos ONCE
-- Score 8-10 → Use handoff_to_sofia ONCE
-
-Current Lead Score: {lead_score}
-
-Use the handoff tool with a Spanish task description, then STOP.
-Example: handoff_to_maria("Responder al saludo del cliente")
-
-REMEMBER: ONE TOOL CALL, THEN STOP IMMEDIATELY!"""
+Select the appropriate handoff tool based on the score above."""
     
     def build_prompt(state: MinimalState) -> List[AnyMessage]:
         lead_score = state.get("lead_score", 0)
-        messages = state.get("messages", [])
         
         # Format the system prompt with current score
         formatted_system = system_prompt.format(lead_score=lead_score)
         
-        return [{"role": "system", "content": formatted_system}] + messages
+        # Don't pass customer messages - supervisor doesn't need them
+        # This prevents the urge to respond to the customer
+        return [{"role": "system", "content": formatted_system}]
     
-    # Create agent - without state_modifier for compatibility
+    # Create agent without prompt function for now
     agent = create_react_agent(
         model=model,
         tools=tools,
         state_schema=MinimalState
     )
     
-    return agent
+    return agent, build_prompt  # Return both agent and prompt builder
 
 
 async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
@@ -130,8 +122,16 @@ async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"Supervisor processing - Lead score: {lead_score}")
         
         # Create and run supervisor
-        supervisor = create_supervisor_with_tools()
-        result = await supervisor.ainvoke(state)
+        supervisor, build_prompt = create_supervisor_with_tools()
+        
+        # Build a custom state with only the system prompt
+        prompt_messages = build_prompt(state)
+        supervisor_state = {
+            "messages": prompt_messages,
+            "remaining_steps": state.get("remaining_steps", 10)
+        }
+        
+        result = await supervisor.ainvoke(supervisor_state)
         
         # Extract routing from result
         current_messages = state.get("messages", [])
@@ -148,19 +148,31 @@ async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
         # Find handoff in messages
         handoff_found = False
         
+        # Filter messages to ensure NO direct responses from supervisor
+        filtered_messages = []
         for msg in result.get("messages", []):
             # Check if AI message has tool calls
             if isinstance(msg, AIMessage):
                 if hasattr(msg, 'tool_calls') and msg.tool_calls:
                     logger.info(f"✅ Supervisor used {len(msg.tool_calls)} tool(s)")
                     handoff_found = True
+                    # Keep the message but remove any content
+                    msg.content = ""  # Clear content to ensure no text response
+                    filtered_messages.append(msg)
                 elif msg.content and not msg.tool_calls:
                     # CRITICAL ERROR - supervisor responded directly!
                     logger.error(f"❌ CRITICAL: Supervisor responded directly: {msg.content[:100]}")
-                    # Remove this message from output
-                    routing_update["messages"] = [m for m in routing_update["messages"] if m != msg]
-            
-            # Check for handoff pattern
+                    # DO NOT include this message at all
+                    continue
+            else:
+                # Keep non-AI messages (like ToolMessage)
+                filtered_messages.append(msg)
+        
+        # Update messages with filtered version
+        routing_update["messages"] = MessageManager.set_messages(current_messages, filtered_messages)
+        
+        # Check for handoff pattern in filtered messages
+        for msg in filtered_messages:
             if hasattr(msg, 'content') and isinstance(msg.content, str) and msg.content.startswith("HANDOFF:"):
                 parts = msg.content.split(":", 2)
                 if len(parts) >= 3:

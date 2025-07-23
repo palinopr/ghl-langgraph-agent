@@ -234,11 +234,75 @@ def save_important_context(
         }
 
 
+@tool
+def track_lead_progress(
+    contact_id: str,
+    score_change: Optional[str] = None,
+    data_collected: Optional[str] = None,
+    next_steps: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Track lead progress and score changes in GHL.
+    Use this when the lead score changes or important progress is made.
+    
+    Args:
+        contact_id: GHL contact ID
+        score_change: Description of score change (e.g., "Score: 3→5 por interés en demo")
+        data_collected: New data collected (e.g., "Nombre: Juan, Negocio: Restaurante")
+        next_steps: Next steps planned (e.g., "Agendar demo para mañana")
+    
+    Returns:
+        Tracking result
+    """
+    logger.info(f"Tracking progress for {contact_id}")
+    
+    try:
+        # Build progress note
+        note_parts = []
+        
+        if score_change:
+            note_parts.append(f"📊 {score_change}")
+        
+        if data_collected:
+            note_parts.append(f"📋 Datos: {data_collected}")
+            
+        if next_steps:
+            note_parts.append(f"➡️ Siguiente: {next_steps}")
+        
+        if note_parts:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+            note = f"[{timestamp}] " + " | ".join(note_parts)
+            
+            # Add note to GHL
+            result = ghl_client.add_contact_note(contact_id, note)
+            
+            return {
+                "success": True,
+                "contact_id": contact_id,
+                "progress_tracked": note
+            }
+        else:
+            return {
+                "success": True,
+                "contact_id": contact_id,
+                "message": "No progress to track"
+            }
+            
+    except Exception as e:
+        logger.error(f"Error tracking progress: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "contact_id": contact_id
+        }
+
+
 # Export all tools
 __all__ = [
     "escalate_to_supervisor",
     "get_contact_details_with_task",
     "update_contact_with_context",
     "book_appointment_with_instructions",
-    "save_important_context"
+    "save_important_context",
+    "track_lead_progress"
 ]

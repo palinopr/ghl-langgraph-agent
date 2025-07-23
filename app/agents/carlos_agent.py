@@ -10,7 +10,8 @@ from app.tools.agent_tools import (
     get_contact_details_with_task,
     update_contact_with_context,
     escalate_to_supervisor,
-    save_important_context
+    save_important_context,
+    track_lead_progress
 )
 from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
@@ -95,24 +96,42 @@ Remember: Don't just qualify - show them why they NEED this demo NOW!"""
     # create_react_agent returns all input messages plus its response
     messages = state.get("messages", [])
     
-    # First, find the last valid message (HumanMessage or AIMessage)
-    # Skip ToolMessage and other non-standard message types that OpenAI can't handle
-    valid_message = None
+    # Find the last customer message to process
+    customer_message = None
     for msg in reversed(messages):
-        # Check for HumanMessage type
+        # Check for HumanMessage that's from a customer (no name attribute)
         if hasattr(msg, '__class__') and 'Human' in msg.__class__.__name__:
-            valid_message = msg
-            break
-        # Check for AIMessage type
-        elif hasattr(msg, '__class__') and 'AI' in msg.__class__.__name__:
-            valid_message = msg
-            break
-        # Skip ToolMessage and other types
+            # Skip if it has a name (means it's from an agent/system)
+            if not hasattr(msg, 'name') or not msg.name:
+                customer_message = msg
+                break
     
-    # Include the valid message if found
-    filtered_messages = [valid_message] if valid_message else []
+    # Build conversation history for context (excluding supervisor messages)
+    conversation_history = []
+    for msg in messages:
+        # Include customer messages (HumanMessage without name)
+        if hasattr(msg, '__class__') and 'Human' in msg.__class__.__name__:
+            if not hasattr(msg, 'name') or not msg.name:
+                conversation_history.append(f"Cliente: {msg.content}")
+        # Include agent responses (AIMessage with name that's not supervisor)
+        elif hasattr(msg, '__class__') and 'AI' in msg.__class__.__name__:
+            if hasattr(msg, 'name') and msg.name and msg.name != 'supervisor':
+                conversation_history.append(f"{msg.name.title()}: {msg.content}")
+    
+    # Add conversation history to prompt
+    history_context = ""
+    if conversation_history:
+        history_context = "\n\n💬 CONVERSATION HISTORY:"
+        for msg in conversation_history[-5:]:  # Show last 5 exchanges
+            history_context += f"\n{msg}"
+    
+    # Update system prompt with conversation history
+    system_prompt_with_history = system_prompt + history_context
+    
+    # Only pass the last customer message to avoid duplication
+    filtered_messages = [customer_message] if customer_message else []
         
-    return [{"role": "system", "content": system_prompt}] + filtered_messages
+    return [{"role": "system", "content": system_prompt_with_history}] + filtered_messages
 
 
 def create_carlos_agent_fixed():
@@ -123,7 +142,8 @@ def create_carlos_agent_fixed():
         get_contact_details_with_task,
         update_contact_with_context,
         escalate_to_supervisor,
-        save_important_context
+        save_important_context,
+        track_lead_progress
     ]
     
     agent = create_react_agent(

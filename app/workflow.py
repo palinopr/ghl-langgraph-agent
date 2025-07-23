@@ -61,8 +61,7 @@ class ProductionState(TypedDict):
 # Import all agent nodes
 from app.agents.thread_id_mapper import thread_id_mapper_node
 from app.agents.receptionist_agent import receptionist_node
-from app.intelligence.analyzer import intelligence_node
-from app.agents.supervisor import supervisor_node
+from app.agents.smart_router import smart_router_node
 from app.agents.maria_agent import maria_node
 from app.agents.carlos_agent import carlos_node
 from app.agents.sofia_agent import sofia_node
@@ -87,11 +86,11 @@ def route_from_supervisor(state: ProductionState) -> Literal["maria", "carlos", 
         return "end"
 
 
-def route_from_agent(state: ProductionState) -> Literal["responder", "supervisor"]:
-    """Route from agent - either to responder or back to supervisor"""
+def route_from_agent(state: ProductionState) -> Literal["responder", "smart_router"]:
+    """Route from agent - either to responder or back to smart_router"""
     if state.get("needs_escalation", False):
-        logger.info("Escalating back to supervisor")
-        return "supervisor"
+        logger.info("Escalating back to smart_router")
+        return "smart_router"
     
     return "responder"
 
@@ -102,8 +101,7 @@ workflow_graph = StateGraph(ProductionState)
 # Add all nodes
 workflow_graph.add_node("thread_mapper", thread_id_mapper_node)
 workflow_graph.add_node("receptionist", receptionist_node)  
-workflow_graph.add_node("intelligence", intelligence_node)
-workflow_graph.add_node("supervisor", supervisor_node)
+workflow_graph.add_node("smart_router", smart_router_node)
 workflow_graph.add_node("maria", maria_node)
 workflow_graph.add_node("carlos", carlos_node)
 workflow_graph.add_node("sofia", sofia_node)
@@ -114,13 +112,12 @@ workflow_graph.set_entry_point("thread_mapper")
 
 # Define edges
 workflow_graph.add_edge("thread_mapper", "receptionist")
-workflow_graph.add_edge("receptionist", "intelligence")
-workflow_graph.add_edge("intelligence", "supervisor")
+workflow_graph.add_edge("receptionist", "smart_router")
 
-# Supervisor routing
+# Smart router routing
 workflow_graph.add_conditional_edges(
-    "supervisor",
-    route_from_supervisor,
+    "smart_router",
+    route_from_supervisor,  # Reuse the same routing function
     {
         "maria": "maria",
         "carlos": "carlos",
@@ -137,7 +134,7 @@ for agent in ["maria", "carlos", "sofia"]:
         route_from_agent,
         {
             "responder": "responder",
-            "supervisor": "supervisor"
+            "smart_router": "smart_router"
         }
     )
 
