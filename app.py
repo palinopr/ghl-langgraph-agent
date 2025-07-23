@@ -26,10 +26,13 @@ if __name__ == "__main__":
     print(f"Debug endpoints available at http://localhost:{port}/debug")
     
     # Run the server
+    # Get reload setting from environment (default to False in production)
+    reload = os.environ.get("APP_ENV", "production").lower() == "development"
+    
     uvicorn.run(
         app, 
         host="0.0.0.0", 
         port=port,
-        reload=True,
+        reload=reload,
         log_level="info"
     )

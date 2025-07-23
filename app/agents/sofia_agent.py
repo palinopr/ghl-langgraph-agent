@@ -71,10 +71,59 @@ def sofia_prompt_fixed(state: SofiaState) -> list[AnyMessage]:
     elif has_name and has_business and has_budget and has_email:
         next_step = "OFFER_APPOINTMENT"
     
-    system_prompt = f"""You are Sofia, demo appointment closer for Main Outlet Media. 
+    # Get configurable business context
+    from app.config import get_settings
+    settings = get_settings()
+    
+    # Adapt demo pitch based on customer context
+    if settings.adapt_to_customer and current_message:
+        current_lower = current_message.lower()
+        
+        # Restaurant/Customer Retention
+        if any(word in current_lower for word in ['restaurante', 'restaurant', 'cliente', 'perder']):
+            demo_focus = "sistema de retención de clientes"
+            demo_pitch = "En 15 minutos te muestro cómo recuperar clientes perdidos automáticamente"
+            value_prop = "Imagina enviar ofertas personalizadas a clientes que no han regresado en 30 días"
+            urgency_message = "Esta semana implementamos 3 sistemas de retención - quedan 2 espacios"
+            
+        # Message Overload
+        elif any(word in current_lower for word in ['mensaje', 'whatsapp', 'ocupado', 'responder']):
+            demo_focus = "automatización de WhatsApp"
+            demo_pitch = "En 15 minutos te muestro cómo responder 1000 mensajes automáticamente"
+            value_prop = "Respuestas instantáneas 24/7 mientras duermes"
+            urgency_message = "Esta semana solo quedan 3 espacios para demos de WhatsApp"
+            
+        # Retail/Catalog
+        elif any(word in current_lower for word in ['tienda', 'producto', 'catálogo', 'venta']):
+            demo_focus = "catálogo digital automatizado"
+            demo_pitch = "En 15 minutos te muestro cómo vender 24/7 con catálogo en WhatsApp"
+            value_prop = "Tus clientes ven productos, precios y compran sin que estés presente"
+            urgency_message = "Esta semana lanzamos 3 catálogos digitales - quedan 2 espacios"
+            
+        # Service/Appointments
+        elif any(word in current_lower for word in ['servicio', 'cita', 'agenda', 'consulta']):
+            demo_focus = "sistema de agendamiento automático"
+            demo_pitch = "En 15 minutos te muestro cómo llenar tu agenda automáticamente"
+            value_prop = "Clientes agendan, confirman y reprograman sin tu intervención"
+            urgency_message = "Esta semana configuramos 3 sistemas de citas - queda 1 espacio"
+            
+        else:
+            # Generic from settings
+            demo_focus = settings.demo_type
+            demo_pitch = f"En 15 minutos te muestro exactamente cómo {settings.service_type} transforma tu negocio"
+            value_prop = "Automatización personalizada para tu industria específica"
+            urgency_message = "Esta semana solo me quedan 3 espacios"
+    else:
+        # Default values
+        demo_focus = settings.demo_type
+        demo_pitch = "En 15 minutos te muestro exactamente cómo capturar más clientes 24/7"
+        value_prop = "Sistema automatizado que trabaja mientras descansas"
+        urgency_message = "Esta semana solo me quedan 3 espacios"
+    
+    system_prompt = f"""You are Sofia, {demo_focus} closing specialist for {settings.company_name}. 
 IMPORTANTE: Responde SIEMPRE en español.
 
-🎯 YOUR GOAL: Close the DEMO APPOINTMENT - they're already qualified!
+🎯 YOUR GOAL: Close the {demo_focus.upper()} APPOINTMENT - they're already qualified!
 
 CURRENT STATUS:
 - Lead Score: {lead_score}/10 (8+ = READY FOR DEMO)
@@ -84,35 +133,35 @@ CURRENT STATUS:
 - Budget: {extracted_data.get('budget', 'NOT PROVIDED')}
 - Email: {extracted_data.get('email', 'NOT PROVIDED')}
 
-📋 DEMO CLOSING STRATEGY:
-1. If missing email → "Para enviarte el enlace de la demo, ¿cuál es tu correo?"
-2. If has all data → BOOK THE DEMO NOW
-3. Create urgency: "Esta semana solo me quedan 3 espacios"
-4. Be assumptive: "¿Te va mejor mañana a las 3pm o el jueves a las 11am?"
+🎯 SPECIFIC DEMO FOCUS: {demo_focus}
+📢 YOUR PITCH: "{demo_pitch}"
+💡 VALUE PROP: "{value_prop}"
+
+📋 CONTEXT-SPECIFIC CLOSING STRATEGY:
+1. If missing email → "Para enviarte el enlace de la demo de {demo_focus}, ¿cuál es tu correo?"
+2. If has all data → BOOK THE DEMO NOW with context-specific pitch
+3. Create urgency: "{urgency_message}"
+4. Be assumptive: "¿Te va mejor mañana a las 3pm o el jueves a las 11am para ver {demo_focus}?"
 
 🚀 APPOINTMENT BOOKING FLOW:
-- STEP 1: Use customer name and business if available for personalization
-- STEP 2: "En 15 minutos te muestro exactamente cómo capturar más clientes 24/7"
-- STEP 3: Use book_appointment_with_instructions tool
-- STEP 4: Confirm appointment was sent to their email
+- STEP 1: Acknowledge their specific problem
+- STEP 2: Present YOUR specific solution: "{demo_pitch}"
+- STEP 3: Emphasize value: "{value_prop}"
+- STEP 4: Use book_appointment_with_instructions tool
+- STEP 5: Confirm: "Perfecto {extracted_data.get('name', '')}, te envié los detalles de nuestra demo de {demo_focus}"
 
-💬 OBJECTION HANDLING:
-- "No tengo tiempo" → "Por eso mismo necesitas automatización. 15 minutos te ahorrarán 20 horas/semana"
-- "Necesito pensarlo" → "¿Qué dudas tienes? La demo es gratis y sin compromiso"
-- "Es muy caro" → "¿Cuánto pierdes por no responder a tiempo? La inversión se paga sola"
+💬 CONTEXT-AWARE OBJECTION HANDLING:
+- "No tengo tiempo" → "Por eso mismo necesitas {demo_focus}. 15 minutos te ahorrarán horas diarias"
+- "Necesito pensarlo" → "¿Qué dudas tienes sobre {demo_focus}? La demo es gratis y personalizada"
+- "Es muy caro" → "¿Cuánto pierdes por {extracted_data.get('goal', 'no optimizar')}? El {demo_focus} se paga solo"
 
 ⚠️ CRITICAL RULES:
-- Score 8+ = Your territory, CLOSE THE DEMO
+- Score 8+ = Your territory, CLOSE THE {demo_focus.upper()} DEMO
 - Score < 8 = Escalate immediately to Carlos
-- Don't collect data we already have
+- Always mention the SPECIFIC solution: {demo_focus}
 - Book appointments FAST - momentum is key
 
-AVAILABLE TOOLS:
-- book_appointment_with_instructions: Use this to book the demo
-- update_contact_with_context: Save any new information
-- escalate_to_router: Only if score < 8
-
-Remember: They're HOT leads - CLOSE THE DEMO!"""
+Remember: They need {demo_focus} - CLOSE THAT SPECIFIC DEMO!"""
     
     # Only include the current message to prevent duplication
     # create_react_agent returns all input messages plus its response

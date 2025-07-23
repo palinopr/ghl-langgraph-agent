@@ -328,6 +328,36 @@ class GHLClient:
             logger.error(f"✗ Failed to add note to contact {contact_id}")
         return result
     
+    # Appointment Methods
+    async def create_appointment(self, appointment_data: Dict[str, Any]) -> Optional[Dict]:
+        """
+        Create an appointment in GHL calendar
+        
+        Args:
+            appointment_data: Dict containing:
+                - calendarId: Calendar ID
+                - contactId: Contact ID
+                - title: Appointment title
+                - startTime: ISO format start time
+                - endTime: ISO format end time
+                - appointmentStatus: Status (e.g., "confirmed")
+                - assignedUserId: User ID
+                - notes: Optional notes
+                
+        Returns:
+            API response with appointment ID or None if error
+        """
+        return await self.api_call("POST", "/appointments", json=appointment_data)
+    
+    async def get_calendar_slots(self, calendar_id: str, start_date: str, end_date: str) -> Optional[Dict]:
+        """Get available calendar slots"""
+        params = {
+            "calendarId": calendar_id,
+            "startDate": start_date,
+            "endDate": end_date
+        }
+        return await self.api_call("GET", "/appointments/slots", params=params)
+    
     # Backwards compatibility methods
     async def get_contact_details(self, contact_id: str) -> Optional[Dict]:
         """Alias for get_contact"""

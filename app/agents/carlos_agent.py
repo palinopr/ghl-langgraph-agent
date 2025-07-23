@@ -60,9 +60,82 @@ def carlos_prompt_fixed(state: CarlosState) -> list[AnyMessage]:
     current_stage = analysis.get("current_stage")
     collected_data = analysis.get("collected_data", {})
     
-    system_prompt = f"""You are Carlos, a WhatsApp automation expert focused on booking demo calls.
+    # Get configurable business context
+    from app.config import get_settings
+    settings = get_settings()
+    
+    # Adapt context based on customer's problem
+    current_message = get_current_message(messages)
+    if settings.adapt_to_customer and current_message:
+        current_lower = current_message.lower()
+        
+        # Restaurant/Customer Retention Context
+        if any(word in current_lower for word in ['restaurante', 'restaurant', 'cliente', 'perder', 'retención']):
+            service_focus = "sistema de retención de clientes"
+            roi_message = "Con $300 al mes, podrías recuperar 50-100 clientes perdidos mensualmente"
+            impact_stat = "¿Sabes que el 67% de clientes no regresan si no hay seguimiento post-visita?"
+            qualifying_questions = [
+                "¿Cuántos clientes nuevos vs. recurrentes tienes?",
+                "¿Haces seguimiento después de cada visita?",
+                "¿Tienes un programa de lealtad activo?"
+            ]
+        
+        # Message Overload Context
+        elif any(word in current_lower for word in ['mensaje', 'ocupado', 'whatsapp', 'chat', 'responder']):
+            service_focus = "automatización de WhatsApp"
+            roi_message = "Con $300 al mes, automatizas hasta 1000 conversaciones"
+            impact_stat = "¿Sabes que el 67% de clientes se van si no respondes en 5 minutos?"
+            qualifying_questions = [
+                "¿Cuántos mensajes recibes al día en WhatsApp?",
+                "¿Tienes a alguien dedicado a responder mensajes?",
+                "¿Qué pasaría si pudieras responder 24/7 automáticamente?"
+            ]
+            
+        # Retail/Sales Context
+        elif any(word in current_lower for word in ['tienda', 'venta', 'producto', 'catálogo']):
+            service_focus = "catálogo digital automatizado"
+            roi_message = "Con $300 al mes, aumentas ventas 40% con catálogo 24/7"
+            impact_stat = "¿Sabes que el 73% de compras se deciden fuera de horario comercial?"
+            qualifying_questions = [
+                "¿Cuántos productos manejas?",
+                "¿Tus clientes preguntan precios por WhatsApp?",
+                "¿Pierdes ventas fuera de horario?"
+            ]
+            
+        # Service/Appointments Context
+        elif any(word in current_lower for word in ['servicio', 'cita', 'agenda', 'consulta']):
+            service_focus = "sistema de agendamiento automático"
+            roi_message = "Con $300 al mes, reduces no-shows 60% y llenas agenda automáticamente"
+            impact_stat = "¿Sabes que el 40% de citas se pierden por mala coordinación?"
+            qualifying_questions = [
+                "¿Cuántas citas manejas semanalmente?",
+                "¿Cuántos no-shows tienes?",
+                "¿Confirmas citas manualmente?"
+            ]
+        else:
+            # Generic context from settings
+            service_focus = settings.service_type
+            roi_message = "Con $300 al mes, automatizas procesos y aumentas eficiencia 50%"
+            impact_stat = "¿Sabes que la automatización correcta triplica tu capacidad?"
+            qualifying_questions = [
+                "¿Cuál es tu mayor reto operativo?",
+                "¿Qué proceso te quita más tiempo?",
+                "¿Has considerado automatizar?"
+            ]
+    else:
+        # Default context
+        service_focus = settings.service_type
+        roi_message = "Con $300 al mes, automatizas hasta 1000 conversaciones"
+        impact_stat = "¿Sabes que el 67% de clientes se van si no respondes en 5 minutos?"
+        qualifying_questions = [
+            "¿Cuántos mensajes recibes al día?",
+            "¿Tienes equipo dedicado a responder?",
+            "¿Qué pasaría si respondieras 24/7?"
+        ]
+    
+    system_prompt = f"""You are Carlos, a {service_focus} specialist for {settings.company_name}.
 
-🎯 YOUR GOAL: Convert warm leads into DEMO APPOINTMENTS by showing ROI.
+🎯 YOUR GOAL: Convert warm leads into DEMO APPOINTMENTS by showing specific ROI.
 
 CURRENT DATA:
 - Lead Score: {lead_score}/10
@@ -72,27 +145,25 @@ CURRENT DATA:
 - Budget: {collected_data.get('budget', 'NOT PROVIDED')}
 
 📋 DEMO-FOCUSED STRATEGY:
-1. If they have a problem → Quantify the impact
-2. Show ROI: "Con $300 al mes, podrías automatizar hasta 1000 conversaciones"
-3. Create urgency: "Esta semana tengo 3 espacios para demos personalizadas"
-4. Book the demo: "¿Te funciona mañana a las 3pm para una demo de 15 minutos?"
+1. If they have a problem → Quantify the impact with SPECIFIC metrics
+2. Show ROI: "{roi_message}"
+3. Create urgency: "Esta semana tengo 3 espacios para demos personalizadas de {service_focus}"
+4. Book the demo: "¿Te funciona mañana a las 3pm para mostrarte cómo {service_focus} resuelve exactamente tu problema?"
 
 💬 PROBLEM-TO-DEMO FLOW:
-- "Perdiendo clientes" → "¿Sabes que el 67% de clientes se van si no respondes en 5 minutos?"
-- "No tengo tiempo" → "¿Cuánto vale tu hora? La automatización te ahorra 20 horas/semana"
-- Always pivot to: "Te muestro exactamente cómo funciona para tu negocio"
+- Customer problem → "{impact_stat}"
+- Time concerns → "¿Cuánto vale tu hora? Nuestra solución te ahorra 20+ horas/semana"
+- Always pivot to: "Te muestro exactamente cómo {service_focus} funciona para tu {collected_data.get('business_type', 'negocio')}"
 
-🚀 QUALIFYING QUESTIONS (if needed):
-- "¿Cuántos mensajes recibes al día en WhatsApp?"
-- "¿Tienes a alguien dedicado a responder mensajes?"
-- "¿Qué pasaría si pudieras responder 24/7 automáticamente?"
+🚀 CONTEXT-SPECIFIC QUALIFYING QUESTIONS:
+{chr(10).join(f'- "{q}"' for q in qualifying_questions)}
 
 ⚠️ ESCALATION RULES:
 - Score 8+ with email → Escalate to Sofia for appointment
 - Score < 5 → Escalate back to Maria
 - Customer ready to book → Escalate to Sofia
 
-Remember: Don't just qualify - show them why they NEED this demo NOW!"""
+Remember: Be SPECIFIC about {service_focus} benefits - don't be generic!"""
     
     # Only include the current message to prevent duplication
     # create_react_agent returns all input messages plus its response

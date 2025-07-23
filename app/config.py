@@ -129,6 +129,24 @@ class Settings(BaseSettings):
     enable_performance_monitoring: bool = Field(default=True, env="ENABLE_PERFORMANCE_MONITORING")
     performance_log_interval: int = Field(default=300, env="PERFORMANCE_LOG_INTERVAL")  # seconds
     
+    # Business Context Settings (NEW - Configurable business context)
+    company_name: str = Field(default="Main Outlet Media", env="COMPANY_NAME")
+    service_type: str = Field(default="WhatsApp automation", env="SERVICE_TYPE")
+    service_description: str = Field(
+        default="automated WhatsApp communication to improve customer engagement",
+        env="SERVICE_DESCRIPTION"
+    )
+    target_problem: str = Field(default="communication challenges", env="TARGET_PROBLEM")
+    demo_type: str = Field(default="WhatsApp automation demo", env="DEMO_TYPE")
+    adapt_to_customer: bool = Field(default=True, env="ADAPT_TO_CUSTOMER")
+    
+    # Server Configuration (NEW - Replace hardcoded values)
+    server_host: str = Field(default="0.0.0.0", env="SERVER_HOST")
+    server_port: int = Field(default=8000, env="SERVER_PORT")
+    langgraph_url: str = Field(default="http://localhost:2024", env="LANGGRAPH_URL")
+    redis_host: str = Field(default="localhost", env="REDIS_HOST")
+    redis_port: int = Field(default=6379, env="REDIS_PORT")
+    
     class Config:
         env_file = ".env"
         case_sensitive = False

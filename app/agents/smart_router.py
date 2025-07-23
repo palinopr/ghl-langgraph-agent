@@ -148,7 +148,17 @@ class SmartRouter:
         # Get existing data
         existing_data = state.get("extracted_data", {})
         
-        prompt = f"""Analyze this WhatsApp conversation for lead qualification.
+        # Get business context
+        from app.config import get_settings
+        settings = get_settings()
+        
+        # Adapt analysis context based on customer needs
+        if settings.adapt_to_customer:
+            analysis_context = "customer conversation"
+        else:
+            analysis_context = f"{settings.service_type} conversation"
+        
+        prompt = f"""Analyze this {analysis_context} for lead qualification.
 
 Current message: {current_message}
 
@@ -161,13 +171,14 @@ Analyze and provide:
    - Business information provided
    - Urgency indicators
    - Budget discussions
+   - Problem clarity and fit with our solutions
    
 2. Extract any new information:
    - Name
    - Business type
    - Contact details (phone, email)
    - Budget range
-   - Specific needs/problems
+   - Specific needs/problems (IMPORTANT: Extract their ACTUAL problem)
    - Timeline/urgency
 
 3. Detect intent:
@@ -177,10 +188,13 @@ Analyze and provide:
    - appointment_interest
    - objection
    - confirmation
+   - problem_statement
 
 4. Assess urgency (low/medium/high)
 
 5. Sentiment (positive/neutral/negative)
+
+6. Problem match: Does their problem align with {settings.service_type}? (yes/no/maybe)
 
 Provide response as JSON:
 {{
@@ -192,12 +206,13 @@ Provide response as JSON:
         "email": "if found",
         "phone": "if found",
         "budget": "if found",
-        "goal": "if found",
+        "goal": "if found (ACTUAL customer problem)",
         "timeline": "if found"
     }},
     "intent": "detected intent",
     "urgency": "low/medium/high",
-    "sentiment": "positive/neutral/negative"
+    "sentiment": "positive/neutral/negative",
+    "problem_match": "yes/no/maybe"
 }}"""
 
         response = await self.model.ainvoke(prompt)
@@ -210,7 +225,8 @@ Provide response as JSON:
                 analysis = json.loads(json_match.group())
             else:
                 raise ValueError("No JSON found in response")
-        except:
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning(f"Failed to parse LLM response as JSON: {str(e)}")
             # Fallback analysis
             analysis = {
                 "lead_score": 1,
@@ -226,6 +242,27 @@ Provide response as JSON:
         for key, value in analysis.get("extracted_data", {}).items():
             if value and value != "if found" and value != "NOT PROVIDED":
                 merged_data[key] = value
+        
+        # Context-specific data enrichment
+        problem_match = analysis.get("problem_match", "maybe")
+        if settings.adapt_to_customer:
+            # If customer mentioned restaurant/food, update business type
+            if "restaurant" in merged_data.get("business_type", "").lower():
+                if not merged_data.get("goal"):
+                    merged_data["goal"] = "customer retention and engagement"
+                merged_data["industry"] = "food_service"
+            
+            # If they mention being busy with messages
+            elif any(word in current_message.lower() for word in ['mensaje', 'whatsapp', 'ocupado']):
+                if not merged_data.get("goal"):
+                    merged_data["goal"] = "automate message responses"
+                merged_data["industry"] = "general_business"
+                
+            # Adjust score based on problem match
+            if problem_match == "no" and analysis["lead_score"] > 3:
+                # Lower score if problem doesn't match our services
+                analysis["lead_score"] = max(3, analysis["lead_score"] - 2)
+                analysis["score_reason"] += " (Adjusted down - problem mismatch)"
         
         analysis["extracted_data"] = merged_data
         analysis["timestamp"] = self._get_timestamp()

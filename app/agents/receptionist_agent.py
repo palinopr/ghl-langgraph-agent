@@ -201,7 +201,8 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
             lead_score_str = custom_fields.get("wAPjuqxtfgKLCJqahjo1", "0")
             try:
                 lead_score = int(lead_score_str) if lead_score_str else 0
-            except:
+            except (ValueError, TypeError) as e:
+                logger.debug(f"Failed to parse lead score '{lead_score_str}': {str(e)}")
                 lead_score = 0
         
         logger.info(f"Total messages: {len(messages)}, Lead score: {lead_score}")

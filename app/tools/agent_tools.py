@@ -169,35 +169,108 @@ async def book_appointment_with_instructions(
     logger.info(f"Booking appointment for {contact_id}: {appointment_request}")
     
     try:
-        # TODO: Implement actual GHL calendar integration
-        # For now, return a mock response but be honest about it
-        logger.warning("Appointment booking not yet implemented - returning mock response")
+        from app.tools.calendar_slots import (
+            generate_available_slots,
+            parse_spanish_datetime,
+            find_matching_slot,
+            format_slot_for_spanish
+        )
+        from app.config import get_settings
+        settings = get_settings()
         
-        # Add a note about the appointment request
-        note = f"[APPOINTMENT REQUEST] {appointment_request}"
+        # Parse customer's preferred time
+        preferred_time = parse_spanish_datetime(appointment_request)
+        
+        # Generate available slots
+        available_slots = generate_available_slots(
+            num_slots=5,
+            start_hour=9,
+            end_hour=18,
+            timezone="America/New_York"
+        )
+        
+        # Find best matching slot
+        selected_slot = find_matching_slot(available_slots, appointment_request)
+        
+        if not selected_slot:
+            logger.warning("No available slots found")
+            return {
+                "success": False,
+                "contact_id": contact_id,
+                "message": "Lo siento, no tengo horarios disponibles esta semana. Un representante te contactará pronto.",
+                "status": "no_availability"
+            }
+        
+        # Format appointment details
+        appointment_title = f"Demo - {settings.service_type}"
         if special_instructions:
-            note += f" | Instructions: {special_instructions}"
+            appointment_title += f" ({special_instructions})"
         
-        # Try to save the note at least
-        note_result = await ghl_client.add_contact_note(contact_id, note)
-        
-        return {
-            "success": False,  # Be honest - we didn't actually book it
-            "contact_id": contact_id,
-            "appointment_request": appointment_request,
-            "special_instructions": special_instructions,
-            "status": "not_implemented",
-            "message": "Lo siento, la función de agendar citas está en desarrollo. Un representante te contactará pronto.",
-            "note_saved": note_result is not None
+        # Create appointment in GHL
+        appointment_data = {
+            "calendarId": settings.ghl_calendar_id,
+            "contactId": contact_id,
+            "title": appointment_title,
+            "startTime": selected_slot["startTime"].isoformat(),
+            "endTime": selected_slot["endTime"].isoformat(),
+            "appointmentStatus": "confirmed",
+            "assignedUserId": settings.ghl_assigned_user_id,
+            "notes": f"Requested: {appointment_request}\nBooked via: AI Assistant"
         }
         
+        # Call GHL API to create appointment
+        result = await ghl_client.create_appointment(appointment_data)
+        
+        if result and result.get("id"):
+            # Success! Add confirmation note
+            formatted_time = format_slot_for_spanish(selected_slot)
+            confirmation_note = f"✅ DEMO CONFIRMADA: {formatted_time} | ID: {result['id']}"
+            await ghl_client.add_contact_note(contact_id, confirmation_note)
+            
+            # Update contact with appointment info
+            await ghl_client.update_contact(contact_id, {
+                "customFields": {
+                    settings.preferred_day_field_id: selected_slot["startTime"].strftime("%A"),
+                    settings.preferred_time_field_id: selected_slot["startTime"].strftime("%I:%M %p")
+                }
+            })
+            
+            return {
+                "success": True,
+                "contact_id": contact_id,
+                "appointment_id": result["id"],
+                "appointment_time": formatted_time,
+                "message": f"¡Perfecto! Tu demo está confirmada para {formatted_time}. Te enviaré un recordatorio.",
+                "status": "confirmed"
+            }
+        else:
+            # Fallback: Save as note if API fails
+            note = f"[CITA SOLICITADA] {appointment_request} - Confirmar manualmente"
+            await ghl_client.add_contact_note(contact_id, note)
+            
+            return {
+                "success": False,
+                "contact_id": contact_id,
+                "message": "Estoy procesando tu solicitud. Un representante confirmará tu cita pronto.",
+                "status": "pending_confirmation"
+            }
+        
     except Exception as e:
-        logger.error(f"Error booking appointment: {str(e)}")
+        logger.error(f"Error booking appointment: {str(e)}", exc_info=True)
+        
+        # Always try to save the request as a note
+        try:
+            fallback_note = f"[ERROR AL AGENDAR] {appointment_request} - Contactar manualmente"
+            await ghl_client.add_contact_note(contact_id, fallback_note)
+        except:
+            pass
+        
         return {
             "success": False,
             "error": str(e),
             "contact_id": contact_id,
-            "message": "Hubo un error al procesar tu solicitud. Un representante te contactará."
+            "message": "Hubo un problema técnico. Un representante te contactará para confirmar tu cita.",
+            "status": "error"
         }
 
 
