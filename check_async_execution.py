@@ -5,10 +5,10 @@ Check if async functions are being executed properly
 
 import asyncio
 import inspect
-from app.agents.responder_streaming import responder_streaming_node
+from app.agents.responder_agent import responder_node
 
 # Check if the function is async
-print(f"responder_streaming_node is async: {inspect.iscoroutinefunction(responder_streaming_node)}")
+print(f"responder_node is async: {inspect.iscoroutinefunction(responder_node)}")
 
 # Test execution
 async def test_responder():
@@ -28,7 +28,7 @@ async def test_responder():
     }
     
     print("\nTesting responder with mock state...")
-    result = await responder_streaming_node(mock_state)
+    result = await responder_node(mock_state)
     print(f"Result: {result}")
     
     # Check what should have happened

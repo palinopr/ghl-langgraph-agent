@@ -110,27 +110,27 @@ async def test_agents():
     agents_tested = []
     
     # Test Maria
-    from app.agents.maria_memory_aware import maria_memory_aware_node
+    from app.agents.maria_agent import maria_node
     agents_tested.append("Maria (memory aware)")
     
     # Test Carlos
-    from app.agents.carlos_agent_v2_fixed import carlos_node_v2_fixed
+    from app.agents.carlos_agent import carlos_node
     agents_tested.append("Carlos (v2 fixed)")
     
     # Test Sofia
-    from app.agents.sofia_agent_v2_fixed import sofia_node_v2_fixed
+    from app.agents.sofia_agent import sofia_node
     agents_tested.append("Sofia (v2 fixed)")
     
     # Test Supervisor
-    from app.agents.supervisor_official import supervisor_official_node
-    agents_tested.append("Supervisor (official)")
+    from app.agents.supervisor import supervisor_node
+    agents_tested.append("Supervisor")
     
     # Test Receptionist
-    from app.agents.receptionist_memory_aware import receptionist_memory_aware_node
-    agents_tested.append("Receptionist (memory aware)")
+    from app.agents.receptionist_agent import receptionist_node
+    agents_tested.append("Receptionist")
     
     # Test Responder
-    from app.agents.responder_streaming import responder_streaming_node
+    from app.agents.responder_agent import responder_node
     agents_tested.append("Responder (streaming)")
     
     return f"Successfully imported: {', '.join(agents_tested)}"
@@ -295,10 +295,10 @@ def test_circular_imports():
     imports_to_test = [
         "app.workflow",
         "app.state.minimal_state",
-        "app.agents.supervisor_official",
-        "app.agents.maria_memory_aware",
-        "app.agents.carlos_agent_v2_fixed",
-        "app.agents.sofia_agent_v2_fixed",
+        "app.agents.supervisor",
+        "app.agents.maria_agent",
+        "app.agents.carlos_agent",
+        "app.agents.sofia_agent",
         "app.intelligence.analyzer",
         "app.tools.ghl_client_simple",
         "app.utils.simple_logger",
@@ -353,17 +353,17 @@ def test_no_dead_references():
         "ghl_client.py",     # Should use ghl_client_simple.py
         "workflow_enhanced",  # Deleted workflow variants
         "workflow_parallel",
-        "supervisor_brain",   # Should use supervisor_official.py
+        "supervisor_brain",   # Should use supervisor.py
         "debug_logger"        # Should use simple_logger
     ]
     
     # Files to check
     check_files = [
         "app/workflow.py",
-        "app/agents/supervisor_official.py",
-        "app/agents/maria_memory_aware.py",
-        "app/agents/carlos_agent_v2_fixed.py",
-        "app/agents/sofia_agent_v2_fixed.py"
+        "app/agents/supervisor.py",
+        "app/agents/maria_agent.py",
+        "app/agents/carlos_agent.py",
+        "app/agents/sofia_agent.py"
     ]
     
     found_references = []

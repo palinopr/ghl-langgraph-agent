@@ -66,4 +66,4 @@ railway_copy_env_vars_solution.py
 test_*.py
 
 # Server files
-server.log
+server.logsrc_backup_to_delete/

@@ -199,5 +199,4 @@ async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Export
-supervisor_fixed_node = supervisor_node
-__all__ = ["supervisor_node", "supervisor_fixed_node", "create_supervisor_with_tools"]
+__all__ = ["supervisor_node", "create_supervisor_with_tools"]

@@ -9,7 +9,7 @@ from langchain_core.tools import tool
 from app.tools.ghl_client import ghl_client
 from app.utils.simple_logger import get_logger
 
-logger = get_logger("agent_tools_fixed")
+logger = get_logger("agent_tools")
 
 
 # ============ AGENT ESCALATION TOOLS ============

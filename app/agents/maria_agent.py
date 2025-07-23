@@ -23,7 +23,7 @@ from app.agents.base_agent import (
     get_base_contact_info
 )
 
-logger = get_logger("maria_memory_aware")
+logger = get_logger("maria")
 
 
 def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:

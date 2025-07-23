@@ -40,7 +40,7 @@ def analyze_trace(trace_id):
         
         print(f'\nTotal Child Runs: {len(child_runs)}')
         
-        # Look for responder_streaming_node
+        # Look for responder_node
         responder_found = False
         ghl_send_found = False
         import_errors = []
