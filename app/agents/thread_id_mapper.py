@@ -112,49 +112,21 @@ async def thread_id_mapper_node(state: Dict[str, Any]) -> Dict[str, Any]:
     logger.info(f"   Mapped to: {new_thread_id}")
     logger.info(f"   Config updated: {config_updated}")
     
-    # Try to manually load checkpoint with our thread_id
-    # This is a last-ditch effort to ensure we have conversation history
-    try:
-        from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-        import os
-        
-        checkpoint_db = os.path.join(os.path.dirname(os.path.dirname(__file__)), "checkpoints.db")
-        if os.path.exists(checkpoint_db):
-            logger.info(f"Attempting to load checkpoint from: {checkpoint_db}")
-            
-            async with AsyncSqliteSaver.from_conn_string(checkpoint_db) as checkpointer:
-                checkpoint_config = {"configurable": {"thread_id": new_thread_id}}
-                checkpoint_tuple = await checkpointer.aget(checkpoint_config)
-                
-                if checkpoint_tuple and checkpoint_tuple.checkpoint:
-                    checkpoint_data = checkpoint_tuple.checkpoint.get("channel_values", {})
-                    
-                    # Load messages if not already present
-                    if "messages" in checkpoint_data and not updated_state.get("messages"):
-                        updated_state["messages"] = checkpoint_data["messages"]
-                        logger.info(f"✅ Loaded {len(checkpoint_data['messages'])} messages from checkpoint")
-                    
-                    # Load extracted data
-                    if "extracted_data" in checkpoint_data:
-                        updated_state["extracted_data"] = checkpoint_data["extracted_data"]
-                        logger.info(f"✅ Loaded extracted data: {checkpoint_data['extracted_data']}")
-                    
-                    # Load other important fields
-                    for field in ["lead_score", "score_history", "last_agent", "conversation_stage"]:
-                        if field in checkpoint_data:
-                            updated_state[field] = checkpoint_data[field]
-                            logger.info(f"✅ Loaded {field}: {checkpoint_data[field]}")
-                else:
-                    logger.info(f"No checkpoint found for thread: {new_thread_id}")
-        else:
-            logger.warning(f"Checkpoint database not found at: {checkpoint_db}")
-            
-    except Exception as e:
-        logger.warning(f"Could not manually load checkpoint: {e}")
+    # NOTE: Removed checkpoint loading - only receptionist should load messages
+    # This prevents message duplication in the state
     
     logger.info("=== ENHANCED THREAD ID MAPPER COMPLETE ===")
     
-    return updated_state
+    # CRITICAL: Only return the fields we're updating, NOT the full state
+    # Otherwise the state reducer will duplicate messages
+    return {
+        "thread_id": new_thread_id,
+        "mapped_thread_id": new_thread_id,
+        "original_thread_id": original_thread_id,
+        "contact_id": contact_id,
+        "conversation_id": conversation_id,
+        "__config__": updated_state.get("__config__")
+    }
 
 
 # Export
