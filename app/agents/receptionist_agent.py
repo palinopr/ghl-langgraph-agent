@@ -4,7 +4,7 @@ Simplified Receptionist - Only loads from GHL, no checkpoint messages
 from typing import Dict, Any, List
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from app.utils.simple_logger import get_logger
-from app.tools.ghl_client_simple import SimpleGHLClient
+from app.tools.ghl_client import GHLClient
 from app.state.message_manager import MessageManager
 from app.utils.debug_helpers import log_state_transition, validate_state
 from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
@@ -55,7 +55,7 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"Current message: {current_message}")
         
         # Initialize GHL client
-        ghl_client = SimpleGHLClient()
+        ghl_client = GHLClient()
         
         # Load conversation history from GHL ONLY
         messages = []

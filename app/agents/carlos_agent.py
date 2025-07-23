@@ -23,6 +23,7 @@ from app.agents.base_agent import (
 )
 from app.state.message_manager import MessageManager
 from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
+from app.agents.message_fixer import fix_agent_messages
 
 logger = get_logger("carlos_v2_fixed")
 
@@ -189,6 +190,12 @@ async def carlos_node(state: Dict[str, Any]) -> Dict[str, Any]:
         # Only return new messages to avoid duplication
         current_messages = state.get("messages", [])
         result_messages = result.get("messages", [])
+        
+        # Fix agent messages to have proper name
+        if result_messages:
+            result_messages = fix_agent_messages(result_messages, "carlos")
+            logger.info(f"Fixed {len(result_messages)} messages with agent name 'carlos'")
+        
         new_messages = MessageManager.set_messages(current_messages, result_messages)
         
         # Update state

@@ -55,7 +55,7 @@ def escalate_to_supervisor(
 
 # ============ GHL CONTACT TOOLS ============
 @tracked_tool
-def get_contact_details_with_task(
+async def get_contact_details_with_task(
     contact_id: str,
     task: Annotated[str, "What information to look for"] = "general"
 ) -> Dict[str, Any]:
@@ -73,7 +73,7 @@ def get_contact_details_with_task(
     
     try:
         # Get contact from GHL
-        contact = ghl_client.get_contact(contact_id)
+        contact = await ghl_client.get_contact(contact_id)
         
         if not contact:
             return {
@@ -106,7 +106,7 @@ def get_contact_details_with_task(
 
 
 @tracked_tool
-def update_contact_with_context(
+async def update_contact_with_context(
     contact_id: str,
     updates: Dict[str, Any],
     context: Annotated[str, "Why updating this information"]
@@ -126,11 +126,11 @@ def update_contact_with_context(
     
     try:
         # Update the contact
-        result = ghl_client.update_contact(contact_id, updates)
+        result = await ghl_client.update_contact(contact_id, updates)
         
         # Add note about the update
         note = f"[{datetime.now().strftime('%Y-%m-%d %H:%M')}] Update: {context}"
-        ghl_client.add_contact_note(contact_id, note)
+        await ghl_client.add_contact_note(contact_id, note)
         
         return {
             "success": True,
@@ -150,7 +150,7 @@ def update_contact_with_context(
 
 # ============ APPOINTMENT TOOLS ============
 @tracked_tool
-def book_appointment_with_instructions(
+async def book_appointment_with_instructions(
     contact_id: str,
     appointment_request: Annotated[str, "Customer's appointment request (e.g., 'Tuesday at 2pm')"],
     special_instructions: Optional[str] = None
@@ -169,16 +169,26 @@ def book_appointment_with_instructions(
     logger.info(f"Booking appointment for {contact_id}: {appointment_request}")
     
     try:
-        # For now, return a structured response
-        # In production, this would integrate with GHL calendar API
+        # TODO: Implement actual GHL calendar integration
+        # For now, return a mock response but be honest about it
+        logger.warning("Appointment booking not yet implemented - returning mock response")
+        
+        # Add a note about the appointment request
+        note = f"[APPOINTMENT REQUEST] {appointment_request}"
+        if special_instructions:
+            note += f" | Instructions: {special_instructions}"
+        
+        # Try to save the note at least
+        note_result = await ghl_client.add_contact_note(contact_id, note)
         
         return {
-            "success": True,
+            "success": False,  # Be honest - we didn't actually book it
             "contact_id": contact_id,
             "appointment_request": appointment_request,
             "special_instructions": special_instructions,
-            "status": "pending_confirmation",
-            "message": f"Appointment request received: {appointment_request}"
+            "status": "not_implemented",
+            "message": "Lo siento, la función de agendar citas está en desarrollo. Un representante te contactará pronto.",
+            "note_saved": note_result is not None
         }
         
     except Exception as e:
@@ -186,13 +196,14 @@ def book_appointment_with_instructions(
         return {
             "success": False,
             "error": str(e),
-            "contact_id": contact_id
+            "contact_id": contact_id,
+            "message": "Hubo un error al procesar tu solicitud. Un representante te contactará."
         }
 
 
 # ============ CONTEXT SAVING TOOLS ============
 @tracked_tool
-def save_important_context(
+async def save_important_context(
     contact_id: str,
     context: Annotated[str, "Important information to remember"],
     context_type: Literal["preference", "business_info", "goal", "constraint"],
@@ -215,12 +226,12 @@ def save_important_context(
     try:
         # Create a note in GHL
         note = f"[{context_type.upper()}] {context} (Importance: {importance})"
-        result = ghl_client.add_contact_note(contact_id, note)
+        result = await ghl_client.add_contact_note(contact_id, note)
         
         # Also update custom fields if it's high importance
         if importance == "high":
             custom_field_key = f"ai_{context_type}"
-            ghl_client.update_contact(contact_id, {
+            await ghl_client.update_contact(contact_id, {
                 "customFields": {
                     custom_field_key: context
                 }
@@ -244,7 +255,7 @@ def save_important_context(
 
 
 @tracked_tool
-def track_lead_progress(
+async def track_lead_progress(
     contact_id: str,
     score_change: Optional[str] = None,
     data_collected: Optional[str] = None,
@@ -283,7 +294,7 @@ def track_lead_progress(
             note = f"[{timestamp}] " + " | ".join(note_parts)
             
             # Add note to GHL
-            result = ghl_client.add_contact_note(contact_id, note)
+            result = await ghl_client.add_contact_note(contact_id, note)
             
             return {
                 "success": True,

@@ -25,6 +25,7 @@ from app.agents.base_agent import (
 )
 from app.state.message_manager import MessageManager
 from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
+from app.agents.message_fixer import fix_agent_messages
 
 logger = get_logger("maria")
 
@@ -220,6 +221,11 @@ async def maria_node(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
                 if hasattr(msg, '__class__') and 'AI' in msg.__class__.__name__:
                     new_agent_messages = [msg]
                     break
+        # Fix agent messages to have proper name
+        if new_agent_messages:
+            new_agent_messages = fix_agent_messages(new_agent_messages, "maria")
+            logger.info(f"Fixed {len(new_agent_messages)} messages with agent name 'maria'")
+        
         # Use MessageManager with only the new agent messages
         new_messages = MessageManager.set_messages(current_messages, new_agent_messages)
         
