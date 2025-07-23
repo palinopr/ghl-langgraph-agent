@@ -8,6 +8,7 @@ from app.utils.simple_logger import get_logger
 from app.utils.model_factory import create_openai_model
 # GHL client will be initialized when needed
 from app.state.message_manager import MessageManager
+from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
 import json
 
 logger = get_logger("smart_router")
@@ -30,18 +31,51 @@ class SmartRouter:
             previous_score = state.get("lead_score", 0)
             previous_agent = state.get("current_agent", "none")
             
+            # Log routing context to LangSmith
+            log_to_langsmith({
+                "contact_id": contact_id,
+                "previous_score": previous_score,
+                "previous_agent": previous_agent,
+                "message_count": len(messages),
+                "has_extracted_data": bool(state.get("extracted_data")),
+            }, "routing_context")
+            
             # Get current message
             current_message = self._get_last_customer_message(messages)
             if not current_message:
-                logger.warning("No customer message found")
-                return self._create_routing_response("maria", 0, "No message to analyze", state)
+                logger.info("No new customer message to route (may already be processed)")
+                log_to_langsmith({
+                    "issue": "no_customer_message",
+                    "fallback_agent": "maria",
+                    "reason": "No new message to analyze"
+                }, "routing_fallback")
+                return self._create_routing_response("maria", 0, "No new message to analyze", state)
             
             # Analyze the message for lead scoring and data extraction
             analysis = await self._analyze_message(current_message, messages, state)
             
+            # Log analysis results to LangSmith
+            log_to_langsmith({
+                "current_message": current_message[:200],
+                "lead_score": analysis["lead_score"],
+                "score_reason": analysis["score_reason"],
+                "intent": analysis["intent"],
+                "urgency": analysis["urgency"],
+                "sentiment": analysis["sentiment"],
+                "extracted_data": analysis["extracted_data"],
+            }, "message_analysis")
+            
             # Determine routing based on score
             new_score = analysis["lead_score"]
             routing_decision = self._determine_routing(new_score, analysis)
+            
+            # Log routing decision to LangSmith
+            debugger.log_routing_decision(
+                previous_agent,
+                routing_decision["next_agent"],
+                routing_decision["routing_reason"],
+                new_score
+            )
             
             # Track score changes
             score_change_note = self._track_score_change(
@@ -310,6 +344,7 @@ Provide response as JSON:
 smart_router = SmartRouter()
 
 
+@debug_node("smart_router")
 async def smart_router_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Smart router node for workflow"""
     return await smart_router.analyze_and_route(state)

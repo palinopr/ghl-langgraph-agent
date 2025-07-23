@@ -24,6 +24,7 @@ from app.agents.base_agent import (
     get_base_contact_info
 )
 from app.state.message_manager import MessageManager
+from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
 
 logger = get_logger("maria")
 
@@ -159,6 +160,7 @@ Remember: You're not just collecting data - you're solving their WhatsApp commun
     return [{"role": "system", "content": system_prompt_with_history}] + filtered_messages
 
 
+@debug_node("maria_agent")
 async def maria_node(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
     """
     Maria agent node with memory isolation

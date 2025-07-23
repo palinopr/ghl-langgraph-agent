@@ -7,11 +7,13 @@ from typing import Dict, Any, Optional
 from app.utils.simple_logger import get_logger
 from app.state.message_manager import MessageManager
 from app.utils.debug_helpers import log_state_transition, validate_state
+from app.utils.langsmith_debug import debug_node, log_to_langsmith, debug_state
 import copy
 
 logger = get_logger("thread_id_mapper")
 
 
+@debug_node("thread_id_mapper")
 async def thread_id_mapper_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Enhanced mapper that attempts to override checkpoint configuration
@@ -28,6 +30,15 @@ async def thread_id_mapper_node(state: Dict[str, Any]) -> Dict[str, Any]:
     messages = state.get("messages", [])
     webhook_body = state.get("webhook_data", {}).get("body", "")
     
+    # Log webhook data to LangSmith
+    if state.get("webhook_data"):
+        log_to_langsmith({
+            "webhook_contact_id": state["webhook_data"].get("contactId"),
+            "webhook_conversation_id": state["webhook_data"].get("conversationId"),
+            "webhook_body": webhook_body[:100] if webhook_body else None,
+            "has_messages_prepopulated": len(messages) > 0,
+        }, "webhook_analysis")
+    
     if messages and webhook_body:
         # Check if the first message matches webhook body
         first_msg_content = ""
@@ -40,6 +51,11 @@ async def thread_id_mapper_node(state: Dict[str, Any]) -> Dict[str, Any]:
         
         if first_msg_content == webhook_body:
             logger.warning(f"⚠️ Detected LangGraph Cloud pre-population: message '{first_msg_content[:50]}...' appears in both messages and webhook_data")
+            log_to_langsmith({
+                "issue": "langgraph_cloud_prepopulation_detected",
+                "first_message": first_msg_content[:100],
+                "webhook_body": webhook_body[:100],
+            }, "prepopulation_warning")
             # We'll let receptionist handle this by using MessageManager
     
     # Validate input state

@@ -8,12 +8,21 @@ import pytz
 from langchain_core.tools import tool
 from app.tools.ghl_client import ghl_client
 from app.utils.simple_logger import get_logger
+from app.utils.langsmith_debug import debugger, log_to_langsmith
+from functools import wraps
 
 logger = get_logger("agent_tools")
 
 
+def tracked_tool(func):
+    """Decorator that adds LangSmith tracking to any tool"""
+    # For now, just use regular @tool decorator
+    # The tracking happens via LangSmith's built-in tool tracking
+    return tool(func)
+
+
 # ============ AGENT ESCALATION TOOLS ============
-@tool
+@tracked_tool
 def escalate_to_supervisor(
     reason: Literal["needs_appointment", "wrong_agent", "customer_confused", "qualification_complete"],
     task_description: Annotated[str, "Clear description of what needs to be done next"],
@@ -45,7 +54,7 @@ def escalate_to_supervisor(
 
 
 # ============ GHL CONTACT TOOLS ============
-@tool
+@tracked_tool
 def get_contact_details_with_task(
     contact_id: str,
     task: Annotated[str, "What information to look for"] = "general"
@@ -96,7 +105,7 @@ def get_contact_details_with_task(
         }
 
 
-@tool
+@tracked_tool
 def update_contact_with_context(
     contact_id: str,
     updates: Dict[str, Any],
@@ -140,7 +149,7 @@ def update_contact_with_context(
 
 
 # ============ APPOINTMENT TOOLS ============
-@tool
+@tracked_tool
 def book_appointment_with_instructions(
     contact_id: str,
     appointment_request: Annotated[str, "Customer's appointment request (e.g., 'Tuesday at 2pm')"],
@@ -182,7 +191,7 @@ def book_appointment_with_instructions(
 
 
 # ============ CONTEXT SAVING TOOLS ============
-@tool
+@tracked_tool
 def save_important_context(
     contact_id: str,
     context: Annotated[str, "Important information to remember"],
@@ -234,7 +243,7 @@ def save_important_context(
         }
 
 
-@tool
+@tracked_tool
 def track_lead_progress(
     contact_id: str,
     score_change: Optional[str] = None,

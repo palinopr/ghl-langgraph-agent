@@ -22,6 +22,7 @@ from app.agents.base_agent import (
     create_error_response
 )
 from app.state.message_manager import MessageManager
+from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
 
 logger = get_logger("sofia_v2_fixed")
 
@@ -178,6 +179,7 @@ def create_sofia_agent_fixed():
     return agent
 
 
+@debug_node("sofia_agent")
 async def sofia_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Fixed Sofia node that enforces conversation rules

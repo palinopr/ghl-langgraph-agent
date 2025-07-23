@@ -22,6 +22,7 @@ from app.agents.base_agent import (
     create_error_response
 )
 from app.state.message_manager import MessageManager
+from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
 
 logger = get_logger("carlos_v2_fixed")
 
@@ -158,6 +159,7 @@ def create_carlos_agent_fixed():
     return agent
 
 
+@debug_node("carlos_agent")
 async def carlos_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Fixed Carlos node that enforces templates

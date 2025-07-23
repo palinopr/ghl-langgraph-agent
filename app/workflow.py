@@ -6,6 +6,7 @@ from typing import Dict, Any, Literal, TypedDict, Annotated, List, Union
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
 from langchain_openai import ChatOpenAI
+from app.utils.langsmith_debug import log_to_langsmith, debugger
 import os
 import logging
 
@@ -195,12 +196,34 @@ async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
         # Run workflow with thread config
         config = {"configurable": {"thread_id": thread_id}}
         
+        # Log workflow start to LangSmith
+        log_to_langsmith({
+            "action": "workflow_start",
+            "contact_id": contact_id,
+            "thread_id": thread_id,
+            "conversation_id": conversation_id,
+            "message_body": message_body[:100] if message_body else None,
+            "webhook_type": webhook_data.get("type", "unknown")
+        }, "workflow_execution")
+        
         # Execute workflow
         result = await workflow.ainvoke(initial_state, config=config)
         
         # Extract response
         last_sent_message = result.get("last_sent_message", "")
         message_sent = result.get("message_sent", False)
+        
+        # Log workflow completion to LangSmith
+        log_to_langsmith({
+            "action": "workflow_complete",
+            "contact_id": contact_id,
+            "thread_id": thread_id,
+            "final_agent": result.get("current_agent"),
+            "lead_score": result.get("lead_score", 0),
+            "message_sent": message_sent,
+            "response_length": len(last_sent_message) if last_sent_message else 0,
+            "total_messages": len(result.get("messages", []))
+        }, "workflow_result")
         
         return {
             "success": True,

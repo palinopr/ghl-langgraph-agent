@@ -6,10 +6,12 @@ from typing import Dict, Any, List, Optional
 from langchain_core.messages import HumanMessage, AIMessage
 from app.tools.ghl_streaming import send_human_like_response, HumanLikeResponder
 from app.utils.simple_logger import get_logger
+from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
 
 logger = get_logger("responder")
 
 
+@debug_node("responder")
 async def responder_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Enhanced responder with human-like typing delays
@@ -85,6 +87,16 @@ async def responder_node(state: Dict[str, Any]) -> Dict[str, Any]:
         
         logger.info(f"💬 Preparing to send: {last_ai_message.content[:50]}...")
         
+        # Log message details to LangSmith
+        log_to_langsmith({
+            "action": "preparing_response",
+            "contact_id": contact_id,
+            "message_type": message_type,
+            "message_length": len(last_ai_message.content),
+            "from_agent": current_agent,
+            "message_preview": last_ai_message.content[:200]
+        }, "responder_preparation")
+        
         # Split message if it contains multiple parts (separated by double newlines)
         message_parts = last_ai_message.content.split('\n\n')
         
@@ -111,6 +123,16 @@ async def responder_node(state: Dict[str, Any]) -> Dict[str, Any]:
             )
             
             logger.info(f"✓ Message sent after natural delay")
+        
+        # Log successful send to LangSmith
+        log_to_langsmith({
+            "action": "message_sent",
+            "contact_id": contact_id,
+            "message_type": message_type,
+            "success": True,
+            "message_parts": len(message_parts) if len(message_parts) > 1 else 1,
+            "agent": current_agent
+        }, "responder_success")
         
         # Update state to track sent message
         return {

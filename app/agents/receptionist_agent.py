@@ -7,10 +7,12 @@ from app.utils.simple_logger import get_logger
 from app.tools.ghl_client_simple import SimpleGHLClient
 from app.state.message_manager import MessageManager
 from app.utils.debug_helpers import log_state_transition, validate_state
+from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
 
 logger = get_logger("receptionist")
 
 
+@debug_node("receptionist")
 async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Simplified receptionist that ONLY loads messages from GHL
@@ -64,9 +66,22 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
         # First, try with conversation_id if provided
         if conversation_id:
             logger.info(f"Using conversation_id: {conversation_id}")
+            log_to_langsmith({
+                "action": "loading_conversation",
+                "conversation_id": conversation_id,
+                "method": "direct_conversation"
+            }, "ghl_api_call")
+            
             try:
                 # Get messages directly from conversation
                 ghl_messages = await ghl_client.get_conversation_messages(conversation_id)
+                
+                log_to_langsmith({
+                    "action": "conversation_loaded",
+                    "conversation_id": conversation_id,
+                    "message_count": len(ghl_messages),
+                    "success": True
+                }, "ghl_api_result")
                 
                 # Convert to LangChain messages
                 for msg in ghl_messages:
@@ -88,9 +103,16 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
                         messages.append(msg)
                 
                 logger.info(f"Loaded {len(messages)} messages from GHL")
+                debugger.log_message_flow(messages, "ghl_messages_loaded")
                 
             except Exception as e:
                 logger.error(f"Failed to load messages by conversation_id: {e}")
+                log_to_langsmith({
+                    "action": "conversation_load_failed",
+                    "conversation_id": conversation_id,
+                    "error": str(e),
+                    "success": False
+                }, "ghl_api_error")
                 messages = []
         
         # If no conversation_id or failed, try loading by contact_id
