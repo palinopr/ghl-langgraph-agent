@@ -59,15 +59,16 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
         
         # Load conversation history from GHL ONLY
         messages = []
+        
+        # Try to load conversation history
+        logger.info(f"Attempting to load conversation history for contact: {contact_id}")
+        
+        # First, try with conversation_id if provided
         if conversation_id:
-            logger.info("Loading conversation history from GHL...")
+            logger.info(f"Using conversation_id: {conversation_id}")
             try:
-                # Get ALL messages for this conversation
-                ghl_messages = await loader.load_conversation_history(
-                    contact_id=contact_id,
-                    conversation_id=conversation_id,
-                    limit=50  # Reasonable limit
-                )
+                # Get messages directly from conversation
+                ghl_messages = await ghl_client.get_conversation_messages(conversation_id)
                 
                 # Convert to LangChain messages
                 for msg in ghl_messages:
@@ -84,7 +85,44 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
                 logger.info(f"Loaded {len(messages)} messages from GHL")
                 
             except Exception as e:
-                logger.error(f"Failed to load GHL history: {e}")
+                logger.error(f"Failed to load messages by conversation_id: {e}")
+                messages = []
+        
+        # If no conversation_id or failed, try loading by contact_id
+        if not messages and contact_id:
+            logger.info(f"Trying to load conversations by contact_id: {contact_id}")
+            try:
+                # Get all conversations for this contact
+                conversations = await ghl_client.get_conversations(contact_id)
+                logger.info(f"Found {len(conversations)} conversations for contact")
+                
+                if conversations:
+                    # Get the most recent conversation
+                    recent_conv = conversations[0]  # They're usually sorted by recency
+                    conv_id = recent_conv.get('id')
+                    logger.info(f"Loading messages from most recent conversation: {conv_id}")
+                    
+                    # Get messages from this conversation
+                    ghl_messages = await ghl_client.get_conversation_messages(conv_id)
+                    
+                    # Convert to LangChain messages
+                    for msg in ghl_messages:
+                        if isinstance(msg, dict):
+                            role = msg.get("role", "human")
+                            content = msg.get("content", "") or msg.get("body", "")
+                            if role == "user" or role == "human":
+                                messages.append(HumanMessage(content=content))
+                            else:
+                                messages.append(AIMessage(content=content))
+                        else:
+                            messages.append(msg)
+                    
+                    logger.info(f"Loaded {len(messages)} messages from conversation")
+                else:
+                    logger.warning("No conversations found for this contact")
+                    
+            except Exception as e:
+                logger.error(f"Failed to load by contact_id: {e}", exc_info=True)
         
         # Add current message ONLY if it's not already in the loaded messages
         # This prevents duplication when message is already in state
