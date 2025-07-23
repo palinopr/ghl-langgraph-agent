@@ -7,6 +7,7 @@ from app.utils.simple_logger import get_logger
 from app.tools.ghl_client_simple import SimpleGHLClient
 from app.tools.conversation_loader import ConversationLoader
 from app.state.message_manager import MessageManager
+from app.utils.debug_helpers import log_state_transition, validate_state
 
 logger = get_logger("receptionist")
 
@@ -17,6 +18,9 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
     No checkpoint loading, no duplication
     """
     logger.info("=== SIMPLE RECEPTIONIST STARTING ===")
+    
+    # Log input state for debugging
+    log_state_transition(state, "receptionist", "input")
     
     try:
         # Extract info from state
@@ -139,8 +143,8 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"Current state has {len(current_state_messages)} messages")
         logger.info(f"Returning {len(new_messages)} new messages to avoid duplication")
         
-        # Return updated state with only new messages
-        return {
+        # Prepare result
+        result = {
             "messages": new_messages,  # Only new messages due to append reducer
             "contact_info": contact_info or {},
             "previous_custom_fields": custom_fields,
@@ -150,6 +154,16 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
             "is_first_contact": len(messages) <= 1,
             "thread_message_count": len(messages)
         }
+        
+        # Log output state for debugging
+        log_state_transition(result, "receptionist", "output")
+        
+        # Validate output state
+        validation = validate_state(result, "receptionist")
+        if not validation["valid"]:
+            logger.warning(f"Output validation issues: {validation['issues']}")
+        
+        return result
         
     except Exception as e:
         logger.error(f"Receptionist error: {str(e)}", exc_info=True)

@@ -11,6 +11,7 @@ A production-ready multi-agent system built with LangGraph v0.5.3+ for intellige
 - **Human-Like Responses**: Natural typing delays and message batching
 - **Production Ready**: Comprehensive error handling, monitoring, and validation
 - **Performance Optimized**: Python 3.13 with GIL-free mode and JIT compilation
+- **Advanced Debugging**: Built-in tools for trace analysis and message deduplication
 
 ## 🏗️ Architecture Overview
 
@@ -95,6 +96,41 @@ make deploy    # Deploy to production
 ## 📄 License
 
 This project is proprietary software. All rights reserved.
+
+## 🔍 Debugging & Monitoring
+
+### Debug Tools
+
+The system includes built-in debugging tools to quickly identify and fix issues:
+
+```bash
+# Analyze a specific trace
+python analyze_trace.py 1f067756-c282-640a-85ed-56c1478cd894 --verbose
+
+# Monitor traces in real-time
+python monitor_traces.py
+
+# Debug message duplication
+python debug_message_duplication.py
+```
+
+### Common Issues
+
+1. **Message Duplication**: Use `MessageManager.set_messages()` in all nodes
+2. **Dict vs BaseMessage**: MessageManager handles format normalization
+3. **Error Accumulation**: Error messages are deduplicated automatically
+
+### Debug Helpers
+
+```python
+from app.utils.debug_helpers import log_state_transition, validate_state
+
+# In your node:
+log_state_transition(state, "node_name", "input")
+validation = validate_state(state, "node_name")
+```
+
+See [DEBUGGING_GUIDE.md](DEBUGGING_GUIDE.md) for comprehensive debugging practices.
 
 ## 🙏 Acknowledgments
 
