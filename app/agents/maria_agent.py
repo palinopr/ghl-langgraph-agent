@@ -3,7 +3,7 @@ Maria - Memory-Aware Customer Support Agent
 Uses isolated memory context to prevent confusion
 """
 from typing import Dict, Any, List, Union
-from langchain_core.messages import AnyMessage
+from langchain_core.messages import AnyMessage, BaseMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.types import Command
 from app.tools.agent_tools import (
@@ -26,6 +26,7 @@ from app.agents.base_agent import (
 from app.state.message_manager import MessageManager
 from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
 from app.agents.message_fixer import fix_agent_messages
+from app.utils.conversation_analyzer import analyze_conversation_state
 
 logger = get_logger("maria")
 
@@ -41,14 +42,31 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
     handoff_info = state.get("handoff_info")
     current_message = get_current_message(messages)
     
+    # Log received extracted data
+    if extracted_data:
+        logger.info(f"Maria received extracted_data: {extracted_data}")
+        if extracted_data.get('business_type'):
+            logger.info(f"✅ Maria sees business_type: {extracted_data['business_type']}")
+        if extracted_data.get('goal'):
+            logger.info(f"✅ Maria sees goal: {extracted_data['goal']}")
+    
     # Build Maria's view of the conversation
     context = "\\n📊 MARIA'S CONTEXT:\\n"
     
-    # Check if this is ongoing conversation
-    is_new_conversation = len(messages) <= 2  # First exchange
-    has_greeted = any("hola" in str(msg.content).lower() for msg in messages[:-1] if hasattr(msg, 'name') and msg.name == 'maria')
+    # Analyze conversation history to understand where we are
+    conversation_analysis = analyze_conversation_state(messages, agent_name="maria")
     
-    context += f"\\n🔄 CONVERSATION STATUS: {'NEW - Greet customer' if is_new_conversation and not has_greeted else 'ONGOING - NO greeting needed'}"
+    context += f"\\n🔄 CONVERSATION STATUS: {conversation_analysis['status']}"
+    context += f"\\n📍 CONVERSATION STAGE: {conversation_analysis['stage']}"
+    context += f"\\n💬 EXCHANGES SO FAR: {conversation_analysis['exchange_count']}"
+    
+    # Show what we've already discussed
+    if conversation_analysis['topics_discussed']:
+        context += f"\\n✅ ALREADY DISCUSSED: {', '.join(conversation_analysis['topics_discussed'])}"
+    
+    # Show what we still need
+    if conversation_analysis['pending_info']:
+        context += f"\\n❓ STILL NEED: {', '.join(conversation_analysis['pending_info'])}"
     
     # Show handoff if receiving one
     if handoff_info:
@@ -135,11 +153,18 @@ def maria_memory_prompt(state: Dict[str, Any]) -> List[AnyMessage]:
 - Problem: {extracted_data.get('goal', 'NOT PROVIDED')}
 - Budget: {extracted_data.get('budget', 'NOT PROVIDED')}
 
-📋 CONVERSATION STRATEGY:
-1. NEVER repeat greetings if conversation already started
-2. NEVER ask for data we already have
-3. IMMEDIATELY acknowledge their specific problem and offer the tailored solution
-4. Focus on THEIR EXACT PROBLEM with SPECIFIC solutions
+📋 CONVERSATION STRATEGY BASED ON STAGE:
+
+{f'''STAGE: {conversation_analysis["stage"].upper()}
+- Status: {conversation_analysis["status"]}
+- DO NOT GREET''' if conversation_analysis["has_greeted"] else '''STAGE: {conversation_analysis["stage"].upper()}
+- Status: {conversation_analysis["status"]}
+- START with greeting'''}
+
+1. NEVER repeat greetings if already greeted
+2. NEVER ask for data we already have: {', '.join(conversation_analysis['topics_discussed']) if conversation_analysis['topics_discussed'] else 'none yet'}
+3. FOCUS on getting: {', '.join(conversation_analysis['pending_info']) if conversation_analysis['pending_info'] else 'move to closing'}
+4. {f'IMMEDIATELY acknowledge their {extracted_data.get("business_type", "")} problem' if extracted_data.get('business_type') else 'DISCOVER their business type'}
 
 💬 CONTEXT-SPECIFIC RESPONSES:
 - Restaurant losing customers → "Entiendo perfectamente. Con nuestro {specific_solution}, podrías recuperar hasta un 30% de clientes inactivos"

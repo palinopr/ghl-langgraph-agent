@@ -24,6 +24,7 @@ from app.agents.base_agent import (
 from app.state.message_manager import MessageManager
 from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
 from app.agents.message_fixer import fix_agent_messages
+from app.utils.conversation_analyzer import analyze_conversation_state
 
 logger = get_logger("sofia_v2_fixed")
 
@@ -59,6 +60,23 @@ def sofia_prompt_fixed(state: SofiaState) -> list[AnyMessage]:
     # Get current message
     messages = state.get("messages", [])
     current_message = get_current_message(messages)
+    
+    # Analyze conversation state
+    conversation_analysis = analyze_conversation_state(messages, agent_name="sofia")
+    
+    # Build context from analysis
+    context = f"""
+📊 SOFIA CONVERSATION CONTEXT:
+🔄 STATUS: {conversation_analysis['status']}
+📍 STAGE: {conversation_analysis['stage']}
+💬 EXCHANGES: {conversation_analysis['exchange_count']}
+🎯 DEMO ATTEMPTS: {conversation_analysis['demo_attempts']}
+
+✅ ALREADY COLLECTED: {', '.join(conversation_analysis['topics_discussed']) if conversation_analysis['topics_discussed'] else 'Nothing yet'}
+❓ STILL NEED: {', '.join(conversation_analysis['pending_info']) if conversation_analysis['pending_info'] else 'All info collected - CLOSE!'}"""
+    
+    # Greeting check
+    should_greet = conversation_analysis['exchange_count'] <= 1 and not conversation_analysis['has_greeted']
     
     # Calculate what we need next (ONE THING AT A TIME!)
     next_step = "ASK_NAME"
@@ -124,6 +142,13 @@ def sofia_prompt_fixed(state: SofiaState) -> list[AnyMessage]:
 IMPORTANTE: Responde SIEMPRE en español.
 
 🎯 YOUR GOAL: Close the {demo_focus.upper()} APPOINTMENT - they're already qualified!
+
+{context}
+
+📋 CONVERSATION RULES:
+{f'1. DO NOT GREET - Continue closing naturally' if not should_greet else '1. START with enthusiastic greeting'}
+2. NEVER ask for info already collected: {', '.join(conversation_analysis['topics_discussed'])}
+3. FOCUS on: {next_step}
 
 CURRENT STATUS:
 - Lead Score: {lead_score}/10 (8+ = READY FOR DEMO)

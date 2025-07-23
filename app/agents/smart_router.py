@@ -100,6 +100,13 @@ class SmartRouter:
                     analysis
                 )
             
+            # Log extracted data for debugging
+            logger.info(f"Smart Router extracted data: {analysis['extracted_data']}")
+            if analysis['extracted_data'].get('business_type'):
+                logger.info(f"✅ Business type detected: {analysis['extracted_data']['business_type']}")
+            if analysis['extracted_data'].get('goal'):
+                logger.info(f"✅ Goal detected: {analysis['extracted_data']['goal']}")
+            
             # Create comprehensive response
             return {
                 # Routing info
@@ -165,6 +172,17 @@ Current message: {current_message}
 Existing data collected:
 {json.dumps(existing_data, indent=2)}
 
+IMPORTANT: Look for business type mentions like:
+- "tengo un restaurante" → business_type: "restaurante"
+- "mi tienda" → business_type: "tienda/retail"
+- "nuestra clínica" → business_type: "clínica/healthcare"
+- "soy dentista" → business_type: "dentista/healthcare"
+
+IMPORTANT: Extract the ACTUAL problem they mention:
+- "estoy perdiendo clientes" → goal: "customer retention"
+- "no puedo responder todos los mensajes" → goal: "automate message responses"
+- "necesito más ventas" → goal: "increase sales"
+
 Analyze and provide:
 1. Lead score (0-10) based on:
    - Interest level (questions about service, pricing, demo)
@@ -175,10 +193,10 @@ Analyze and provide:
    
 2. Extract any new information:
    - Name
-   - Business type
+   - Business type (EXTRACT from phrases like "tengo un restaurante", "mi tienda", etc.)
    - Contact details (phone, email)
    - Budget range
-   - Specific needs/problems (IMPORTANT: Extract their ACTUAL problem)
+   - Specific needs/problems (EXTRACT their ACTUAL problem like "perdiendo clientes")
    - Timeline/urgency
 
 3. Detect intent:
@@ -202,11 +220,11 @@ Provide response as JSON:
     "score_reason": "Brief explanation",
     "extracted_data": {{
         "name": "if found",
-        "business_type": "if found",
+        "business_type": "if found (e.g., 'restaurante' from 'tengo un restaurante')",
         "email": "if found",
         "phone": "if found",
         "budget": "if found",
-        "goal": "if found (ACTUAL customer problem)",
+        "goal": "if found (e.g., 'customer retention' from 'perdiendo clientes')",
         "timeline": "if found"
     }},
     "intent": "detected intent",
@@ -246,17 +264,52 @@ Provide response as JSON:
         # Context-specific data enrichment
         problem_match = analysis.get("problem_match", "maybe")
         if settings.adapt_to_customer:
-            # If customer mentioned restaurant/food, update business type
-            if "restaurant" in merged_data.get("business_type", "").lower():
+            current_lower = current_message.lower()
+            
+            # FALLBACK: If LLM didn't extract business_type, check message directly
+            if not merged_data.get("business_type") or merged_data.get("business_type") == "NOT PROVIDED":
+                # Restaurant/Food Service
+                if any(word in current_lower for word in ['restaurante', 'restaurant', 'comida', 'food', 'cocina', 'chef', 'mesa', 'comensal']):
+                    merged_data["business_type"] = "restaurante"
+                    merged_data["industry"] = "food_service"
+                    logger.info("Detected restaurant business type from message")
+                # Retail/Store
+                elif any(word in current_lower for word in ['tienda', 'store', 'venta', 'producto', 'inventario', 'shop']):
+                    merged_data["business_type"] = "tienda/retail"
+                    merged_data["industry"] = "retail"
+                # Healthcare
+                elif any(word in current_lower for word in ['clínica', 'clinic', 'dentista', 'doctor', 'médico', 'salud', 'hospital']):
+                    merged_data["business_type"] = "clínica/healthcare"
+                    merged_data["industry"] = "healthcare"
+                # Service Business
+                elif any(word in current_lower for word in ['servicio', 'service', 'consultoría', 'agencia']):
+                    merged_data["business_type"] = "servicio"
+                    merged_data["industry"] = "services"
+            
+            # FALLBACK: If LLM didn't extract goal, check message directly
+            if not merged_data.get("goal") or merged_data.get("goal") == "NOT PROVIDED":
+                # Customer retention problem
+                if ('perdiendo' in current_lower and 'cliente' in current_lower) or 'losing customers' in current_lower:
+                    merged_data["goal"] = "customer retention"
+                    logger.info("Detected customer retention goal from message")
+                # Message overload problem
+                elif any(phrase in current_lower for phrase in ['no puedo responder', 'muchos mensajes', 'ocupado con mensaje']):
+                    merged_data["goal"] = "automate message responses"
+                # Sales problem
+                elif any(phrase in current_lower for phrase in ['necesito venta', 'más venta', 'incrementar venta']):
+                    merged_data["goal"] = "increase sales"
+            
+            # Now apply context-specific enrichment based on extracted data
+            if merged_data.get("business_type", "").lower() in ['restaurante', 'restaurant']:
                 if not merged_data.get("goal"):
                     merged_data["goal"] = "customer retention and engagement"
-                merged_data["industry"] = "food_service"
+                specific_context = "restaurant customer retention"
             
             # If they mention being busy with messages
-            elif any(word in current_message.lower() for word in ['mensaje', 'whatsapp', 'ocupado']):
+            elif any(word in current_lower for word in ['mensaje', 'whatsapp', 'ocupado']):
                 if not merged_data.get("goal"):
                     merged_data["goal"] = "automate message responses"
-                merged_data["industry"] = "general_business"
+                specific_context = "message automation"
                 
             # Adjust score based on problem match
             if problem_match == "no" and analysis["lead_score"] > 3:

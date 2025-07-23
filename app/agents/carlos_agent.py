@@ -24,6 +24,7 @@ from app.agents.base_agent import (
 from app.state.message_manager import MessageManager
 from app.utils.langsmith_debug import debug_node, log_to_langsmith, debugger
 from app.agents.message_fixer import fix_agent_messages
+from app.utils.conversation_analyzer import analyze_conversation_state
 
 logger = get_logger("carlos_v2_fixed")
 
@@ -48,17 +49,23 @@ def carlos_prompt_fixed(state: CarlosState) -> list[AnyMessage]:
     # Get messages to analyze conversation stage
     messages = state.get("messages", [])
     
-    # Simplified analysis without enforcer
-    analysis = {
-        "allowed_response": "",
-        "current_stage": "qualification",
-        "collected_data": extracted_data
-    }
+    # Analyze conversation state
+    conversation_analysis = analyze_conversation_state(messages, agent_name="carlos")
     
-    # Get the allowed response
-    allowed_response = analysis.get("allowed_response", "")
-    current_stage = analysis.get("current_stage")
-    collected_data = analysis.get("collected_data", {})
+    # Build context from analysis
+    context = f"""
+📊 CARLOS CONVERSATION CONTEXT:
+🔄 STATUS: {conversation_analysis['status']}
+📍 STAGE: {conversation_analysis['stage']}
+💬 EXCHANGES: {conversation_analysis['exchange_count']}
+❌ OBJECTIONS: {', '.join(conversation_analysis['objections_raised']) if conversation_analysis['objections_raised'] else 'None'}
+🎯 DEMO ATTEMPTS: {conversation_analysis['demo_attempts']}
+
+✅ ALREADY DISCUSSED: {', '.join(conversation_analysis['topics_discussed']) if conversation_analysis['topics_discussed'] else 'Nothing yet'}
+❓ STILL NEED: {', '.join(conversation_analysis['pending_info']) if conversation_analysis['pending_info'] else 'Ready to close'}"""
+    
+    # Greeting check
+    should_greet = conversation_analysis['exchange_count'] <= 1 and not conversation_analysis['has_greeted']
     
     # Get configurable business context
     from app.config import get_settings
@@ -137,12 +144,19 @@ def carlos_prompt_fixed(state: CarlosState) -> list[AnyMessage]:
 
 🎯 YOUR GOAL: Convert warm leads into DEMO APPOINTMENTS by showing specific ROI.
 
+{context}
+
 CURRENT DATA:
 - Lead Score: {lead_score}/10
-- Name: {collected_data.get('name', 'NOT PROVIDED')}
-- Business: {collected_data.get('business_type', 'NOT PROVIDED')}
-- Problem: {collected_data.get('goal', 'NOT PROVIDED')}
-- Budget: {collected_data.get('budget', 'NOT PROVIDED')}
+- Name: {extracted_data.get('name', 'NOT PROVIDED')}
+- Business: {extracted_data.get('business_type', 'NOT PROVIDED')}
+- Problem: {extracted_data.get('goal', 'NOT PROVIDED')}
+- Budget: {extracted_data.get('budget', 'NOT PROVIDED')}
+
+📋 CONVERSATION RULES:
+{f'1. DO NOT GREET - Continue conversation naturally' if not should_greet else '1. START with a warm greeting'}
+2. NEVER ask for info already collected: {', '.join(conversation_analysis['topics_discussed'])}
+3. {f'Handle objection: "{conversation_analysis["objections_raised"][0]}"' if conversation_analysis['objections_raised'] else 'Push for demo appointment'}
 
 📋 DEMO-FOCUSED STRATEGY:
 1. If they have a problem → Quantify the impact with SPECIFIC metrics
