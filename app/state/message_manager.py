@@ -49,7 +49,7 @@ class MessageManager:
                 else:
                     msg_type = class_name.lower()
             
-            return (msg_type, content)
+            return (msg_type, content.lower().strip())
         
         # Get existing message keys
         existing_keys = {msg_key(msg) for msg in current_messages}
@@ -98,7 +98,7 @@ class MessageManager:
                 else:
                     msg_type = class_name.lower()
             
-            return (msg_type, content)
+            return (msg_type, content.lower().strip())
         
         seen = set()
         deduplicated = []

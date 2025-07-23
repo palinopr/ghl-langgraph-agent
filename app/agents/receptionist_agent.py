@@ -170,7 +170,7 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
             elif hasattr(msg, "content"):
                 msg_content = msg.content
             
-            if msg_content == current_message:
+            if msg_content.lower().strip() == current_message.lower().strip():
                 should_add_current = False
                 logger.info("Current message already in history, not adding again")
                 break

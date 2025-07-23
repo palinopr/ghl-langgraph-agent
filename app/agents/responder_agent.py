@@ -50,8 +50,8 @@ def find_agent_response(messages: list[BaseMessage], current_agent: str) -> Opti
             if content.startswith('[') or len(content) < 20:
                 continue
                 
-            # Skip messages from supervisor
-            if hasattr(msg, 'name') and msg.name == 'supervisor':
+            # Skip messages from router
+            if hasattr(msg, 'name') and msg.name == 'smart_router':
                 continue
             
             # This looks like an agent response

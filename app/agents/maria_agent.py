@@ -8,7 +8,7 @@ from langgraph.prebuilt import create_react_agent
 from langgraph.types import Command
 from app.tools.agent_tools import (
     get_contact_details_with_task,
-    escalate_to_supervisor,
+    escalate_to_router,
     update_contact_with_context,
     save_important_context,
     track_lead_progress
@@ -133,16 +133,16 @@ Remember: You're not just collecting data - you're solving their WhatsApp commun
                 customer_message = msg
                 break
     
-    # Build conversation history for context (excluding supervisor messages)
+    # Build conversation history for context (excluding router messages)
     conversation_history = []
     for msg in messages:
         # Include customer messages (HumanMessage without name)
         if hasattr(msg, '__class__') and 'Human' in msg.__class__.__name__:
             if not hasattr(msg, 'name') or not msg.name:
                 conversation_history.append(f"Cliente: {msg.content}")
-        # Include agent responses (AIMessage with name that's not supervisor)
+        # Include agent responses (AIMessage with name that's not router)
         elif hasattr(msg, '__class__') and 'AI' in msg.__class__.__name__:
-            if hasattr(msg, 'name') and msg.name and msg.name != 'supervisor':
+            if hasattr(msg, 'name') and msg.name and msg.name not in ['supervisor', 'smart_router']:
                 conversation_history.append(f"{msg.name.title()}: {msg.content}")
     
     # Add conversation history to context
@@ -179,7 +179,7 @@ async def maria_node(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
         model = create_openai_model(temperature=0.0)
         tools = [
             get_contact_details_with_task,
-            escalate_to_supervisor,
+            escalate_to_router,
             update_contact_with_context,
             save_important_context,
             track_lead_progress

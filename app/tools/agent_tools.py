@@ -23,13 +23,13 @@ def tracked_tool(func):
 
 # ============ AGENT ESCALATION TOOLS ============
 @tracked_tool
-def escalate_to_supervisor(
+def escalate_to_router(
     reason: Literal["needs_appointment", "wrong_agent", "customer_confused", "qualification_complete"],
     task_description: Annotated[str, "Clear description of what needs to be done next"],
     details: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Escalate back to supervisor with clear task description.
+    Escalate back to smart router with clear task description.
     Use this when you need to transfer to a different agent.
     
     Args:
@@ -40,7 +40,7 @@ def escalate_to_supervisor(
     Returns:
         Escalation result
     """
-    logger.info(f"Escalating to supervisor: {reason} - {task_description}")
+    logger.info(f"Escalating to router: {reason} - {task_description}")
     
     return {
         "status": "escalated",
@@ -319,7 +319,7 @@ async def track_lead_progress(
 
 # Export all tools
 __all__ = [
-    "escalate_to_supervisor",
+    "escalate_to_router",
     "get_contact_details_with_task",
     "update_contact_with_context",
     "book_appointment_with_instructions",

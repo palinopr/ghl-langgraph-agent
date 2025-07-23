@@ -35,14 +35,32 @@ class LangSmithDebugger:
     """Comprehensive debugger that sends everything to LangSmith"""
     
     @staticmethod
+    def _get_message_content(msg: Any) -> str:
+        """Safely extract content from a message regardless of format"""
+        if isinstance(msg, dict):
+            return msg.get('content', str(msg))
+        elif hasattr(msg, 'content'):
+            return msg.content
+        else:
+            return str(msg)
+    
+    @staticmethod
     def log_metadata(metadata: Dict[str, Any], name: str = "debug_info"):
         """Add metadata to current LangSmith run"""
         try:
             run_tree = get_current_run_tree()
             if run_tree:
-                run_tree.extra_metadata = run_tree.extra_metadata or {}
-                run_tree.extra_metadata[name] = metadata
-                run_tree.patch()
+                # Use the correct API for adding metadata
+                if hasattr(run_tree, 'add_metadata'):
+                    run_tree.add_metadata({name: metadata})
+                elif hasattr(run_tree, 'metadata'):
+                    # Fallback: directly update metadata if available
+                    if run_tree.metadata is None:
+                        run_tree.metadata = {}
+                    run_tree.metadata[name] = metadata
+                else:
+                    # If neither method is available, just log locally
+                    logger.debug(f"LangSmith metadata ({name}): {metadata}")
         except Exception as e:
             logger.error(f"Failed to log metadata to LangSmith: {e}")
     
@@ -62,7 +80,7 @@ class LangSmithDebugger:
                 "next_agent": state.get("next_agent"),
                 "lead_score": state.get("lead_score"),
                 "message_count": len(messages),
-                "last_message": messages[-1].content if messages else None,
+                "last_message": LangSmithDebugger._get_message_content(messages[-1]) if messages else None,
                 "state_keys": list(state.keys()),
                 "extracted_data": state.get("extracted_data", {}),
                 "routing_reason": state.get("routing_reason"),

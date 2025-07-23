@@ -9,7 +9,7 @@ from langgraph.prebuilt.chat_agent_executor import AgentState
 from app.tools.agent_tools import (
     get_contact_details_with_task,
     update_contact_with_context,
-    escalate_to_supervisor,
+    escalate_to_router,
     save_important_context,
     track_lead_progress
 )
@@ -143,7 +143,7 @@ def create_carlos_agent_fixed():
     tools = [
         get_contact_details_with_task,
         update_contact_with_context,
-        escalate_to_supervisor,
+        escalate_to_router,
         save_important_context,
         track_lead_progress
     ]

@@ -23,12 +23,7 @@ def create_openai_model(model_name: str = None, temperature: float = 0.0):
         model=model,
         temperature=temperature,
         max_retries=3,
-        timeout=30,
-        # Ensure we're using the latest API version that supports tools
-        model_kwargs={
-            "tools": None,  # Will be bound by create_react_agent
-            "tool_choice": "auto"
-        }
+        timeout=30
     )
     
     logger.info(f"Created ChatOpenAI model: {model} (temp={temperature})")

@@ -4,7 +4,7 @@ Production tools with modernized patterns
 """
 from app.tools.agent_tools import (
     get_contact_details_with_task,
-    escalate_to_supervisor,
+    escalate_to_router,
     update_contact_with_context,
     save_important_context,
     book_appointment_with_instructions
@@ -24,7 +24,7 @@ from app.tools.ghl_streaming import HumanLikeResponder, send_human_like_response
 __all__ = [
     # Core tools
     "get_contact_details_with_task",
-    "escalate_to_supervisor",
+    "escalate_to_router",
     "update_contact_with_context",
     "save_important_context",
     "book_appointment_with_instructions",

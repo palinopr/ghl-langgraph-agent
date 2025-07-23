@@ -10,7 +10,7 @@ from app.tools.agent_tools import (
     get_contact_details_with_task,
     update_contact_with_context,
     book_appointment_with_instructions,
-    escalate_to_supervisor,
+    escalate_to_router,
     track_lead_progress
 )
 from app.utils.simple_logger import get_logger
@@ -110,7 +110,7 @@ CURRENT STATUS:
 AVAILABLE TOOLS:
 - book_appointment_with_instructions: Use this to book the demo
 - update_contact_with_context: Save any new information
-- escalate_to_supervisor: Only if score < 8
+- escalate_to_router: Only if score < 8
 
 Remember: They're HOT leads - CLOSE THE DEMO!"""
     
@@ -164,7 +164,7 @@ def create_sofia_agent_fixed():
         get_contact_details_with_task,
         update_contact_with_context,
         book_appointment_with_instructions,
-        escalate_to_supervisor,
+        escalate_to_router,
         track_lead_progress
     ]
     

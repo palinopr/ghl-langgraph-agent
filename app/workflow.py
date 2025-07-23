@@ -24,7 +24,7 @@ class ProductionState(TypedDict):
     location_id: str
     next_agent: str
     agent_task: str
-    supervisor_complete: bool
+    router_complete: bool
     needs_escalation: bool
     escalation_reason: str
     routing_attempts: int
@@ -69,12 +69,12 @@ from app.agents.sofia_agent import sofia_node
 from app.agents.responder_agent import responder_node
 
 
-def route_from_supervisor(state: ProductionState) -> Literal["maria", "carlos", "sofia", "responder", "end"]:
-    """Route based on supervisor decision"""
+def route_from_smart_router(state: ProductionState) -> Literal["maria", "carlos", "sofia", "responder", "end"]:
+    """Route based on smart router decision"""
     if state.get("should_end", False):
         return "end"
     
-    if not state.get("supervisor_complete"):
+    if not state.get("router_complete"):
         return "end"
     
     next_agent = state.get("next_agent")
@@ -118,7 +118,7 @@ workflow_graph.add_edge("receptionist", "smart_router")
 # Smart router routing
 workflow_graph.add_conditional_edges(
     "smart_router",
-    route_from_supervisor,  # Reuse the same routing function
+    route_from_smart_router,
     {
         "maria": "maria",
         "carlos": "carlos",
