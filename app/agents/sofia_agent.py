@@ -136,7 +136,7 @@ def create_sofia_agent_fixed():
     return agent
 
 
-async def sofia_node_v2_fixed(state: Dict[str, Any]) -> Dict[str, Any]:
+async def sofia_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Fixed Sofia node that enforces conversation rules
     """
@@ -176,4 +176,4 @@ async def sofia_node_v2_fixed(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Export
-__all__ = ["sofia_node_v2_fixed", "create_sofia_agent_fixed", "SofiaState"]
+__all__ = ["sofia_node", "create_sofia_agent_fixed", "SofiaState"]

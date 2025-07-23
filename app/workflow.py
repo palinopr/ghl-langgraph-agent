@@ -59,14 +59,14 @@ class ProductionState(TypedDict):
 
 
 # Import all agent nodes
-from app.agents.thread_id_mapper import thread_id_mapper_enhanced_node as thread_id_mapper_node
-from app.agents.receptionist_agent import receptionist_simple_node
-from app.intelligence.analyzer import intelligence_node as intelligence_analyzer_node
+from app.agents.thread_id_mapper import thread_id_mapper_node
+from app.agents.receptionist_agent import receptionist_node
+from app.intelligence.analyzer import intelligence_node
 from app.agents.supervisor import supervisor_node
-from app.agents.maria_agent import maria_memory_aware_node as maria_node
-from app.agents.carlos_agent import carlos_node_v2_fixed as carlos_node
-from app.agents.sofia_agent import sofia_node_v2_fixed as sofia_node
-from app.agents.responder_agent import responder_streaming_node
+from app.agents.maria_agent import maria_node
+from app.agents.carlos_agent import carlos_node
+from app.agents.sofia_agent import sofia_node
+from app.agents.responder_agent import responder_node
 
 
 def route_from_supervisor(state: ProductionState) -> Literal["maria", "carlos", "sofia", "responder", "end"]:
@@ -101,13 +101,13 @@ workflow_graph = StateGraph(ProductionState)
 
 # Add all nodes
 workflow_graph.add_node("thread_mapper", thread_mapper_node)
-workflow_graph.add_node("receptionist", receptionist_simple_node)  
-workflow_graph.add_node("intelligence", intelligence_analyzer_node)
+workflow_graph.add_node("receptionist", receptionist_node)  
+workflow_graph.add_node("intelligence", intelligence_node)
 workflow_graph.add_node("supervisor", supervisor_node)
 workflow_graph.add_node("maria", maria_node)
 workflow_graph.add_node("carlos", carlos_node)
 workflow_graph.add_node("sofia", sofia_node)
-workflow_graph.add_node("responder", responder_streaming_node)  
+workflow_graph.add_node("responder", responder_node)  
 
 # Set entry point
 workflow_graph.set_entry_point("thread_mapper")

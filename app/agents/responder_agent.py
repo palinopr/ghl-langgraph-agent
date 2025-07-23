@@ -10,7 +10,7 @@ from app.utils.simple_logger import get_logger
 logger = get_logger("responder_streaming")
 
 
-async def responder_streaming_node(state: Dict[str, Any]) -> Dict[str, Any]:
+async def responder_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Enhanced responder with human-like typing delays
     """

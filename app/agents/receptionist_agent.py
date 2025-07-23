@@ -7,10 +7,10 @@ from app.utils.simple_logger import get_logger
 from app.tools.ghl_client_simple import SimpleGHLClient
 from app.tools.conversation_loader import ConversationLoader
 
-logger = get_logger("receptionist_simple")
+logger = get_logger("receptionist")
 
 
-async def receptionist_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
+async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Simplified receptionist that ONLY loads messages from GHL
     No checkpoint loading, no duplication
@@ -115,4 +115,4 @@ async def receptionist_simple_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Export
-__all__ = ["receptionist_simple_node"]
+__all__ = ["receptionist_node"]

@@ -6,10 +6,10 @@ from typing import Dict, Any, Optional
 from app.utils.simple_logger import get_logger
 import copy
 
-logger = get_logger("thread_id_mapper_enhanced")
+logger = get_logger("thread_id_mapper")
 
 
-async def thread_id_mapper_enhanced_node(state: Dict[str, Any]) -> Dict[str, Any]:
+async def thread_id_mapper_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Enhanced mapper that attempts to override checkpoint configuration
     to force LangGraph Cloud to use our consistent thread_ids

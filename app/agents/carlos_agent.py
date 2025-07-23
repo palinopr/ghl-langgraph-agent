@@ -116,7 +116,7 @@ def create_carlos_agent_fixed():
     return agent
 
 
-async def carlos_node_v2_fixed(state: Dict[str, Any]) -> Dict[str, Any]:
+async def carlos_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Fixed Carlos node that enforces templates
     """
@@ -154,4 +154,4 @@ async def carlos_node_v2_fixed(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Export
-__all__ = ["carlos_node_v2_fixed", "create_carlos_agent_fixed", "CarlosState"]
+__all__ = ["carlos_node", "create_carlos_agent_fixed", "CarlosState"]

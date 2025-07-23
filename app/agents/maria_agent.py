@@ -115,7 +115,7 @@ Remember: You're not just collecting data - you're solving their WhatsApp commun
     return [{"role": "system", "content": system_prompt}] + messages
 
 
-async def maria_memory_aware_node(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
+async def maria_node(state: Dict[str, Any]) -> Union[Command, Dict[str, Any]]:
     """
     Maria agent node with memory isolation
     """
