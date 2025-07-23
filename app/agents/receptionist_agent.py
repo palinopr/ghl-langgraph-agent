@@ -23,7 +23,27 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
         contact_id = state.get("contact_id", "")
         conversation_id = state.get("conversation_id", "")
         webhook_data = state.get("webhook_data", {})
-        current_message = webhook_data.get("body", "")
+        
+        # Handle both webhook and direct invocation patterns
+        if webhook_data and webhook_data.get("body"):
+            # Webhook pattern: get message from webhook_data
+            current_message = webhook_data.get("body", "")
+            logger.info("Using webhook pattern for message")
+        else:
+            # Direct invocation: get last message from state
+            state_messages = state.get("messages", [])
+            if state_messages:
+                last_msg = state_messages[-1]
+                if isinstance(last_msg, dict):
+                    current_message = last_msg.get("content", "")
+                elif hasattr(last_msg, "content"):
+                    current_message = last_msg.content
+                else:
+                    current_message = str(last_msg)
+                logger.info("Using direct invocation pattern for message")
+            else:
+                current_message = ""
+                logger.warning("No message found in webhook_data or state")
         
         logger.info(f"Processing contact: {contact_id}")
         logger.info(f"Conversation ID: {conversation_id}")
@@ -62,14 +82,32 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
             except Exception as e:
                 logger.error(f"Failed to load GHL history: {e}")
         
-        # Add current message
-        messages.append(HumanMessage(
-            content=current_message,
-            additional_kwargs={
-                "contact_id": contact_id,
-                "source": "webhook"
-            }
-        ))
+        # Add current message ONLY if it's not already in the loaded messages
+        # This prevents duplication when message is already in state
+        should_add_current = True
+        
+        # Check if current message is already in the loaded messages
+        for msg in messages:
+            msg_content = ""
+            if isinstance(msg, dict):
+                msg_content = msg.get("content", "")
+            elif hasattr(msg, "content"):
+                msg_content = msg.content
+            
+            if msg_content == current_message:
+                should_add_current = False
+                logger.info("Current message already in history, not adding again")
+                break
+        
+        if should_add_current and current_message:
+            messages.append(HumanMessage(
+                content=current_message,
+                additional_kwargs={
+                    "contact_id": contact_id,
+                    "source": "webhook"
+                }
+            ))
+            logger.info("Added current message to history")
         
         # Get contact info
         contact_info = None
@@ -115,11 +153,19 @@ async def receptionist_node(state: Dict[str, Any]) -> Dict[str, Any]:
         
     except Exception as e:
         logger.error(f"Receptionist error: {str(e)}", exc_info=True)
+        
+        # Even on error, use MessageManager to avoid duplication
+        current_state_messages = state.get("messages", [])
+        error_message = HumanMessage(content=webhook_data.get("body", "Error") if "webhook_data" in locals() else "Error")
+        
+        # Only add the error message if it's not already in state
+        new_messages = MessageManager.set_messages(current_state_messages, [error_message])
+        
         # Return minimal state on error
         return {
-            "messages": [HumanMessage(content=webhook_data.get("body", "Error"))],
+            "messages": new_messages,  # Use MessageManager even for errors
             "receptionist_complete": True,
-            "last_message": webhook_data.get("body", ""),
+            "last_message": error_message.content,
             "is_first_contact": True
         }
 
