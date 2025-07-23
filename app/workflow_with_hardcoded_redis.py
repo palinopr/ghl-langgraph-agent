@@ -4,6 +4,10 @@ Temporary workaround to ensure Redis is used
 """
 from app.workflow import *  # Import everything from the fixed workflow
 import os
+import logging
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 # Override the create_checkpointer function
 def create_checkpointer_hardcoded():
