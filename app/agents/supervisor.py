@@ -64,7 +64,7 @@ def create_supervisor_with_tools():
     
     tools = [handoff_to_maria, handoff_to_carlos, handoff_to_sofia]
     
-    # CRITICAL: Prompt that forces tool usage ONLY and prevents recursion
+    # CRITICAL: Prompt that forces tool usage ONLY
     system_prompt = """You are a routing-only supervisor. You CANNOT talk to customers directly.
 
 YOUR ONLY TASK: Use ONE handoff tool based on the lead score, then STOP.
@@ -97,14 +97,12 @@ REMEMBER: ONE TOOL CALL, THEN STOP IMMEDIATELY!"""
         
         return [{"role": "system", "content": formatted_system}] + messages
     
-    # Create agent with state schema and recursion limit
+    # Create agent - use state_modifier for production compatibility
     agent = create_react_agent(
         model=model,
         tools=tools,
         state_schema=MinimalState,
-        prompt=build_prompt,
-        name="supervisor",
-        recursion_limit=1  # CRITICAL: Prevent recursion loops - supervisor should make ONE tool call only
+        state_modifier=build_prompt
     )
     
     return agent
@@ -181,6 +179,7 @@ async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
         
     except Exception as e:
         logger.error(f"Supervisor error: {str(e)}", exc_info=True)
+        # Default to maria on any error
         return {
             "next_agent": "maria",
             "agent_task": "Atender al cliente",
@@ -191,5 +190,5 @@ async def supervisor_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Export
-supervisor_official_node = supervisor_node
-__all__ = ["supervisor_node", "supervisor_official_node", "create_supervisor_with_tools"]
+supervisor_fixed_node = supervisor_node
+__all__ = ["supervisor_node", "supervisor_fixed_node", "create_supervisor_with_tools"]

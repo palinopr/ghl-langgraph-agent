@@ -36,7 +36,7 @@ class ProductionState(TypedDict):
     urgency_level: str
     budget: str
     thread_id: str
-    webhook_data: Dict[str, Any]  # For passing webhook data to receptionist
+    webhook_data: Dict[str, Any]
     # Receptionist outputs
     last_message: str
     is_first_contact: bool
@@ -44,7 +44,7 @@ class ProductionState(TypedDict):
     # Intelligence outputs  
     last_intent: str
     intelligence_complete: bool
-    # Additional fields from checkpoint-aware receptionist
+    # Additional fields
     contact_info: Dict[str, Any]
     previous_custom_fields: Dict[str, Any]
     is_new_conversation: bool
@@ -55,19 +55,18 @@ class ProductionState(TypedDict):
     message_sent: bool
     final_response: str
     responder_complete: bool
-    # Agent completion flags
     agent_complete: bool
 
 
-# Import all agent nodes and utilities
-from app.agents.thread_id_mapper_enhanced import thread_id_mapper_enhanced_node as thread_mapper_node
-from app.agents.receptionist_checkpoint_aware import receptionist_checkpoint_aware_node
+# Import all agent nodes
+from app.agents.thread_id_mapper import thread_id_mapper_node
+from app.agents.receptionist_agent import receptionist_simple_node
 from app.intelligence.analyzer import intelligence_node as intelligence_analyzer_node
-from app.agents.supervisor_fixed import supervisor_fixed_node as supervisor_node
-from app.agents.maria_memory_aware import maria_memory_aware_node as maria_node
-from app.agents.carlos_agent_v2_fixed import carlos_node_v2_fixed as carlos_node
-from app.agents.sofia_agent_v2_fixed import sofia_node_v2_fixed as sofia_node
-from app.agents.responder_streaming import responder_streaming_node
+from app.agents.supervisor import supervisor_node
+from app.agents.maria_agent import maria_memory_aware_node as maria_node
+from app.agents.carlos_agent import carlos_node_v2_fixed as carlos_node
+from app.agents.sofia_agent import sofia_node_v2_fixed as sofia_node
+from app.agents.responder_agent import responder_streaming_node
 
 
 def route_from_supervisor(state: ProductionState) -> Literal["maria", "carlos", "sofia", "responder", "end"]:
@@ -102,7 +101,7 @@ workflow_graph = StateGraph(ProductionState)
 
 # Add all nodes
 workflow_graph.add_node("thread_mapper", thread_mapper_node)
-workflow_graph.add_node("receptionist", receptionist_checkpoint_aware_node)  
+workflow_graph.add_node("receptionist", receptionist_simple_node)  
 workflow_graph.add_node("intelligence", intelligence_analyzer_node)
 workflow_graph.add_node("supervisor", supervisor_node)
 workflow_graph.add_node("maria", maria_node)
@@ -145,31 +144,85 @@ for agent in ["maria", "carlos", "sofia"]:
 # Responder ends
 workflow_graph.add_edge("responder", END)
 
-# CRITICAL FIX: Use proper checkpoint configuration
-def create_checkpointer():
-    """Create checkpointer based on environment"""
-    # TEMPORARY: Hardcode Redis URL since env vars not available in deployment
-    redis_url = "redis://default:7LOQGvcF6ZQzOv3kvR9JcqpFE3jjNbwo@redis-19970.c9.us-east-1-4.ec2.redns.redis-cloud.com:19970"
-    
-    try:
-        # Try to import and use Redis checkpointer
-        from app.state.redis_store import RedisCheckpointSaver
-        logger.info(f"Using Redis checkpointer (hardcoded) with URL: {redis_url[:50]}...")
-        return RedisCheckpointSaver(redis_url=redis_url)
-    except Exception as e:
-        logger.error(f"Failed to create Redis checkpointer: {e}")
-        # Fallback to memory saver
-        logger.info("Using in-memory checkpointer (no persistence)")
-        from langgraph.checkpoint.memory import MemorySaver
-        return MemorySaver()
-
-# Create checkpointer
-checkpointer = create_checkpointer()
+# Use simple memory checkpointer - Redis is overkill since GHL stores messages
+from langgraph.checkpoint.memory import MemorySaver
+checkpointer = MemorySaver()
 
 # Compile workflow
 workflow = workflow_graph.compile(checkpointer=checkpointer)
 
-logger.info(f"Production workflow compiled with {type(checkpointer).__name__}")
+logger.info("Production workflow compiled with memory checkpointer")
 
-# Export
-__all__ = ["workflow"]
+
+async def run_workflow(webhook_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Run workflow from webhook data
+    
+    Args:
+        webhook_data: Data from GoHighLevel webhook
+        
+    Returns:
+        Result dictionary with success status and response
+    """
+    try:
+        logger.info(f"Running workflow for contact: {webhook_data.get('contactId')}")
+        
+        # Extract data from webhook
+        contact_id = webhook_data.get("contactId", "")
+        conversation_id = webhook_data.get("conversationId", "")
+        location_id = webhook_data.get("locationId", "")
+        message_body = webhook_data.get("body", "")
+        
+        # Get contact data
+        contact_data = webhook_data.get("contact", {})
+        contact_name = f"{contact_data.get('firstName', '')} {contact_data.get('lastName', '')}".strip()
+        
+        # Create thread ID from conversation ID
+        thread_id = f"conv-{conversation_id}" if conversation_id else f"contact-{contact_id}"
+        
+        # Create initial state - empty messages, receptionist loads from GHL
+        initial_state = {
+            "messages": [],
+            "contact_id": contact_id,
+            "conversation_id": conversation_id,
+            "location_id": location_id,
+            "contact_name": contact_name,
+            "email": contact_data.get("email", ""),
+            "phone": contact_data.get("phone", ""),
+            "thread_id": thread_id,
+            "webhook_data": webhook_data,
+            "current_agent": "receptionist",
+            "lead_score": 0
+        }
+        
+        # Run workflow with thread config
+        config = {"configurable": {"thread_id": thread_id}}
+        
+        # Execute workflow
+        result = await workflow.ainvoke(initial_state, config=config)
+        
+        # Extract response
+        last_sent_message = result.get("last_sent_message", "")
+        message_sent = result.get("message_sent", False)
+        
+        return {
+            "success": True,
+            "contact_id": contact_id,
+            "thread_id": thread_id,
+            "message_sent": message_sent,
+            "response": last_sent_message,
+            "agent": result.get("current_agent"),
+            "lead_score": result.get("lead_score", 0)
+        }
+        
+    except Exception as e:
+        logger.error(f"Workflow error: {str(e)}", exc_info=True)
+        return {
+            "success": False,
+            "error": str(e),
+            "contact_id": webhook_data.get("contactId", "unknown")
+        }
+
+
+# Export everything needed
+__all__ = ["workflow", "run_workflow"]

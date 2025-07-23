@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from typing import Dict, Any
 import asyncio
-from app.workflow_fixed_final import run_workflow
+from app.workflow import run_workflow
 from app.tools.webhook_processor import webhook_processor
 from app.tools.ghl_client import ghl_client
 from app.utils.simple_logger import get_logger
