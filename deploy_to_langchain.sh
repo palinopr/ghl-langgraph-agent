@@ -40,7 +40,7 @@ rm -f langgraph-deploy.json
 # Step 3: Stage production files
 echo -e "${YELLOW}📦 Staging production files...${NC}"
 git add langgraph.json
-git add app/workflow_production_ready.py
+git add app/workflow.py
 git add api/webhook_production.py
 git add requirements_production.txt
 git add DEPLOYMENT_INSTRUCTIONS.md
@@ -53,7 +53,7 @@ cat > langgraph-deploy.json << EOF
   "version": "3.1.1",
   "description": "GoHighLevel Multi-Agent System",
   "graphs": {
-    "agent": "./app/workflow_production_ready.py:workflow"
+    "agent": "./app/workflow.py:workflow"
   },
   "dependencies": ["."],
   "env": ".env",
@@ -69,7 +69,7 @@ EOF
 echo -e "${YELLOW}✅ Validating workflow...${NC}"
 python3 -c "
 try:
-    from app.workflow_production_ready import workflow
+    from app.workflow import workflow
     print('✅ Workflow imports successfully')
 except Exception as e:
     print(f'❌ Workflow validation failed: {e}')

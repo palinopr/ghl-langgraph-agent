@@ -4,7 +4,7 @@ This guide shows how to deploy your multi-agent system to production.
 
 ## 📋 Pre-Deployment Changes Made
 
-✅ **Created production-ready workflow** (`app/workflow_production_ready.py`)
+✅ **Created production-ready workflow** (`app/workflow.py`)
 - No complex imports that cause issues
 - Full agent functionality (Maria, Carlos, Sofia)
 - Thread mapping for conversation consistency

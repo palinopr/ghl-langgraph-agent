@@ -13,8 +13,8 @@ def quick_check():
     
     # 1. Try to import and compile workflow
     try:
-        # Use production workflow that doesn't have import issues
-        from app.workflow_production_ready import workflow
+        # Import main workflow
+        from app.workflow import workflow
         print("✅ Workflow imports successfully")
     except Exception as e:
         print(f"❌ Workflow import failed: {e}")

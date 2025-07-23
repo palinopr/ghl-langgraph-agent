@@ -40,7 +40,7 @@ async def run_test():
         import importlib.util
         spec = importlib.util.spec_from_file_location(
             "workflow_module", 
-            "app/workflow_production_ready.py"
+            "app/workflow.py"
         )
         workflow_module = importlib.util.module_from_spec(spec)
         

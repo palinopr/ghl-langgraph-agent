@@ -22,7 +22,7 @@ async def test_workflow():
     """Test workflow with different scenarios"""
     
     # Import here after env vars are set
-    from app.workflow_production_ready import workflow
+    from app.workflow import workflow
     
     print("🚀 Direct Workflow Testing")
     print("=" * 50)
@@ -129,7 +129,7 @@ async def test_workflow():
 async def test_conversation_continuity():
     """Test that conversation context is maintained"""
     
-    from app.workflow_production_ready import workflow
+    from app.workflow import workflow
     
     print("\n🧪 Testing Conversation Continuity")
     print("=" * 50)
