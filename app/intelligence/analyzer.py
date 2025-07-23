@@ -629,33 +629,17 @@ async def intelligence_node(state: MinimalState) -> Dict[str, Any]:
     analyzer = IntelligenceAnalyzer()
     
     try:
-        # Run analysis with tracing
-        async with TracedOperation(
-            "intelligence_analysis",
-            metadata={
-                "contact_id": state.get("contact_id", "unknown"),
-                "previous_score": state.get("lead_score", 0),
-                "message_count": len(state.get("messages", []))
-            },
-            tags=["intelligence", "scoring", "extraction"]
-        ):
-            # Run analysis
-            enriched_state = await analyzer.analyze(state)
+        # Run analysis (removed TracedOperation due to production issues)
+        # TODO: Fix TracedOperation for async context managers
+        
+        # Run analysis
+        enriched_state = await analyzer.analyze(state)
         
         logger.info(
             f"Intelligence analysis complete: Score {enriched_state['lead_score']}, "
             f"Route: {enriched_state['lead_category']}, "
             f"Suggested: {enriched_state['suggested_agent']}"
         )
-        
-        # Log lead score as feedback for tracking
-        if hasattr(TracedOperation, '_current_run_id'):
-            log_feedback(
-                run_id=TracedOperation._current_run_id,
-                score=enriched_state['lead_score'] / 10.0,  # Normalize to 0-1
-                feedback_type="lead_score",
-                comment=enriched_state.get('score_reasoning')
-            )
         
         return enriched_state
         

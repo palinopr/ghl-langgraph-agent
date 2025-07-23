@@ -95,8 +95,13 @@ async def receptionist_checkpoint_aware_node(state: Dict[str, Any]) -> Dict[str,
         if messages:
             logger.info("=== CONVERSATION CONTEXT ===")
             for i, msg in enumerate(messages[-3:]):  # Last 3 messages
-                msg_content = str(msg.content)[:100]  # First 100 chars
-                msg_type = type(msg).__name__
+                # Handle both dict and object messages
+                if isinstance(msg, dict):
+                    msg_content = str(msg.get('content', ''))[:100]
+                    msg_type = msg.get('type', 'unknown')
+                else:
+                    msg_content = str(getattr(msg, 'content', ''))[:100]
+                    msg_type = type(msg).__name__
                 logger.info(f"  [{i-3}] {msg_type}: {msg_content}...")
             logger.info("=== END CONTEXT ===")
         

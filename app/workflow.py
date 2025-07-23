@@ -148,21 +148,20 @@ workflow_graph.add_edge("responder", END)
 # CRITICAL FIX: Use proper checkpoint configuration
 def create_checkpointer():
     """Create checkpointer based on environment"""
-    redis_url = os.getenv("REDIS_URL")
+    # TEMPORARY: Hardcode Redis URL since env vars not available in deployment
+    redis_url = "redis://default:7LOQGvcF6ZQzOv3kvR9JcqpFE3jjNbwo@redis-19970.c9.us-east-1-4.ec2.redns.redis-cloud.com:19970"
     
-    if redis_url:
-        try:
-            # Try to import and use Redis checkpointer
-            from app.state.redis_store import RedisCheckpointSaver
-            logger.info(f"Using Redis checkpointer with URL: {redis_url[:50]}...")
-            return RedisCheckpointSaver(redis_url=redis_url)
-        except Exception as e:
-            logger.warning(f"Failed to create Redis checkpointer: {e}")
-    
-    # Fallback to memory saver
-    logger.info("Using in-memory checkpointer (no persistence)")
-    from langgraph.checkpoint.memory import MemorySaver
-    return MemorySaver()
+    try:
+        # Try to import and use Redis checkpointer
+        from app.state.redis_store import RedisCheckpointSaver
+        logger.info(f"Using Redis checkpointer (hardcoded) with URL: {redis_url[:50]}...")
+        return RedisCheckpointSaver(redis_url=redis_url)
+    except Exception as e:
+        logger.error(f"Failed to create Redis checkpointer: {e}")
+        # Fallback to memory saver
+        logger.info("Using in-memory checkpointer (no persistence)")
+        from langgraph.checkpoint.memory import MemorySaver
+        return MemorySaver()
 
 # Create checkpointer
 checkpointer = create_checkpointer()

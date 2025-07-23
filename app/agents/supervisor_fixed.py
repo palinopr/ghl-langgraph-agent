@@ -97,12 +97,12 @@ REMEMBER: ONE TOOL CALL, THEN STOP IMMEDIATELY!"""
         
         return [{"role": "system", "content": formatted_system}] + messages
     
-    # Create agent without recursion_limit (not supported in production)
+    # Create agent - use state_modifier for production compatibility
     agent = create_react_agent(
         model=model,
         tools=tools,
         state_schema=MinimalState,
-        messages_modifier=build_prompt,  # Use messages_modifier instead of prompt
+        state_modifier=build_prompt
     )
     
     return agent
